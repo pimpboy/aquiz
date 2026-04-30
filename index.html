@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>항공안전법 스마트 퀴즈 v2.3</title>
+    <title>항공안전법 스마트 퀴즈 v2.4</title>
     <style>
         :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; --border: #dadce0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 15px; display: flex; justify-content: center; }
@@ -29,18 +29,23 @@
         .feedback-title { font-weight: bold; font-size: 16px; margin-bottom: 8px; }
         .exp-text { font-size: 14px; color: #555; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
 
+        /* 결과 화면 분석 카드 */
         .summary { background: #e8f0fe; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
+        .analysis-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .analysis-item { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; border-bottom: 1px solid #f1f3f4; }
+        .analysis-item:last-child { border-bottom: none; }
+        .low-perf { color: var(--err); font-weight: bold; }
+        
         .wrong-card { border-left: 5px solid var(--err); background: #fff5f5; padding: 15px; margin-bottom: 15px; border-radius: 4px; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <div id="loader" style="text-align:center; padding-top:50px;">데이터를 동기화하고 있읍니다...</div>
+    <div id="loader" style="text-align:center; padding-top:50px;">데이터 정밀 분석 준비 중...</div>
 
     <div id="menu-ui" style="display:none">
-        <h2 style="margin-top:0">✈️ 스마트 퀴즈 v2.3</h2>
-        
+        <h2 style="margin-top:0">✈️ 스마트 퀴즈 v2.4</h2>
         <div class="menu-group">
             <label>1. 대분류</label>
             <select id="lcat-select" onchange="updateMcat()"><option value="ALL">전체</option></select>
@@ -69,7 +74,6 @@
         <div id="cat-tag" style="font-size:11px; color:var(--p); font-weight:bold; margin-bottom:8px"></div>
         <div id="q" class="q-text"></div>
         <div id="opts" class="opt-list"></div>
-        
         <div id="feedback-area">
             <div id="feedback-res" class="feedback-title"></div>
             <div id="exp-content" class="exp-text"></div>
@@ -78,8 +82,12 @@
     </div>
 
     <div id="res-ui" style="display:none">
-        <h2 style="text-align:center">최종 리포트</h2>
+        <h2 style="text-align:center">미션 분석 리포트</h2>
         <div id="total-stat" class="summary"></div>
+        <div id="analysis-area" class="analysis-card">
+            <h4 style="margin-top:0">📊 카테고리별 정답률</h4>
+            <div id="analysis-list"></div>
+        </div>
         <div id="wrong-list"></div>
         <button class="btn-main" onclick="location.reload()">처음으로</button>
     </div>
@@ -89,15 +97,10 @@
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?gid=0&single=true&output=csv';
     let allData = [], filteredQuiz = [], idx = 0, score = 0, logs = [];
 
-    // 정교한 CSV 파서 (줄바꿈 및 따옴표 처리 강화)
     function parseCSV(text) {
-        const rows = [];
-        let row = [];
-        let cell = "";
-        let inQuotes = false;
+        const rows = []; let row = []; let cell = ""; let inQuotes = false;
         for (let i = 0; i < text.length; i++) {
-            let char = text[i];
-            let nextChar = text[i + 1];
+            let char = text[i]; let nextChar = text[i + 1];
             if (inQuotes) {
                 if (char === '"' && nextChar === '"') { cell += '"'; i++; }
                 else if (char === '"') { inQuotes = false; }
@@ -108,8 +111,7 @@
                 else if (char === '\r' || char === '\n') {
                     row.push(cell.trim()); cell = "";
                     if (row.some(c => c !== "")) rows.push(row);
-                    row = [];
-                    if (char === '\r' && nextChar === '\n') i++;
+                    row = []; if (char === '\r' && nextChar === '\n') i++;
                 } else { cell += char; }
             }
         }
@@ -132,21 +134,18 @@
             const rows = parseCSV(text);
             const h = rows[0];
             const find = (k) => h.findIndex(name => name.includes(k));
-            
             allData = rows.slice(1).map(r => ({
                 lcat: r[find('대분류')], mcat: r[find('중분류')], q: r[find('문제')],
                 opts: [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]],
                 ansText: r[find('보기' + r[find('정답')])] || r[4 + (parseInt(r[find('정답')]) - 1)],
                 exp: r[find('해설')] || ""
             })).filter(i => i.q);
-
             const lcats = [...new Set(allData.map(d => d.lcat))].filter(Boolean);
             const lSelect = document.getElementById('lcat-select');
             lcats.forEach(c => lSelect.innerHTML += `<option value="${c}">${c}</option>`);
-
             document.getElementById('loader').style.display = 'none';
             document.getElementById('menu-ui').style.display = 'block';
-        } catch (e) { document.getElementById('loader').innerText = "로드 에러: " + e.message; }
+        } catch (e) { document.getElementById('loader').innerText = "로드 실패"; }
     }
 
     function updateMcat() {
@@ -156,7 +155,7 @@
         if(lVal !== 'ALL') {
             const mcats = [...new Set(allData.filter(d => d.lcat === lVal).map(d => d.mcat))].filter(Boolean);
             mcats.forEach(c => mSelect.innerHTML += `<option value="${c}">${c}</option>`);
-        } else { mSelect.innerHTML = '<option value="ALL">대분류를 먼저 선택하세요</option>'; }
+        }
     }
 
     function startSession() {
@@ -182,8 +181,7 @@
         document.getElementById('cat-tag').innerText = `${item.lcat} > ${item.mcat}`;
         document.getElementById('q').innerText = item.q;
         document.getElementById('feedback-area').style.display = 'none';
-        const container = document.getElementById('opts');
-        container.innerHTML = '';
+        const container = document.getElementById('opts'); container.innerHTML = '';
         opts.forEach((o) => {
             const btn = document.createElement('div');
             btn.className = 'opt-item';
@@ -191,7 +189,8 @@
             btn.onclick = () => {
                 const btns = document.querySelectorAll('.opt-item');
                 btns.forEach(b => b.classList.add('disabled'));
-                if (o.isCorrect) {
+                const isCorrect = o.isCorrect;
+                if (isCorrect) {
                     score++; btn.classList.add('correct');
                     document.getElementById('feedback-res').innerText = "✅ 정답";
                     document.getElementById('feedback-res').style.color = "var(--suc)";
@@ -201,7 +200,7 @@
                     document.getElementById('feedback-res').innerText = "❌ 오답";
                     document.getElementById('feedback-res').style.color = "var(--err)";
                 }
-                logs.push({ ...item, userChoice: o.text, isCorrect: o.isCorrect });
+                logs.push({ ...item, isCorrect });
                 document.getElementById('exp-content').innerText = item.exp || "해설이 없읍니다.";
                 document.getElementById('feedback-area').style.display = 'block';
                 setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
@@ -216,12 +215,34 @@
         document.getElementById('quiz-ui').style.display = 'none';
         document.getElementById('res-ui').style.display = 'block';
         const rate = Math.round((score/logs.length)*100);
-        document.getElementById('total-stat').innerHTML = `<strong>성취도: ${rate}%</strong><br>${logs.length}문제 중 ${score}개 정답`;
+        document.getElementById('total-stat').innerHTML = `<strong>최종 성취도: ${rate}%</strong><br>${logs.length}문제 중 ${score}개 정답`;
+
+        // 카테고리별 분석 로직
+        const analysis = {};
+        logs.forEach(log => {
+            const key = `${log.lcat} > ${log.mcat}`;
+            if(!analysis[key]) analysis[key] = { total: 0, correct: 0 };
+            analysis[key].total++;
+            if(log.isCorrect) analysis[key].correct++;
+        });
+
+        const aList = document.getElementById('analysis-list');
+        aList.innerHTML = '';
+        for(const [cat, data] of Object.entries(analysis)) {
+            const per = Math.round((data.correct / data.total) * 100);
+            const isLow = per < 70;
+            aList.innerHTML += `
+                <div class="analysis-item">
+                    <span style="font-size:12px; max-width:70%;">${cat}</span>
+                    <span class="${isLow ? 'low-perf' : ''}">${per}% (${data.correct}/${data.total})</span>
+                </div>`;
+        }
+
         const wArea = document.getElementById('wrong-list');
         const wrongs = logs.filter(l => !l.isCorrect);
-        wArea.innerHTML = wrongs.length === 0 ? '<p style="color:var(--suc)">만점입니다!</p>' : '<h4>오답 복기</h4>';
+        wArea.innerHTML = wrongs.length === 0 ? '<p style="text-align:center; color:var(--suc); font-weight:bold;">🎉 모든 고도를 완벽하게 통과하셨읍니다!</p>' : '<h4>오답 복기</h4>';
         wrongs.forEach(w => {
-            wArea.innerHTML += `<div class="wrong-card"><strong>Q: ${w.q}</strong><br><br><span style="color:var(--err)">선택: ${w.userChoice}</span><br><span style="color:var(--suc)">정답: ${w.ansText}</span></div>`;
+            wArea.innerHTML += `<div class="wrong-card"><strong>Q: ${w.q}</strong><br><br><span style="color:var(--suc)">정답: ${w.ansText}</span></div>`;
         });
     }
     window.onload = loadData;
