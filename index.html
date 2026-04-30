@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>항공안전법 퀴즈 시스템</title>
+    <style>
+        :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 15px; display: flex; justify-content: center; }
+        #app { background: #fff; width: 100%; max-width: 500px; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-height: 80vh; }
+        .loading { text-align: center; padding-top: 50px; font-weight: bold; color: var(--p); }
+        .header { display: flex; justify-content: space-between; font-size: 12px; color: #70757a; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .q-text { font-size: 18px; font-weight: bold; margin-bottom: 25px; line-height: 1.6; word-break: keep-all; }
+        .opt-list { display: grid; gap: 12px; }
+        .opt-item { padding: 16px; border: 1px solid #dadce0; border-radius: 10px; background: #fff; text-align: left; font-size: 16px; cursor: pointer; transition: 0.2s; -webkit-tap-highlight-color: transparent; }
+        .opt-item:active { background: #e8f0fe; }
+        .summary { background: #f1f3f4; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
+        .wrong-card { border-left: 5px solid var(--err); background: #fff5f5; padding: 15px; margin-bottom: 15px; border-radius: 4px; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="status" class="loading">데이터 피드 동기화 중...</div>
+
+    <div id="quiz-ui" style="display:none">
+        <div class="header">
+            <span id="prog"></span>
+            <span id="acc">정답률: 0%</span>
+        </div>
+        <div id="cat" style="font-size:12px; color:var(--p); font-weight:bold; margin-bottom:8px"></div>
+        <div id="q" class="q-text"></div>
+        <div id="opts" class="opt-list"></div>
+        <button onclick="end()" style="margin-top:30px; width:100%; background:none; border:none; color:#70757a; text-decoration:underline; font-size:13px;">학습 세션 종료</button>
+    </div>
+
+    <div id="res-ui" style="display:none">
+        <h2 style="text-align:center">결과 보고서</h2>
+        <div id="total-stat" class="summary"></div>
+        <table>
+            <thead><tr><th>대분류</th><th>중분류</th><th>정답률</th></tr></thead>
+            <tbody id="cat-body"></tbody>
+        </table>
+        <div id="wrong-list"></div>
+        <button onclick="location.reload()" style="width:100%; padding:15px; background:var(--p); color:white; border:none; border-radius:8px; font-weight:bold; font-size:16px; margin-top:20px;">새로운 세션 시작</button>
+    </div>
+</div>
+
+<script>
+    // 보내주신 URL을 그대로 적용했습니다.
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?gid=0&single=true&output=csv';
+
+    let quiz = [], idx = 0, score = 0, logs = [];
+
+    async function loadData() {
+        const statusEl = document.getElementById('status');
+        try {
+            const response = await fetch(CSV_URL);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.text();
+            
+            // CSV 파싱 (쉼표 및 따옴표 처리)
+            const rows = data.split('\n').map(row => {
+                return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/"/g, '').trim());
+            });
+
+            // 헤더 분석 및 데이터 매핑 (D:문제[3], E~H:보기[4~7], I:정답[8], J:해설[9])
+            quiz = rows.slice(1).map(r => ({
+                lcat: r[1], mcat: r[2], q: r[3],
+                opts: [r[4], r[5], r[6], r[7]],
+                ans: parseInt(r[8]), exp: r[9] || ""
+            })).filter(i => i.q);
+
+            if (quiz.length === 0) throw new Error('No data found');
+
+            statusEl.style.display = 'none';
+            document.getElementById('quiz-ui').style.display = 'block';
+            render();
+        } catch (e) {
+            statusEl.innerHTML = `❌ 로드 실패<br><span style="font-size:12px; font-weight:normal;">${e.message}<br><br>PC라면 '크롬' 브라우저를,<br>모바일이라면 '사파리'나 '크롬' 앱을 사용하세요.</span>`;
+        }
+    }
+
+    function render() {
+        if (idx >= quiz.length) { end(); return; }
+        const item = quiz[idx];
+        document.getElementById('prog').innerText = `${idx + 1} / ${quiz.length}`;
+        document.getElementById('acc').innerText = `정답률: ${idx === 0 ? 0 : Math.round((score/idx)*100)}%`;
+        document.getElementById('cat').innerText = `${item.lcat} > ${item.mcat}`;
+        document.getElementById('q').innerText = item.q;
+
+        const container = document.getElementById('opts');
+        container.innerHTML = '';
+        item.opts.forEach((t, i) => {
+            if(!t) return;
+            const btn = document.createElement('div');
+            btn.className = 'opt-item';
+            btn.innerText = `${i + 1}. ${t}`;
+            btn.onclick = () => {
+                const isCorrect = (i + 1) === item.ans;
+                if (isCorrect) score++;
+                logs.push({...item, user: i+1, isCorrect});
+                idx++; render();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function end() {
+        document.getElementById('quiz-ui').style.display = 'none';
+        document.getElementById('res-ui').style.display = 'block';
+        const total = logs.length;
+        const rate = total === 0 ? 0 : Math.round((score/total)*100);
+        
+        document.getElementById('total-stat').innerHTML = `<strong>성취도: ${rate}%</strong><br><span style="font-size:14px; color:#666;">${total}문제 중 ${score}개 정답</span>`;
+
+        const stats = {};
+        logs.forEach(l => {
+            const k = `${l.lcat}|${l.mcat}`;
+            if (!stats[k]) stats[k] = {c: 0, t: 0};
+            stats[k].t++; if(l.isCorrect) stats[k].c++;
+        });
+
+        const tbody = document.getElementById('cat-body');
+        tbody.innerHTML = '';
+        for (let k in stats) {
+            const [l, m] = k.split('|');
+            tbody.innerHTML += `<tr><td>${l}</td><td>${m}</td><td>${Math.round((stats[k].c/stats[k].t)*100)}%</td></tr>`;
+        }
+
+        const wArea = document.getElementById('wrong-list');
+        wArea.innerHTML = '<h4>오답 복기</h4>';
+        logs.filter(l => !l.isCorrect).forEach(w => {
+            wArea.innerHTML += `<div class="wrong-card">
+                <strong>Q: ${w.q}</strong><br>
+                <div style="margin-top:8px">
+                    <span style="color:var(--err)">제출: ${w.user}. ${w.opts[w.user-1]}</span><br>
+                    <span style="color:var(--suc)">정답: ${w.ans}. ${w.opts[w.ans-1]}</span>
+                </div>
+                ${w.exp ? `<div style="margin-top:8px; font-size:12px; color:#666; border-top:1px dashed #ddd; padding-top:5px">💡 ${w.exp}</div>` : ''}
+            </div>`;
+        });
+    }
+
+    window.onload = loadData;
+</script>
+</body>
+</html>
