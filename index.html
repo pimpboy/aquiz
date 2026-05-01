@@ -154,11 +154,25 @@
     }
 
     function render() {
-        isResolved = false; const item = filteredQuiz[idx];
-        const s = quizStats[item.q] || {total:0, wrong:0};
-        const rate = s.total > 0 ? Math.round(((Number(s.total) - Number(s.wrong)) / Number(s.total)) * 100) : 100;
+        isResolved = false; 
+        const item = filteredQuiz[idx];
+        
+        // [수정] quizStats에서 최신 데이터를 가져오고 숫자로 확실히 변환
+        const s = quizStats[item.q] || {total: 0, wrong: 0};
+        const t = Number(s.total) || 0;
+        const w = Number(s.wrong) || 0;
+        
+        // 정답률 계산 (정답수 / 총 횟수)
+        const rate = t > 0 ? Math.round(((t - w) / t) * 100) : 100;
+        
         document.getElementById('prog').innerText = `${idx + 1} / ${filteredQuiz.length}`;
-        document.getElementById('q-stat-area').innerHTML = `<div style="font-size:12px; color:#1e8e3e; background:#e6f4ea; padding:8px; border-radius:5px; margin-bottom:15px;">📊 기출: ${s.total} | 오답: ${s.wrong} | 정답률: ${rate}%</div>`;
+        
+        // [상단바 업데이트]
+        document.getElementById('q-stat-area').innerHTML = `
+            <div style="font-size:12px; color:#1e8e3e; background:#e6f4ea; padding:8px; border-radius:5px; margin-bottom:15px;">
+                📊 기출: ${t} | 오답: ${w} | 정답률: ${rate}%
+            </div>`;
+            
         document.getElementById('q').innerText = item.q;
         const container = document.getElementById('opts'); container.innerHTML = '';
         document.getElementById('feedback-area').style.display = 'none';
@@ -167,7 +181,6 @@
             container.innerHTML = `<input id="subj-input" style="width:100%; padding:15px; border:2px solid #ddd; border-radius:10px; box-sizing:border-box;" autocomplete="off">
                                    <button class="btn-main" onclick="checkSubj()">제출</button>`;
         } else {
-            // 보기 셔플
             const shuffledOpts = [...item.opts].sort(() => Math.random() - 0.5);
             shuffledOpts.forEach(o => {
                 const div = document.createElement('div'); div.className = 'opt-item'; div.innerText = o;
@@ -175,7 +188,6 @@
             });
         }
     }
-
     function check(btn, item, userRes) {
         isResolved = true; const isCorrect = userRes.trim() === item.ans.trim();
         if(isCorrect) score++; else wrongHistory.push(item);
@@ -218,34 +230,40 @@
     }
 
     function goToNext() {
-    const item = filteredQuiz[idx];
-    if (!item._skip && item._res !== undefined) {
-        const s = quizStats[item.q] || { total: 0, wrong: 0 };
-        const nTotal = Number(s.total) + 1; 
-        const nWrong = Number(s.wrong) + (item._isCorrect ? 0 : 1);
+        const item = filteredQuiz[idx];
         
-const payload = new FormData();
-payload.append('subject', currentSub);
-payload.append('type', currentType);
-payload.append('id', item.q);
-payload.append('result', item._res);           // 사용자의 오답/정답
-payload.append('isCorrect', item._isCorrect);   // 정답 여부
-payload.append('correctAns', item.ans);        // [필수 추가] 이 데이터가 있어야 통계에 정답이 뜹니다!
+        // [중요] 기록 제외가 아니고 응답이 있을 때만 실행
+        if (!item._skip && item._res !== undefined) {
+            // 1. 현재 로컬 메모리의 통계 업데이트 (이게 있어야 다음 렌더링 때 반영됨)
+            if (!quizStats[item.q]) quizStats[item.q] = { total: 0, wrong: 0 };
+            
+            quizStats[item.q].total = (Number(quizStats[item.q].total) || 0) + 1;
+            if (!item._isCorrect) {
+                quizStats[item.q].wrong = (Number(quizStats[item.q].wrong) || 0) + 1;
+            }
 
-// totalCount, wrongCount는 이제 서버가 시트 데이터를 보고 직접 계산하므로 
-// 굳이 여기서 계산해서 보낼 필요가 없읍니다 (삭제해도 무방).
-        
-        // [추가] 이 한 줄을 넣어주세요!
-        payload.append('correctAns', item.ans); 
-        
-        const rate = ((nWrong / nTotal) * 100).toFixed(1) + "%";
-        payload.append('errorRateTrend', rate);
-        
-        fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: payload });
-        quizStats[item.q] = { total: nTotal, wrong: nWrong };
+            // 2. 서버 전송용 데이터 준비
+            const payload = new FormData();
+            payload.append('subject', currentSub);
+            payload.append('type', currentType);
+            payload.append('id', item.q);
+            payload.append('result', item._res);
+            payload.append('isCorrect', item._isCorrect);
+            payload.append('correctAns', item.ans); 
+            
+            // 3. 서버로 POST 전송
+            fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: payload })
+            .catch(e => console.error("데이터 전송 실패:", e));
+        }
+
+        // 다음 문제로 이동
+        idx++; 
+        if (idx < filteredQuiz.length) {
+            render(); 
+        } else {
+            finishMission();
+        }
     }
-    idx++; if (idx < filteredQuiz.length) render(); else finishMission();
-}
 
     function finishMission() {
         document.getElementById('quiz-ui').style.display = 'none'; document.getElementById('review-ui').style.display = 'block';
