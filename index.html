@@ -224,14 +224,16 @@
         const nTotal = Number(s.total) + 1; 
         const nWrong = Number(s.wrong) + (item._isCorrect ? 0 : 1);
         
-        const payload = new FormData();
-        payload.append('subject', currentSub);
-        payload.append('type', currentType);
-        payload.append('id', item.q);
-        payload.append('result', item._res);
-        payload.append('isCorrect', item._isCorrect);
-        payload.append('totalCount', nTotal);
-        payload.append('wrongCount', nWrong);
+const payload = new FormData();
+payload.append('subject', currentSub);
+payload.append('type', currentType);
+payload.append('id', item.q);
+payload.append('result', item._res);           // 사용자의 오답/정답
+payload.append('isCorrect', item._isCorrect);   // 정답 여부
+payload.append('correctAns', item.ans);        // [필수 추가] 이 데이터가 있어야 통계에 정답이 뜹니다!
+
+// totalCount, wrongCount는 이제 서버가 시트 데이터를 보고 직접 계산하므로 
+// 굳이 여기서 계산해서 보낼 필요가 없읍니다 (삭제해도 무방).
         
         // [추가] 이 한 줄을 넣어주세요!
         payload.append('correctAns', item.ans); 
