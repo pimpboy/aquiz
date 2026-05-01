@@ -185,11 +185,28 @@
     }
 
     function checkSubj() {
-        const input = document.getElementById('subj-input'); const item = filteredQuiz[idx];
-        const isCorrect = input.value.trim().replace(/\s/g, '') === item.ans.trim().replace(/\s/g, '');
-        isResolved = true; if(isCorrect) score++; else wrongHistory.push(item);
-        showFeedback(isCorrect, item, input.value);
+    const input = document.getElementById('subj-input');
+    const item = filteredQuiz[idx];
+    
+    // 1. 공백 제거 및 소문자 변환 (기본 전처리)
+    let userVal = input.value.trim().replace(/\s/g, '');
+    let correctVal = item.ans.trim().replace(/\s/g, '');
+    
+    // 2. 콤마(,)나 슬래시(/)로 구분된 여러 답안 처리 (순서 무관 판정)
+    // 예: "A, B"와 "B, A"를 똑같이 취급합니다.
+    let isCorrect = false;
+    if (correctVal.includes(',') || correctVal.includes('/')) {
+        let userArray = userVal.split(/[,/]/).sort().join('');
+        let correctArray = correctVal.split(/[,/]/).sort().join('');
+        isCorrect = userArray === correctArray;
+    } else {
+        isCorrect = userVal === correctVal;
     }
+
+    isResolved = true;
+    if(isCorrect) score++; else wrongHistory.push(item);
+    showFeedback(isCorrect, item, input.value);
+}
 
     function showFeedback(isCorrect, item, userRes) {
         document.getElementById('f-res').innerText = isCorrect ? "✅ 정답" : "❌ 오답 (정답: " + item.ans + ")";
