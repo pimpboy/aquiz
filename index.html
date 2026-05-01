@@ -83,18 +83,25 @@
     let currentSub='', currentType='', allData=[], filteredQuiz=[], quizStats={}, idx=0, score=0, wrongHistory=[], isResolved=false;
 
     // 시작 시 통계 로드
-    window.onload = function() {
-        try {
-            // GitHub 환경에서는 google.script.run 대신 fetch로 통계를 가져와야 할 수 있으나 
-            // 현재 구조를 유지하기 위해 fetch로 대체 구현 (Code.gs에 getTrainingStats가 있어야 함)
-            fetch(GAS_URL + "?action=getStats")
-                .then(res => res.json())
-                .then(data => {
-                    quizStats = data;
-                    console.log("통계 동기화 완료");
-                }).catch(e => console.log("통계 로딩 대기..."));
-        } catch(e) {}
-    };
+  window.onload = function() {
+    const mainButtons = document.querySelectorAll('.btn-main');
+    // 데이터 로딩 전까지 버튼 비활성화 (선택 사항)
+    mainButtons.forEach(b => b.disabled = true);
+    
+    fetch(GAS_URL + "?action=getStats")
+        .then(res => res.json())
+        .then(data => {
+            quizStats = data;
+            console.log("✅ 오답 통계 시트와 메모리 동기화 완료!");
+            // 데이터 로드 완료 후 버튼 활성화
+            mainButtons.forEach(b => b.disabled = false);
+            document.getElementById('stats-link').innerText = "📊 나의 훈련 데이터 센터 (연결됨)";
+        })
+        .catch(e => {
+            console.error("❌ 통계 로드 실패:", e);
+            alert("통계 데이터를 가져오지 못했습니다. 네트워크를 확인하세요.");
+        });
+};
 
     function selectSubject(s) { 
         currentSub=s; document.getElementById('step1').style.display='none';
