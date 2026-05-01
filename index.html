@@ -171,7 +171,7 @@
         render();
     }
 
-    function render() {
+function render() {
         if (idx >= filteredQuiz.length) { end(); return; }
         const item = filteredQuiz[idx];
         let opts = item.opts.filter(t => t).map(t => ({ text: t, isCorrect: t === item.ansText }));
@@ -182,6 +182,7 @@
         document.getElementById('q').innerText = item.q;
         document.getElementById('feedback-area').style.display = 'none';
         const container = document.getElementById('opts'); container.innerHTML = '';
+        
         opts.forEach((o) => {
             const btn = document.createElement('div');
             btn.className = 'opt-item';
@@ -190,6 +191,7 @@
                 const btns = document.querySelectorAll('.opt-item');
                 btns.forEach(b => b.classList.add('disabled'));
                 const isCorrect = o.isCorrect;
+                
                 if (isCorrect) {
                     score++; btn.classList.add('correct');
                     document.getElementById('feedback-res').innerText = "✅ 정답";
@@ -199,6 +201,9 @@
                     btns.forEach((b, i) => { if(opts[i].isCorrect) b.classList.add('correct'); });
                     document.getElementById('feedback-res').innerText = "❌ 오답";
                     document.getElementById('feedback-res').style.color = "var(--err)";
+                    
+                    // 🚀 [추가] 오답일 때만 시트로 전송 (호출 트리거)
+                    sendWrongAnswer(item.q, `${item.lcat} > ${item.mcat}`, o.text);
                 }
                 logs.push({ ...item, isCorrect });
                 document.getElementById('exp-content').innerText = item.exp || "해설이 없읍니다.";
@@ -249,17 +254,16 @@
 function sendWrongAnswer(problemId, cat, res) {
   const scriptURL = 'https://script.google.com/macros/s/AKfycbwBAnu1xLGBPe45_fWSC77EpZ4v82YbToUIrQZUxRMN32Ei93OGORCzuSfw2_qoJXTuIA/exec';
   
-  // URLSearchParams 방식을 사용하면 구글이 더 잘 받아먹읍니다.
   const payload = new FormData();
-  payload.append('id', problemId);
-  payload.append('category', cat);
-  payload.append('result', res);
+  payload.append('id', problemId);      // 문제 내용
+  payload.append('category', cat);      // 카테고리
+  payload.append('result', res);        // 내가 찍은 오답
 
   fetch(scriptURL, {
-    method: 'POST',s
-    mode: 'no-cors', // 필수
+    method: 'POST', // ← 끝에 있던 's' 제거 완료
+    mode: 'no-cors',
     body: payload
-  }).then(() => console.log("발사 완료!"))
+  }).then(() => console.log("기록 완료!"))
     .catch((err) => console.error("추락: ", err));
 }
 
