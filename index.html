@@ -32,6 +32,22 @@
 
         #feedback-area { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; border: 1px solid var(--border); background: #fafafa; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 주관식 입력창 스타일 */
+#subjective-ans {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    display: block; /* 확실히 보이게 설정 */
+}
+#subjective-ans:focus {
+    border-color: var(--p);
+    outline: none;
+}
     </style>
 </head>
 <body>
@@ -188,49 +204,49 @@
     }
 
     function render() {
-        const item = filteredQuiz[idx];
-        document.getElementById('prog').innerText = `${idx + 1} / ${filteredQuiz.length}`;
-        document.getElementById('stat-wrong').innerText = `⚠️ 누적 오답: ${item.wrongCount}회`;
-        document.getElementById('stat-count').innerText = `📊 누적 학습: ${item.totalCount}회`;
-        document.getElementById('acc').innerText = `정답률: ${idx === 0 ? 0 : Math.round((score/idx)*100)}%`;
-        document.getElementById('q').innerText = item.q;
+    const item = filteredQuiz[idx];
+    document.getElementById('prog').innerText = `${idx + 1} / ${filteredQuiz.length}`;
+    document.getElementById('stat-wrong').innerText = `⚠️ 누적 오답: ${item.wrongCount}회`;
+    document.getElementById('stat-count').innerText = `📊 누적 학습: ${item.totalCount}회`;
+    document.getElementById('acc').innerText = `정답률: ${idx === 0 ? 0 : Math.round((score/idx)*100)}%`;
+    document.getElementById('q').innerText = item.q;
+    
+    const container = document.getElementById('opts'); 
+    container.innerHTML = ''; // 기존 내용 완전 삭제
+    document.getElementById('feedback-area').style.display = 'none';
+
+    if (currentType === '주관식') {
+        // ✍️ 주관식 UI 강제 생성
+        const input = document.createElement('input');
+        input.id = 'subjective-ans';
+        input.type = 'text';
+        input.placeholder = '정답을 입력하고 제출을 누르십시오';
         
-        const container = document.getElementById('opts'); 
-        container.innerHTML = '';
-        document.getElementById('feedback-area').style.display = 'none';
+        const subBtn = document.createElement('button');
+        subBtn.className = 'btn-main';
+        subBtn.innerText = '답안 제출';
+        subBtn.onclick = () => {
+            const userAns = document.getElementById('subjective-ans').value.trim();
+            if(!userAns) { alert("답을 입력하십시오!"); return; }
+            checkSubjective(userAns, item);
+        };
 
-        if (currentType === '주관식') {
-            // ✍️ 주관식 전용 UI 생성
-            const input = document.createElement('input');
-            input.id = 'subjective-ans';
-            input.type = 'text';
-            input.placeholder = '답안을 입력하십시오...';
-            input.style = 'width:100%; padding:15px; font-size:18px; border:2px solid var(--border); border-radius:10px; box-sizing:border-box;';
-            
-            const subBtn = document.createElement('button');
-            subBtn.className = 'btn-main';
-            subBtn.innerText = '답안 제출';
-            subBtn.style.marginTop = '15px';
-            subBtn.onclick = () => {
-                const userAns = input.value.trim();
-                if(!userAns) return alert("답을 입력하십시오!");
-                checkSubjective(userAns, item);
-            };
-
-            container.appendChild(input);
-            container.appendChild(subBtn);
-            input.focus(); // 바로 입력 가능하게 포커스
-        } else {
-            // 🔘 객관식 전용 UI 생성
-            item.opts.filter(o => o).forEach(o => {
-                const btn = document.createElement('div');
-                btn.className = 'opt-item';
-                btn.innerText = o;
-                btn.onclick = () => check(btn, o === item.ans, item);
-                container.appendChild(btn);
-            });
-        }
+        container.appendChild(input);
+        container.appendChild(subBtn);
+        
+        // 모바일 배려: 렌더링 직후 포커스
+        setTimeout(() => input.focus(), 100);
+    } else {
+        // 🔘 객관식 UI 생성
+        item.opts.filter(o => o).forEach(o => {
+            const btn = document.createElement('div');
+            btn.className = 'opt-item';
+            btn.innerText = o;
+            btn.onclick = () => check(btn, o === item.ans, item);
+            container.appendChild(btn);
+        });
     }
+}
 
     // 🎯 주관식 정답 체크 로직
     function checkSubjective(userAns, item) {
