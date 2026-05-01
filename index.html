@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>항공 훈련소 v3.5 (Integrated)</title>
+    <title>항공 훈련소 v3.7 (Integrated Stats)</title>
     <style>
         :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; --border: #dadce0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 15px; display: flex; justify-content: center; }
@@ -11,6 +11,7 @@
         
         .btn-main { width: 100%; padding: 16px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn-sub { width: 100%; padding: 12px; background: #fff; color: var(--p); border: 2px solid var(--p); border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-stat { width: 100%; padding: 12px; background: #f1f3f4; color: #3c4043; border: 1px solid #dadce0; border-radius: 8px; font-weight: bold; margin-top: 20px; cursor: pointer; }
         
         .menu-group { margin-bottom: 20px; animation: fadeIn 0.5s; }
         label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: #5f6368; }
@@ -25,11 +26,11 @@
         .opt-item.wrong { background-color: #fce8e6; border-color: var(--err); color: var(--err); }
         .opt-item.disabled { cursor: default; pointer-events: none; }
 
-        /* 주관식 입력창 스타일 */
         #subjective-ans { width: 100%; padding: 16px; font-size: 18px; border: 2px solid var(--border); border-radius: 10px; box-sizing: border-box; margin-bottom: 10px; display: block; }
         #subjective-ans:focus { border-color: var(--p); outline: none; }
 
         #feedback-area { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; border: 1px solid var(--border); background: #fafafa; }
+        .stat-card { background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 10px; border-left: 5px solid var(--p); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -38,12 +39,12 @@
 <div id="app">
     <div id="loader" style="display:none; text-align:center; padding-top:100px;">
         <div style="font-size:24px; margin-bottom:10px;">📡</div>
-        <div>데이터 링크 동기화 중...</div>
+        <div>데이터 동기화 중...</div>
     </div>
 
     <div id="step1" class="menu-group">
-        <h2 style="margin-top:0; text-align:center;">✈️ 항공 훈련소 v3.5</h2>
-        <label>과목을 선택하십시오</label>
+        <h2 style="margin-top:0; text-align:center;">✈️ 항공 훈련소 v3.7</h2>
+        <label>훈련 과목을 선택하십시오</label>
         <button class="btn-main" onclick="selectSubject('법규')">항공법규</button>
         <button class="btn-main" style="background:#5f6368" onclick="selectSubject('관제')">관제일반</button>
     </div>
@@ -53,6 +54,7 @@
         <label>훈련 유형을 선택하십시오</label>
         <button class="btn-main" onclick="selectType('객관식')">객관식 훈련</button>
         <button class="btn-main" onclick="selectType('주관식')">주관식 훈련</button>
+        <button class="btn-stat" onclick="showStats()">📊 나의 오답 분석 보고서</button>
         <button class="btn-sub" onclick="goBack(1)">처음으로</button>
     </div>
 
@@ -65,6 +67,13 @@
         <button class="btn-main" onclick="startSession('weak')">⚠️ 취약 문제 정밀 타격 (TOP 30)</button>
         <button class="btn-main" style="background:#34a853" onclick="startSession('smart')">🎲 지능형 랜덤 (200문제)</button>
         <button class="btn-sub" onclick="goBack(2)">이전 단계로</button>
+    </div>
+
+    <div id="stat-view" class="menu-group" style="display:none">
+        <h2 style="text-align:center;">📊 학습 분석 결과</h2>
+        <div id="stat-summary" class="stat-card"></div>
+        <div id="stat-list"></div>
+        <button class="btn-main" onclick="goBack(2)">확인 완료</button>
     </div>
 
     <div id="quiz-ui" style="display:none">
@@ -87,9 +96,10 @@
 </div>
 
 <script>
+    // [중요 설정] 아우님의 시트 GID를 입력하십시오!
     const GID_MAP = {
-        '법규': { '객관식': '0', '주관식': '2011973258' },
-        '관제': { '객관식': '1053182571', '주관식': '217691441' }
+        '법규': { '객관식': '0', '주관식': '2011973258', '통계': '1384146265' },
+        '관제': { '객관식': '1053182571', '주관식': '217691441', '통계': '1522345468' }
     };
     const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?single=true&output=csv';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbxtjoaIxCQy8e97qwIhHPhVv5JXRDFaJQxKqMyFUZ_j7aoS_t44vnP-gr4Z77YujA-A/exec';
@@ -101,7 +111,7 @@
         currentSub = sub;
         document.getElementById('step1').style.display = 'none';
         document.getElementById('step2').style.display = 'block';
-        document.getElementById('selected-sub-title').innerText = `🚀 ${sub} 훈련 코스`;
+        document.getElementById('selected-sub-title').innerText = `🚀 ${sub} 코스 관제 중`;
     }
 
     async function selectType(type) {
@@ -118,52 +128,90 @@
             document.getElementById('step3').style.display = 'block';
             document.getElementById('mission-title').innerText = `${currentSub} > ${type}`;
         } catch (e) {
-            alert("데이터 로드 실패! GID와 웹 게시 설정을 확인하십시오.");
+            alert("데이터 로딩 실패! 웹 게시 및 GID를 확인하십시오.");
             location.reload();
         }
     }
 
     function parseCSVData(text) {
-    const rows = text.split('\n').map(row => {
-        const cells = [];
-        let cell = '', inQuotes = false;
-        for(let char of row) {
-            if(char === '"') inQuotes = !inQuotes;
-            else if(char === ',' && !inQuotes) { cells.push(cell.trim()); cell = ''; }
-            else cell += char;
-        }
-        cells.push(cell.trim());
-        return cells;
-    });
+        const rows = text.split('\n').map(row => {
+            const cells = [];
+            let cell = '', inQuotes = false;
+            for(let char of row) {
+                if(char === '"') inQuotes = !inQuotes;
+                else if(char === ',' && !inQuotes) { cells.push(cell.trim()); cell = ''; }
+                else cell += char;
+            }
+            cells.push(cell.trim());
+            return cells;
+        });
 
-    const h = rows[0];
-    const find = (k) => h.findIndex(name => name.includes(k));
-    
-    allData = rows.slice(1).map(r => {
-        let answer = '';
-        if (currentType === '주관식') {
-            answer = r[4]; // E열 (Index 4)
-        } else {
-            answer = r[8]; // I열 (Index 8) - 객관식 정답 텍스트가 바로 있는 경우
-            // 만약 I열이 정답 번호(1,2,3,4)라면 아래 주석을 해제하고 위 줄을 지우십시오.
-            // answer = r[find('보기' + r[8])]; 
-        }
+        const h = rows[0];
+        const find = (k) => h.findIndex(name => name.includes(k));
+        
+        allData = rows.slice(1).map(r => {
+            let answer = '';
+            if (currentType === '주관식') {
+                answer = r[4]; // 주관식: E열 (Index 4)
+            } else {
+                answer = r[8]; // 객관식: I열 (Index 8)
+            }
 
-        return {
-            lcat: r[find('대분류')],
-            q: r[3], // D열 (Index 3) 고정
-            opts: [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]],
-            ans: answer,
-            exp: r[find('해설')],
-            wrongCount: parseInt(r[10]) || 0, // K열
-            totalCount: parseInt(r[11]) || 0  // L열
-        };
-    }).filter(i => i.q);
+            return {
+                lcat: r[find('대분류')],
+                q: r[3], // D열 (Index 3) 문제 고정
+                opts: [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]],
+                ans: answer,
+                exp: r[find('해설')],
+                wrongCount: parseInt(r[10]) || 0, // K열
+                totalCount: parseInt(r[11]) || 0  // L열
+            };
+        }).filter(i => i.q);
 
         const lcats = [...new Set(allData.map(d => d.lcat))].filter(Boolean);
         const lSelect = document.getElementById('lcat-select');
-        lSelect.innerHTML = '<option value="ALL">전체 대분류</option>';
+        lSelect.innerHTML = '<option value="ALL">전체 카테고리</option>';
         lcats.forEach(c => lSelect.innerHTML += `<option value="${c}">${c}</option>`);
+    }
+
+    async function showStats() {
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('loader').style.display = 'block';
+        
+        const gid = GID_MAP[currentSub]['통계'];
+        try {
+            const res = await fetch(`${BASE_URL}&gid=${gid}`);
+            const text = await res.text();
+            const rows = text.split('\n').map(r => r.split(','));
+            
+            const problemMap = {};
+            rows.slice(1).forEach(r => {
+                const q = r[2]; // 통계 시트의 문제 열
+                if(q) problemMap[q] = (problemMap[q] || 0) + 1;
+            });
+
+            const sorted = Object.entries(problemMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            
+            document.getElementById('stat-summary').innerHTML = `
+                <strong>총 오답 누적:</strong> ${rows.length - 1}회<br>
+                <strong>분석 결과:</strong> 최근 특정 파트에서 집중 오답 발생 중
+            `;
+
+            let listHtml = '<h4>🚨 집중 복습 필요 (오답 TOP 5)</h4>';
+            if(sorted.length === 0) listHtml += '<p>아직 오답 데이터가 없읍니다. 클린 비행 중!</p>';
+            sorted.forEach(([q, count]) => {
+                listHtml += `<div style="padding:10px; border-bottom:1px solid #eee; font-size:14px;">
+                    <strong>[${count}회 낙방]</strong> ${q.substring(0, 60)}...
+                </div>`;
+            });
+            
+            document.getElementById('stat-list').innerHTML = listHtml;
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('stat-view').style.display = 'block';
+        } catch (e) {
+            alert("통계 시트 GID가 설정되지 않았거나 데이터가 없읍니다.");
+            goBack(2);
+        }
     }
 
     function startSession(mode) {
@@ -182,7 +230,6 @@
             }
         }
 
-        if(filteredQuiz.length === 0) { alert("문제가 없읍니다."); return; }
         idx = 0; score = 0;
         document.getElementById('step3').style.display = 'none';
         document.getElementById('quiz-ui').style.display = 'block';
@@ -192,8 +239,8 @@
     function render() {
         const item = filteredQuiz[idx];
         document.getElementById('prog').innerText = `${idx + 1} / ${filteredQuiz.length}`;
-        document.getElementById('stat-wrong').innerText = `⚠️ 누적 오답: ${item.wrongCount}회`;
-        document.getElementById('stat-count').innerText = `📊 누적 학습: ${item.totalCount}회`;
+        document.getElementById('stat-wrong').innerText = `⚠️ 오답: ${item.wrongCount}회`;
+        document.getElementById('stat-count').innerText = `📊 기출: ${item.totalCount}회`;
         document.getElementById('acc').innerText = `정답률: ${idx === 0 ? 0 : Math.round((score/idx)*100)}%`;
         document.getElementById('q').innerText = item.q;
         
@@ -204,18 +251,11 @@
         if (currentType === '주관식') {
             const input = document.createElement('input');
             input.id = 'subjective-ans';
-            input.type = 'text';
-            input.placeholder = '정답을 입력하십시오';
-            
+            input.placeholder = '답안을 입력하십시오';
             const subBtn = document.createElement('button');
             subBtn.className = 'btn-main';
             subBtn.innerText = '답안 제출';
-            subBtn.onclick = () => {
-                const userAns = document.getElementById('subjective-ans').value.trim();
-                if(!userAns) return alert("답을 입력하십시오!");
-                checkSubjective(userAns, item);
-            };
-
+            subBtn.onclick = () => checkSubjective(input.value.trim(), item);
             container.appendChild(input);
             container.appendChild(subBtn);
             setTimeout(() => input.focus(), 100);
@@ -233,66 +273,44 @@
     function check(btn, isCorrect, item) {
         const btns = document.querySelectorAll('.opt-item');
         btns.forEach(b => b.classList.add('disabled'));
-        if (isCorrect) {
-            score++; btn.classList.add('correct');
-            document.getElementById('feedback-res').innerText = "✅ 정답입니다!";
-            document.getElementById('feedback-res').style.color = "var(--suc)";
-        } else {
-            btn.classList.add('wrong');
-            btns.forEach(b => { if(b.innerText === item.ans) b.classList.add('correct'); });
-            document.getElementById('feedback-res').innerText = "❌ 틀렸읍니다!";
-            document.getElementById('feedback-res').style.color = "var(--err)";
-        }
+        if (isCorrect) { score++; btn.classList.add('correct'); document.getElementById('feedback-res').innerText = "✅ 정답입니다!"; }
+        else { btn.classList.add('wrong'); btns.forEach(b => { if(b.innerText === item.ans) b.classList.add('correct'); }); document.getElementById('feedback-res').innerText = "❌ 틀렸읍니다!"; }
         sendDataToGAS(item.q, currentSub, currentType, btn.innerText, isCorrect);
         showFeedback(item);
     }
 
     function checkSubjective(userAns, item) {
+        if(!userAns) return alert("답을 입력하십시오!");
         const input = document.getElementById('subjective-ans');
         const isCorrect = userAns.replace(/\s/g, "").toLowerCase() === item.ans.replace(/\s/g, "").toLowerCase();
-        
         input.disabled = true;
-        if (isCorrect) {
-            score++;
-            input.style.backgroundColor = "#e6f4ea";
-            document.getElementById('feedback-res').innerText = "✅ 정답입니다!";
-            document.getElementById('feedback-res').style.color = "var(--suc)";
-        } else {
-            input.style.backgroundColor = "#fce8e6";
-            document.getElementById('feedback-res').innerText = "❌ 틀렸읍니다!";
-            document.getElementById('feedback-res').style.color = "var(--err)";
-            document.getElementById('feedback-res').innerHTML += `<br><span style="font-size:14px; color:#333;">(정답: ${item.ans})</span>`;
-        }
+        if (isCorrect) { score++; input.style.backgroundColor = "#e6f4ea"; document.getElementById('feedback-res').innerText = "✅ 정답입니다!"; }
+        else { input.style.backgroundColor = "#fce8e6"; document.getElementById('feedback-res').innerText = "❌ 틀렸읍니다!"; document.getElementById('feedback-res').innerHTML += `<br><small>(정답: ${item.ans})</small>`; }
         sendDataToGAS(item.q, currentSub, currentType, userAns, isCorrect);
         showFeedback(item);
     }
 
     function showFeedback(item) {
         document.getElementById('exp-content').innerText = item.exp || "해설 데이터가 없읍니다.";
-        const area = document.getElementById('feedback-area');
-        area.style.display = 'block';
-        setTimeout(() => area.scrollIntoView({ behavior: 'smooth' }), 100);
+        document.getElementById('feedback-area').style.display = 'block';
+        setTimeout(() => document.getElementById('feedback-area').scrollIntoView({ behavior: 'smooth' }), 100);
     }
 
     function sendDataToGAS(q, sub, type, res, isCorrect) {
         const payload = new FormData();
-        payload.append('subject', sub);
-        payload.append('type', type);
-        payload.append('id', q);
-        payload.append('result', res);
-        payload.append('isCorrect', isCorrect);
+        payload.append('subject', sub); payload.append('type', type);
+        payload.append('id', q); payload.append('result', res); payload.append('isCorrect', isCorrect);
         fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: payload });
     }
 
     function goToNext() { 
         idx++; 
         if(idx < filteredQuiz.length) { render(); window.scrollTo(0,0); } 
-        else { alert("훈련 종료!"); location.reload(); }
+        else { alert("미션 종료!"); location.reload(); }
     }
 
     function goBack(step) {
-        document.getElementById('step2').style.display = 'none';
-        document.getElementById('step3').style.display = 'none';
+        document.querySelectorAll('.menu-group, #quiz-ui, #stat-view').forEach(el => el.style.display = 'none');
         document.getElementById(`step${step}`).style.display = 'block';
     }
 </script>
