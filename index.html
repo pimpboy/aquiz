@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>항공 훈련소 v6.1</title>
+    <title>항공 훈련소 v6.3</title>
     <style>
-        :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; --border: #dadce0; --warn: #f9ab00; --soft: #f1f3f4; }
+        :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; --border: #dadce0; --warn: #f9ab00; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 15px; display: flex; justify-content: center; }
         #app { background: #fff; width: 100%; max-width: 500px; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 90vh; display: flex; flex-direction: column; box-sizing: border-box; }
         .btn-main { width: 100%; padding: 16px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 17px; cursor: pointer; margin-top: 10px; }
@@ -14,7 +14,7 @@
         .btn-stop { background: #fee; color: var(--err); border: 1px solid #fadad7; padding: 6px 12px; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: bold; }
         .header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #70757a; margin-bottom: 15px; }
         .q-text { font-size: 19px; font-weight: bold; margin-bottom: 20px; line-height: 1.5; word-break: keep-all; }
-        .opt-item { padding: 16px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; cursor: pointer; }
+        .opt-item { padding: 16px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
         .opt-item.correct { background: #e6f4ea; color: var(--suc); border-color: var(--suc); font-weight: bold; }
         .opt-item.wrong { background: #fce8e6; color: var(--err); border-color: var(--err); }
         #feedback-area { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 1px solid #ddd; }
@@ -25,13 +25,13 @@
 <body>
 <div id="app">
     <div id="step1">
-        <h2 style="text-align:center;">✈️ 항공 훈련소 v6.1</h2>
+        <h2 style="text-align:center;">✈️ 항공 훈련소 v6.3</h2>
         <button class="btn-main" onclick="selectSubject('법규')">항공법규 훈련</button>
         <button class="btn-main" style="background:#5f6368" onclick="selectSubject('관제')">관제일반 훈련</button>
         <a id="stats-link" class="btn-stats" target="_blank">📊 나의 훈련 데이터 센터</a>
     </div>
 
-    <div id="loader" style="display:none; text-align:center; padding-top:50px;">📡 데이터 수신 중...</div>
+    <div id="loader" style="display:none; text-align:center; padding-top:50px;">📡 관제탑 통계 수신 중...</div>
 
     <div id="step2" style="display:none;">
         <h3 id="sub-title"></h3>
@@ -68,48 +68,46 @@
     <div id="review-ui" style="display:none;">
         <h2 style="text-align:center;">📝 미션 디브리핑</h2>
         <div id="report-summary" class="summary-box"></div>
-        <div id="review-container"></div>
+        <div id="review-container" style="max-height:400px; overflow-y:auto; margin-bottom:20px;"></div>
         <button class="btn-main" onclick="location.reload()">새로운 훈련 시작</button>
     </div>
 </div>
 
 <script>
-    // [중요] 본인의 최신 배포 URL로 수정하세요!
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec'; 
+    // [중요] 아우님의 최신 GAS 배포 URL을 입력하세요!
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxtjoaIxCQy8e97qwIhHPhVv5JXRDFaJQxKqMyFUZ_j7aoS_t44vnP-gr4Z77YujA-A/exec'; 
     const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?output=csv';
     const GID = { '법규':{'객관식':'0','주관식':'2011973258'}, '관제':{'객관식':'1053182571','주관식':'217691441'} };
     
     document.getElementById('stats-link').href = GAS_URL;
-
     let currentSub='', currentType='', allData=[], filteredQuiz=[], quizStats={}, idx=0, score=0, wrongHistory=[], isResolved=false;
 
     // 시작 시 통계 로드
     window.onload = function() {
         try {
-            google.script.run.withSuccessHandler(data => {
-                quizStats = JSON.parse(data);
-                console.log("통계 데이터 동기화 완료");
-            }).getTrainingStats();
-        } catch(e) { console.warn("GAS 연동 대기 중..."); }
+            // GitHub 환경에서는 google.script.run 대신 fetch로 통계를 가져와야 할 수 있으나 
+            // 현재 구조를 유지하기 위해 fetch로 대체 구현 (Code.gs에 getTrainingStats가 있어야 함)
+            fetch(GAS_URL + "?action=getStats")
+                .then(res => res.json())
+                .then(data => {
+                    quizStats = data;
+                    console.log("통계 동기화 완료");
+                }).catch(e => console.log("통계 로딩 대기..."));
+        } catch(e) {}
     };
 
     function selectSubject(s) { 
-        currentSub=s; 
-        document.getElementById('step1').style.display='none';
+        currentSub=s; document.getElementById('step1').style.display='none';
         document.getElementById('step2').style.display='block';
         document.getElementById('sub-title').innerText = "🛸 " + s + " 과정";
     }
 
     async function selectType(t) {
-        currentType=t; 
-        document.getElementById('step2').style.display='none';
-        document.getElementById('loader').style.display='block';
+        currentType=t; document.getElementById('step2').style.display='none'; document.getElementById('loader').style.display='block';
         try {
             const res = await fetch(`${BASE_URL}&gid=${GID[currentSub][t]}`);
-            const text = await res.text();
-            parseCSV(text);
-            document.getElementById('loader').style.display='none';
-            document.getElementById('step3').style.display='block';
+            const text = await res.text(); parseCSV(text);
+            document.getElementById('loader').style.display='none'; document.getElementById('step3').style.display='block';
             document.getElementById('mission-title').innerText = "🎯 " + currentSub + " " + t;
         } catch(e) { alert("데이터 로드 실패!"); location.reload(); }
     }
@@ -121,104 +119,75 @@
             if (c === '"') inQuotes = !inQuotes;
             else if (c === ',' && !inQuotes) { row.push(cell.trim()); cell = ''; }
             else if ((c === '\n' || c === '\r') && !inQuotes) {
-                row.push(cell.trim()); cell = '';
-                if (row.length > 1) rows.push(row);
+                row.push(cell.trim()); cell = ''; if (row.length > 1) rows.push(row);
                 row = []; if (c === '\r' && text[i+1] === '\n') i++;
             } else cell += c;
         }
         if (cell || row.length > 0) { row.push(cell.trim()); rows.push(row); }
-
         const h = rows[0].map(v => v.replace(/\s/g, ''));
         const find = (k) => h.findIndex(v => v.includes(k));
-        const qIdx = find('문제'), b1Idx = find('보기1'), ansIdx = find('정답'), expIdx = find('해설');
-
+        const qIdx = find('문제'), bIdx = find('보기1'), aIdx = find('정답'), eIdx = find('해설');
         allData = rows.slice(1).map(r => {
             if(!r[qIdx]) return null;
-            const options = [r[b1Idx], r[b1Idx+1], r[b1Idx+2], r[b1Idx+3]].filter(Boolean);
-            let answer = r[ansIdx];
-            if(currentType === '객관식' && !isNaN(answer)) {
-                answer = options[parseInt(answer)-1] || answer;
-            }
-            return { q: r[qIdx], ans: answer, exp: r[expIdx] || "해설 없음", opts: options };
+            const options = [r[bIdx], r[bIdx+1], r[bIdx+2], r[bIdx+3]].filter(Boolean);
+            let ans = r[aIdx];
+            if(currentType === '객관식' && !isNaN(ans)) ans = options[parseInt(ans)-1] || ans;
+            return { q: r[qIdx], ans: ans, exp: r[eIdx] || "해설 없음", opts: options };
         }).filter(v => v);
     }
 
- // ... (상단 스타일 및 초기 설정 생략) ...
-
-function startSession(mode) {
-    let pool = [...allData];
-    
-    // 1. 우선순위 정렬 (기출 적은 순 또는 오답 많은 순)
-    if(mode === 'omakase') {
-        pool.sort((a,b) => (quizStats[a.q]?.total || 0) - (quizStats[b.q]?.total || 0));
-        filteredQuiz = pool.slice(0, 200);
-    } else {
-        pool.sort((a,b) => (quizStats[b.q]?.wrong || 0) - (quizStats[a.q]?.wrong || 0));
-        filteredQuiz = pool.slice(0, 100);
+    function startSession(mode) {
+        let pool = [...allData];
+        if(mode === 'omakase') {
+            pool.sort((a,b) => (quizStats[a.q]?.total || 0) - (quizStats[b.q]?.total || 0));
+            filteredQuiz = pool.slice(0, 200);
+        } else {
+            pool.sort((a,b) => (quizStats[b.q]?.wrong || 0) - (quizStats[a.q]?.wrong || 0));
+            filteredQuiz = pool.slice(0, 100);
+        }
+        // 문제 셔플
+        filteredQuiz.sort(() => Math.random() - 0.5);
+        idx=0; score=0; wrongHistory=[];
+        document.getElementById('step3').style.display='none';
+        document.getElementById('quiz-ui').style.display='block';
+        render();
     }
 
-    // [핵심 추가] 뽑힌 문제들을 한 번 더 무작위로 섞기 (문제 순서 셔플)
-    filteredQuiz.sort(() => Math.random() - 0.5);
+    function render() {
+        isResolved = false; const item = filteredQuiz[idx];
+        const s = quizStats[item.q] || {total:0, wrong:0};
+        const rate = s.total > 0 ? Math.round(((Number(s.total) - Number(s.wrong)) / Number(s.total)) * 100) : 100;
+        document.getElementById('prog').innerText = `${idx + 1} / ${filteredQuiz.length}`;
+        document.getElementById('q-stat-area').innerHTML = `<div style="font-size:12px; color:#1e8e3e; background:#e6f4ea; padding:8px; border-radius:5px; margin-bottom:15px;">📊 기출: ${s.total} | 오답: ${s.wrong} | 정답률: ${rate}%</div>`;
+        document.getElementById('q').innerText = item.q;
+        const container = document.getElementById('opts'); container.innerHTML = '';
+        document.getElementById('feedback-area').style.display = 'none';
 
-    idx=0; score=0; wrongHistory=[];
-    document.getElementById('step3').style.display='none';
-    document.getElementById('quiz-ui').style.display='block';
-    render();
-}
-
-function render() {
-    isResolved = false;
-    const item = filteredQuiz[idx];
-    const s = quizStats[item.q] || {total:0, wrong:0};
-    const rate = s.total > 0 ? Math.round(((s.total - s.wrong) / s.total) * 100) : 100;
-
-    document.getElementById('prog').innerText = `${idx + 1} / ${filteredQuiz.length}`;
-    document.getElementById('q-stat-area').innerHTML = `
-        <div style="font-size:12px; color:#1e8e3e; background:#e6f4ea; padding:8px; border-radius:5px; margin-bottom:15px;">
-            📊 누적 기출: ${s.total}회 | 오답: ${s.wrong}회 | 정답률: ${rate}%
-        </div>`;
-    document.getElementById('q').innerText = item.q;
-    
-    const container = document.getElementById('opts'); container.innerHTML = '';
-    document.getElementById('feedback-area').style.display = 'none';
-
-    if(currentType === '주관식') {
-        container.innerHTML = `<input id="subj-input" style="width:100%; padding:15px; border:2px solid #ddd; border-radius:10px; box-sizing:border-box;">
-                               <button class="btn-main" onclick="checkSubj()">제출</button>`;
-    } else {
-        // [핵심 추가] 보기 셔플 로직
-        // 원본 보기를 복사해서 무작위로 섞음
-        const shuffledOpts = [...item.opts].sort(() => Math.random() - 0.5);
-        
-        shuffledOpts.forEach(o => {
-            const div = document.createElement('div'); 
-            div.className = 'opt-item'; 
-            div.innerText = o;
-            div.onclick = () => { if(!isResolved) check(div, item, o); };
-            container.appendChild(div);
-        });
+        if(currentType === '주관식') {
+            container.innerHTML = `<input id="subj-input" style="width:100%; padding:15px; border:2px solid #ddd; border-radius:10px; box-sizing:border-box;" autocomplete="off">
+                                   <button class="btn-main" onclick="checkSubj()">제출</button>`;
+        } else {
+            // 보기 셔플
+            const shuffledOpts = [...item.opts].sort(() => Math.random() - 0.5);
+            shuffledOpts.forEach(o => {
+                const div = document.createElement('div'); div.className = 'opt-item'; div.innerText = o;
+                div.onclick = () => { if(!isResolved) check(div, item, o); }; container.appendChild(div);
+            });
+        }
     }
-}
-
-// ... (이하 전송 및 리로드 로직 동일) ...
 
     function check(btn, item, userRes) {
-        isResolved = true;
-        const isCorrect = userRes.trim() === item.ans.trim();
+        isResolved = true; const isCorrect = userRes.trim() === item.ans.trim();
         if(isCorrect) score++; else wrongHistory.push(item);
         btn.classList.add(isCorrect ? 'correct' : 'wrong');
-        document.querySelectorAll('.opt-item').forEach(el => {
-            if(el.innerText.trim() === item.ans.trim()) el.classList.add('correct');
-        });
+        document.querySelectorAll('.opt-item').forEach(el => { if(el.innerText.trim() === item.ans.trim()) el.classList.add('correct'); });
         showFeedback(isCorrect, item, userRes);
     }
 
     function checkSubj() {
-        const input = document.getElementById('subj-input');
-        const item = filteredQuiz[idx];
+        const input = document.getElementById('subj-input'); const item = filteredQuiz[idx];
         const isCorrect = input.value.trim().replace(/\s/g, '') === item.ans.trim().replace(/\s/g, '');
-        isResolved = true;
-        if(isCorrect) score++; else wrongHistory.push(item);
+        isResolved = true; if(isCorrect) score++; else wrongHistory.push(item);
         showFeedback(isCorrect, item, input.value);
     }
 
@@ -233,57 +202,36 @@ function render() {
 
     function goToNext() {
         const item = filteredQuiz[idx];
-        
-        // 데이터 전송 로직 (doPost와 규격 일치화)
         if (!item._skip && item._res !== undefined) {
             const s = quizStats[item.q] || { total: 0, wrong: 0 };
-            const newTotal = Number(s.total) + 1;
-            const newWrong = Number(s.wrong) + (item._isCorrect ? 0 : 1);
+            const nTotal = Number(s.total) + 1; const nWrong = Number(s.wrong) + (item._isCorrect ? 0 : 1);
             
-            sendDataToGAS(item.q, currentSub, currentType, item._res, item._isCorrect, newTotal, newWrong);
+            // 데이터 전송
+            const payload = new FormData();
+            payload.append('subject', currentSub); payload.append('type', currentType); payload.append('id', item.q);
+            payload.append('result', item._res); payload.append('isCorrect', item._isCorrect);
+            payload.append('totalCount', nTotal); payload.append('wrongCount', nWrong);
+            const rate = ((nWrong / nTotal) * 100).toFixed(1) + "%";
+            payload.append('errorRateTrend', rate);
             
-            // 로컬 통계 실시간 업데이트
-            quizStats[item.q] = { total: newTotal, wrong: newWrong };
+            fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: payload });
+            quizStats[item.q] = { total: nTotal, wrong: nWrong };
         }
-
-        idx++;
-        if (idx < filteredQuiz.length) render(); 
-        else finishMission();
-    }
-
-    function sendDataToGAS(q, sub, type, res, isCorrect, total, wrong) {
-        const payload = new FormData();
-        payload.append('subject', sub);
-        payload.append('type', type);
-        payload.append('id', q);
-        payload.append('result', res);
-        payload.append('isCorrect', isCorrect);
-        payload.append('totalCount', total);
-        payload.append('wrongCount', wrong);
-        
-        const rate = total > 0 ? ((wrong / total) * 100).toFixed(1) + "%" : "0%";
-        payload.append('errorRateTrend', rate);
-
-        fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: payload });
+        idx++; if (idx < filteredQuiz.length) render(); else finishMission();
     }
 
     function finishMission() {
-        document.getElementById('quiz-ui').style.display = 'none';
-        document.getElementById('review-ui').style.display = 'block';
+        document.getElementById('quiz-ui').style.display = 'none'; document.getElementById('review-ui').style.display = 'block';
         const rate = idx > 0 ? Math.round((score / idx) * 100) : 0;
-        document.getElementById('report-summary').innerHTML = `<h3>정답률 ${rate}% (${score}/${idx})</h3><p>수고하셨읍니다!</p>`;
-        const container = document.getElementById('review-container');
-        container.innerHTML = '<h4>❌ 오답 리뷰</h4>';
+        document.getElementById('report-summary').innerHTML = `<h3>정답률 ${rate}% (${score}/${idx})</h3><p>오늘도 안전 비행하셨읍니다!</p>`;
+        const container = document.getElementById('review-container'); container.innerHTML = '<h4>❌ 오답 다시보기</h4>';
         if(wrongHistory.length === 0) container.innerHTML += '<p>틀린 문제가 없읍니다. 완벽합니다!</p>';
         wrongHistory.forEach((m, i) => {
             container.innerHTML += `<div class="review-card"><b>${i+1}. ${m.q}</b><br><small style="color:red">정답: ${m.ans}</small><p style="font-size:12px; color:#666; margin-top:5px;">${m.exp}</p></div>`;
         });
     }
 
-    function goBack(s) {
-        document.getElementById('step'+(s+1)).style.display = 'none';
-        document.getElementById('step'+s).style.display = 'block';
-    }
+    function goBack(s) { document.getElementById('step'+(s+1)).style.display = 'none'; document.getElementById('step'+s).style.display = 'block'; }
 </script>
 </body>
 </html>
