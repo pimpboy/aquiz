@@ -245,15 +245,23 @@
             wArea.innerHTML += `<div class="wrong-card"><strong>Q: ${w.q}</strong><br><br><span style="color:var(--suc)">정답: ${w.ansText}</span></div>`;
         });	
     }
+
 function sendWrongAnswer(problemId, cat, res) {
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwBAnu1xLGBPe45_fWSC77EpZ4v82YbToUIrQZUxRMN32Ei93OGORCzuSfw2_qoJXTuIA/exec';
-        fetch(scriptURL, {
-            method: 'POST',
-            mode: 'no-cors', // 구글 스크립트와 통신할 때 필수 설정입니다
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: problemId, category: cat, result: res })
-        });
-    }
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbwBAnu1xLGBPe45_fWSC77EpZ4v82YbToUIrQZUxRMN32Ei93OGORCzuSfw2_qoJXTuIA/exec';
+  
+  // URLSearchParams 방식을 사용하면 구글이 더 잘 받아먹읍니다.
+  const payload = new FormData();
+  payload.append('id', problemId);
+  payload.append('category', cat);
+  payload.append('result', res);
+
+  fetch(scriptURL, {
+    method: 'POST',s
+    mode: 'no-cors', // 필수
+    body: payload
+  }).then(() => console.log("발사 완료!"))
+    .catch((err) => console.error("추락: ", err));
+}
 
     window.onload = loadData;
 </script>
