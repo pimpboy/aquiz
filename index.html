@@ -125,17 +125,36 @@
         });
         
         const h = rows[0];
-        const find = (k) => h.findIndex(name => name.includes(k));
+    const find = (k) => h.findIndex(name => name.includes(k));
+    
+    allData = rows.slice(1).map(r => {
+        let answerText = '';
+        if (currentType === '주관식') {
+            answerText = r[4]; // 주관식: E열(Index 4) 정답 텍스트
+        } else {
+            // 객관식 정답 처리 로직 보강
+            const rawAns = r[find('정답')]; // '정답' 열의 값 (예: 1 또는 지방항공청장)
+            const opt1 = r[find('보기1')], opt2 = r[find('보기2')], opt3 = r[find('보기3')], opt4 = r[find('보기4')];
+            const opts = [opt1, opt2, opt3, opt4];
 
-        allData = rows.slice(1).map(r => ({
+            // 만약 정답 열이 숫자(1,2,3,4)라면 해당 보기 텍스트를 정답으로 설정
+            if (rawAns == "1") answerText = opt1;
+            else if (rawAns == "2") answerText = opt2;
+            else if (rawAns == "3") answerText = opt3;
+            else if (rawAns == "4") answerText = opt4;
+            else answerText = rawAns; // 숫자 형태가 아니면 써진 그대로를 정답으로 간주
+        }
+
+        return {
             lcat: r[find('대분류')],
-            q: r[3], // D열
-            ans: (currentType === '주관식' ? r[4] : r[8]), 
-            exp: r[9],
-            opts: [r[4], r[5], r[6], r[7]],
+            q: r[3], // D열 (Index 3) 문제
+            opts: [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]],
+            ans: answerText,
+            exp: r[find('해설')],
             wrongCount: parseInt(r[10]) || 0,
             totalCount: parseInt(r[11]) || 0
-        })).filter(i => i.q);
+        };
+    }).filter(i => i.q);
 
         const lcats = [...new Set(allData.map(d => d.lcat))].filter(Boolean);
         const lSelect = document.getElementById('lcat-select');
