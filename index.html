@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>항공 훈련소 v4.2 (Anti-Crash)</title>
+    <title>항공 훈련소 v4.4 (Full Stats)</title>
     <style>
-        :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; --border: #dadce0; }
+        :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; --border: #dadce0; --warn: #f9ab00; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 15px; display: flex; justify-content: center; }
         #app { background: #fff; width: 100%; max-width: 500px; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: auto; min-height: 90vh; display: flex; flex-direction: column; box-sizing: border-box; }
         .btn-main { width: 100%; padding: 16px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 17px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-stats { width: 100%; padding: 16px; background: var(--warn); color: #000; border: none; border-radius: 8px; font-weight: bold; font-size: 17px; cursor: pointer; transition: 0.3s; margin-top: 20px; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
         .btn-sub { width: 100%; padding: 12px; background: #fff; color: var(--p); border: 2px solid var(--p); border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-stop { background: #fee; color: var(--err); border: 1px solid #fadad7; padding: 5px 12px; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: bold; }
         .menu-group { margin-bottom: 20px; animation: fadeIn 0.5s; }
@@ -29,18 +30,22 @@
 </head>
 <body>
 <div id="app">
-    <div id="loader" style="display:none; text-align:center; padding-top:100px;">📡<br>데이터 정밀 복구 중...</div>
+    <div id="loader" style="display:none; text-align:center; padding-top:100px;">📡<br>데이터 로딩 중...</div>
+
     <div id="step1" class="menu-group">
-        <h2 style="text-align:center;">✈️ 항공 훈련소 v4.2</h2>
+        <h2 style="text-align:center;">✈️ 항공 훈련소 v4.4</h2>
         <button class="btn-main" onclick="selectSubject('법규')">항공법규</button>
         <button class="btn-main" style="background:#5f6368" onclick="selectSubject('관제')">관제일반</button>
+        <a id="stats-link" class="btn-stats" target="_blank">📊 나의 훈련 기록 (통계)</a>
     </div>
+
     <div id="step2" class="menu-group" style="display:none">
         <h3 id="sub-title"></h3>
         <button class="btn-main" onclick="selectType('객관식')">객관식 훈련</button>
         <button class="btn-main" onclick="selectType('주관식')">주관식 훈련</button>
         <button class="btn-sub" onclick="goBack(1)">처음으로</button>
     </div>
+
     <div id="step3" class="menu-group" style="display:none">
         <h3 id="mission-title"></h3>
         <label>세부 카테고리</label>
@@ -49,6 +54,7 @@
         <button class="btn-main" style="background:#1e8e3e" onclick="startSession('smart')">🍱 200문제 지능형 오마카세</button>
         <button class="btn-sub" onclick="goBack(2)">이전으로</button>
     </div>
+
     <div id="quiz-ui" style="display:none">
         <div class="header"><span id="prog"></span><button class="btn-stop" onclick="finishMission()">🏁 훈련 중단</button></div>
         <div id="q" class="q-text"></div>
@@ -59,6 +65,7 @@
             <button class="btn-main" onclick="goToNext()">다음 문제</button>
         </div>
     </div>
+
     <div id="review-ui" style="display:none">
         <h2 style="text-align:center;">📝 미션 디브리핑</h2>
         <div id="report-summary" style="background:#202124; color:white; padding:20px; border-radius:10px; margin-bottom:20px; text-align:center;"></div>
@@ -72,6 +79,9 @@
     const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?single=true&output=csv';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbxtjoaIxCQy8e97qwIhHPhVv5JXRDFaJQxKqMyFUZ_j7aoS_t44vnP-gr4Z77YujA-A/exec';
     
+    // 페이지 로드 시 통계 링크 자동 설정
+    document.getElementById('stats-link').href = GAS_URL;
+
     let currentSub = '', currentType = '', allData = [], filteredQuiz = [], idx = 0, score = 0, wrongHistory = [];
 
     function selectSubject(sub) { currentSub = sub; document.getElementById('step1').style.display = 'none'; document.getElementById('step2').style.display = 'block'; document.getElementById('sub-title').innerText = `🛸 ${sub} 코스`; }
@@ -94,11 +104,8 @@
                 if (char === '"') inQuotes = true;
                 else if (char === ',') { currentRow.push(currentCell.trim()); currentCell = ''; }
                 else if (char === '\r' || char === '\n') {
-                    // [핵심 수정] 줄바꿈이 따옴표 밖에서 발생했더라도 셀이 부족하면 행이 끝난 게 아니라고 판단
                     currentRow.push(currentCell.trim()); currentCell = '';
-                    if (currentRow.length >= 10) { // 헤더 수에 맞춰 유동적 조절 가능 (보통 10개 이상)
-                        rows.push(currentRow); currentRow = [];
-                    }
+                    if (currentRow.length >= 8) { rows.push(currentRow); currentRow = []; }
                     if (char === '\r' && nextChar === '\n') i++;
                 } else currentCell += char;
             }
@@ -107,12 +114,12 @@
 
         const h = rows[0]; const find = (k) => h.findIndex(name => name.trim().includes(k));
         allData = rows.slice(1).map(r => {
-            const opts = [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]];
+            const opts = [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]].filter(o => o && o.length > 0);
             let answerText = ''; const rawAns = String(r[find('정답')]).trim();
             if (currentType === '주관식') answerText = r[find('보기1')];
             else answerText = (["1","2","3","4"].includes(rawAns)) ? opts[parseInt(rawAns)-1] : rawAns;
             return { lcat: r[find('대분류')], q: r[find('문제')], ans: answerText, exp: r[find('해설')], opts: opts, wrongCount: parseInt(r[find('오답수')])||0, totalCount: parseInt(r[find('전체수')])||0 };
-        }).filter(i => i.q && i.q.length > 2); // 쓰레기 데이터 방지용 필터링
+        }).filter(i => i.q && i.q.length > 2);
 
         const lcats = [...new Set(allData.map(d => d.lcat))].filter(Boolean);
         const lSelect = document.getElementById('lcat-select');
@@ -136,6 +143,7 @@
         document.getElementById('q').innerText = item.q;
         const container = document.getElementById('opts'); container.innerHTML = '';
         document.getElementById('feedback-area').style.display = 'none';
+
         if (currentType === '주관식') {
             const input = document.createElement('input'); input.id = 'subjective-ans'; input.placeholder = '답안 입력...';
             input.style = "width:100%; padding:15px; font-size:18px; border:2px solid var(--border); border-radius:10px; box-sizing:border-box;";
@@ -143,7 +151,8 @@
             btn.onclick = () => checkSubjective(input.value.trim(), item);
             container.appendChild(input); container.appendChild(btn); setTimeout(() => input.focus(), 100);
         } else {
-            item.opts.filter(o => o).forEach(o => {
+            const shuffledOpts = [...item.opts].sort(() => Math.random() - 0.5);
+            shuffledOpts.forEach(o => {
                 const btn = document.createElement('div'); btn.className = 'opt-item'; btn.innerText = o;
                 btn.onclick = () => check(btn, item); container.appendChild(btn);
             });
