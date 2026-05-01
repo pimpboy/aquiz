@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>항공 훈련소 v3.9 (Full Specs)</title>
+    <title>항공 훈련소 v4.0 (Enhanced UI)</title>
     <style>
         :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; --border: #dadce0; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 15px; display: flex; justify-content: center; }
-        #app { background: #fff; width: 100%; max-width: 500px; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 85vh; display: flex; flex-direction: column; box-sizing: border-box; }
+        
+        /* [수정] min-height 제거 및 height: auto로 변경하여 텍스트 길이에 따라 늘어나게 함 */
+        #app { background: #fff; width: 100%; max-width: 500px; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: auto; min-height: 90vh; display: flex; flex-direction: column; box-sizing: border-box; overflow: visible; }
         
         .btn-main { width: 100%; padding: 16px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 17px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn-sub { width: 100%; padding: 12px; background: #fff; color: var(--p); border: 2px solid var(--p); border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
@@ -25,18 +27,22 @@
         .opt-item.wrong { background-color: #fce8e6; border-color: var(--err); color: var(--err); }
         .opt-item.disabled { cursor: default; pointer-events: none; }
 
-        .review-card { border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 15px; background: #fafafa; border-left: 5px solid var(--err); }
-        #feedback-area { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; border: 1px solid var(--border); background: #fafafa; }
+        /* [수정] 복기 카드 높이 제한 해제 */
+        .review-card { border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 15px; background: #fafafa; border-left: 5px solid var(--err); height: auto; }
+        
+        /* [중요] 피드백 영역 레이아웃 보강 */
+        #feedback-area { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; border: 1px solid var(--border); background: #fafafa; height: auto; overflow: visible; }
+        #exp-content { font-size: 14px; color: #555; white-space: pre-wrap; line-height: 1.6; margin-bottom: 15px; word-break: break-all; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-
 <div id="app">
     <div id="loader" style="display:none; text-align:center; padding-top:100px;">📡<br>데이터 동기화 중...</div>
 
     <div id="step1" class="menu-group">
-        <h2 style="text-align:center;">✈️ 항공 훈련소 v3.9</h2>
+        <h2 style="text-align:center;">✈️ 항공 훈련소 v4.0</h2>
         <button class="btn-main" onclick="selectSubject('법규')">항공법규</button>
         <button class="btn-main" style="background:#5f6368" onclick="selectSubject('관제')">관제일반</button>
     </div>
@@ -66,7 +72,7 @@
         <div id="opts" class="opt-list"></div>
         <div id="feedback-area">
             <div id="feedback-res" style="font-weight:bold; margin-bottom:8px;"></div>
-            <div id="exp-content" style="font-size:14px; color:#555; white-space:pre-wrap;"></div>
+            <div id="exp-content"></div>
             <button class="btn-main" onclick="goToNext()">다음 문제</button>
         </div>
     </div>
@@ -109,7 +115,6 @@
             parseCSVData(text);
             document.getElementById('loader').style.display = 'none';
             document.getElementById('step3').style.display = 'block';
-            document.getElementById('mission-title').innerText = `${currentSub} ${currentType} 설정`;
         } catch (e) { alert("데이터 로드 실패!"); location.reload(); }
     }
 
@@ -123,39 +128,18 @@
             }
             cells.push(cell.trim()); return cells;
         });
-        
         const h = rows[0];
-    const find = (k) => h.findIndex(name => name.includes(k));
-    
-    allData = rows.slice(1).map(r => {
-        let answerText = '';
-        if (currentType === '주관식') {
-            answerText = r[4]; // 주관식: E열(Index 4) 정답 텍스트
-        } else {
-            // 객관식 정답 처리 로직 보강
-            const rawAns = r[find('정답')]; // '정답' 열의 값 (예: 1 또는 지방항공청장)
-            const opt1 = r[find('보기1')], opt2 = r[find('보기2')], opt3 = r[find('보기3')], opt4 = r[find('보기4')];
-            const opts = [opt1, opt2, opt3, opt4];
-
-            // 만약 정답 열이 숫자(1,2,3,4)라면 해당 보기 텍스트를 정답으로 설정
-            if (rawAns == "1") answerText = opt1;
-            else if (rawAns == "2") answerText = opt2;
-            else if (rawAns == "3") answerText = opt3;
-            else if (rawAns == "4") answerText = opt4;
-            else answerText = rawAns; // 숫자 형태가 아니면 써진 그대로를 정답으로 간주
-        }
-
-        return {
-            lcat: r[find('대분류')],
-            q: r[3], // D열 (Index 3) 문제
-            opts: [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]],
-            ans: answerText,
-            exp: r[find('해설')],
-            wrongCount: parseInt(r[10]) || 0,
-            totalCount: parseInt(r[11]) || 0
-        };
-    }).filter(i => i.q);
-
+        const find = (k) => h.findIndex(name => name.includes(k));
+        allData = rows.slice(1).map(r => {
+            let answerText = '';
+            if (currentType === '주관식') answerText = r[4];
+            else {
+                const rawAns = r[find('정답')], opts = [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]];
+                if (["1","2","3","4"].includes(String(rawAns))) answerText = opts[parseInt(rawAns)-1];
+                else answerText = rawAns;
+            }
+            return { lcat: r[find('대분류')], q: r[3], ans: answerText, exp: r[9], opts: [r[4], r[5], r[6], r[7]], wrongCount: parseInt(r[10])||0, totalCount: parseInt(r[11])||0 };
+        }).filter(i => i.q);
         const lcats = [...new Set(allData.map(d => d.lcat))].filter(Boolean);
         const lSelect = document.getElementById('lcat-select');
         lSelect.innerHTML = '<option value="ALL">전체 카테고리</option>';
@@ -165,17 +149,8 @@
     function startSession(mode) {
         const lVal = document.getElementById('lcat-select').value;
         let pool = allData.filter(d => lVal === 'ALL' || d.lcat === lVal);
-
-        if (mode === 'weak') {
-            // 오답 많은 순 100개
-            pool.sort((a, b) => b.wrongCount - a.wrongCount);
-            filteredQuiz = pool.slice(0, 100);
-        } else {
-            // 지능형 오마카세 200개 (오답 가중치 랜덤)
-            pool.sort((a, b) => (b.wrongCount * 2 - b.totalCount) - (a.wrongCount * 2 - a.totalCount));
-            filteredQuiz = pool.slice(0, 200).sort(() => Math.random() - 0.5);
-        }
-
+        if (mode === 'weak') { pool.sort((a, b) => b.wrongCount - a.wrongCount); filteredQuiz = pool.slice(0, 100); }
+        else { pool.sort((a, b) => (b.wrongCount * 2 - b.totalCount) - (a.wrongCount * 2 - a.totalCount)); filteredQuiz = pool.slice(0, 200).sort(() => Math.random() - 0.5); }
         if(filteredQuiz.length === 0) return alert("문제가 없읍니다.");
         idx = 0; score = 0; wrongHistory = [];
         document.getElementById('step3').style.display = 'none';
@@ -189,40 +164,39 @@
         document.getElementById('q').innerText = item.q;
         const container = document.getElementById('opts'); container.innerHTML = '';
         document.getElementById('feedback-area').style.display = 'none';
-
         if (currentType === '주관식') {
-            const input = document.createElement('input');
-            input.id = 'subjective-ans'; input.placeholder = '답안 입력...';
+            const input = document.createElement('input'); input.id = 'subjective-ans'; input.placeholder = '답안 입력...';
             input.style = "width:100%; padding:15px; font-size:18px; border:2px solid var(--border); border-radius:10px; box-sizing:border-box;";
-            const btn = document.createElement('button');
-            btn.className = 'btn-main'; btn.innerText = '제출';
+            const btn = document.createElement('button'); btn.className = 'btn-main'; btn.innerText = '제출';
             btn.onclick = () => checkSubjective(input.value.trim(), item);
-            container.appendChild(input); container.appendChild(btn);
-            setTimeout(() => input.focus(), 100);
+            container.appendChild(input); container.appendChild(btn); setTimeout(() => input.focus(), 100);
         } else {
             item.opts.filter(o => o).forEach(o => {
-                const btn = document.createElement('div'); btn.className = 'opt-item';
-                btn.innerText = o; btn.onclick = () => check(btn, o === item.ans, item);
-                container.appendChild(btn);
+                const btn = document.createElement('div'); btn.className = 'opt-item'; btn.innerText = o;
+                btn.onclick = () => check(btn, item); container.appendChild(btn);
             });
         }
     }
 
-    function check(btn, isCorrect, item) {
+    /* [수정] 텍스트 비교 로직 강화 (trim 적용) */
+    function check(btn, item) {
+        const userChoice = btn.innerText.trim();
+        const actualAns = String(item.ans).trim();
+        const isCorrect = userChoice === actualAns;
+
         if (!isCorrect) wrongHistory.push(item);
         if (isCorrect) score++;
         btn.classList.add(isCorrect ? 'correct' : 'wrong');
         document.querySelectorAll('.opt-item').forEach(b => {
             b.classList.add('disabled');
-            if(b.innerText === item.ans) b.classList.add('correct');
+            if(b.innerText.trim() === actualAns) b.classList.add('correct');
         });
         showFeedback(isCorrect, item);
-        sendDataToGAS(item.q, currentSub, currentType, btn.innerText, isCorrect);
+        sendDataToGAS(item.q, currentSub, currentType, userChoice, isCorrect);
     }
 
     function checkSubjective(userAns, item) {
-        if(!userAns) return alert("답을 입력하십시오!");
-        const isCorrect = userAns.replace(/\s/g, "").toLowerCase() === item.ans.replace(/\s/g, "").toLowerCase();
+        const isCorrect = userAns.replace(/\s/g, "").toLowerCase() === String(item.ans).replace(/\s/g, "").toLowerCase();
         if (!isCorrect) wrongHistory.push(item);
         if (isCorrect) score++;
         document.getElementById('subjective-ans').disabled = true;
@@ -235,33 +209,26 @@
         res.innerText = isCorrect ? "✅ 정답입니다!" : `❌ 틀렸읍니다!`;
         res.style.color = isCorrect ? "var(--suc)" : "var(--err)";
         if(!isCorrect) res.innerHTML += `<br><small style="color:#333">(정답: ${item.ans})</small>`;
-        document.getElementById('exp-content').innerText = item.exp || "해설 데이터가 없읍니다.";
+        
+        const exp = document.getElementById('exp-content');
+        exp.innerText = item.exp && item.exp !== "undefined" ? item.exp : "해설 데이터가 없읍니다.";
+        
         document.getElementById('feedback-area').style.display = 'block';
+        // [추가] 해설이 보일 때 화면 하단으로 자동 스크롤
+        setTimeout(() => document.getElementById('feedback-area').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
     }
 
     function finishMission() {
-        if (!confirm("정말 중단하시겠읍니까? 지금까지의 성적이 저장됩니다.")) return;
+        if (!confirm("중단하시겠읍니까?")) return;
         const totalTried = idx + (document.getElementById('feedback-area').style.display === 'block' ? 1 : 0);
         const rate = totalTried === 0 ? 0 : Math.round((score / totalTried) * 100);
-
         document.getElementById('quiz-ui').style.display = 'none';
         document.getElementById('review-ui').style.display = 'block';
-        document.getElementById('report-summary').innerHTML = `
-            <div style="font-size:32px; font-weight:bold; color:#4cc9f0;">${rate}%</div>
-            <div style="font-size:14px; opacity:0.8;">정답률 (${score}/${totalTried})</div>
-        `;
-
+        document.getElementById('report-summary').innerHTML = `<div style="font-size:32px; font-weight:bold; color:#4cc9f0;">${rate}%</div><div style="font-size:14px; opacity:0.8;">정답률 (${score}/${totalTried})</div>`;
         const container = document.getElementById('review-container');
         container.innerHTML = '<h3>❌ 오답 복기 리스트</h3>';
-        if(wrongHistory.length === 0) container.innerHTML += "<p>오답이 없읍니다! 훌륭합니다.</p>";
         wrongHistory.forEach((item, i) => {
-            container.innerHTML += `
-                <div class="review-card">
-                    <div style="font-weight:bold; margin-bottom:5px;">${i+1}. ${item.q}</div>
-                    <div style="color:var(--err); font-size:14px;">정답: ${item.ans}</div>
-                    <div style="font-size:12px; color:#666; margin-top:5px;">해설: ${item.exp || '없음'}</div>
-                </div>
-            `;
+            container.innerHTML += `<div class="review-card"><div style="font-weight:bold; margin-bottom:5px;">${i+1}. ${item.q}</div><div style="color:var(--err); font-size:14px;">정답: ${item.ans}</div><div style="font-size:13px; color:#666; margin-top:8px; white-space:pre-wrap; border-top:1px solid #eee; padding-top:8px;">${item.exp || '해설 없음'}</div></div>`;
         });
     }
 
@@ -274,7 +241,7 @@
 
     function goToNext() { 
         idx++; 
-        if(idx < filteredQuiz.length) render(); 
+        if(idx < filteredQuiz.length) { render(); window.scrollTo(0,0); } 
         else finishMission(); 
     }
 
