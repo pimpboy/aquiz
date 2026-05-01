@@ -3,203 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>항공 훈련소 v5.5</title>
+    <title>항공 훈련소 v5.7</title>
     <style>
         :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; --border: #dadce0; --warn: #f9ab00; --soft: #f1f3f4; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 15px; display: flex; justify-content: center; }
-        #app { background: #fff; width: 100%; max-width: 500px; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 90vh; display: flex; flex-direction: column; box-sizing: border-box; }
-        .btn-main { width: 100%; padding: 16px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 17px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-stats { width: 100%; padding: 16px; background: var(--warn); color: #000; border: none; border-radius: 8px; font-weight: bold; font-size: 17px; cursor: pointer; transition: 0.3s; margin-top: 20px; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
-        .btn-sub { width: 100%; padding: 12px; background: #fff; color: var(--p); border: 2px solid var(--p); border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-redo { flex: 1; padding: 12px; background: var(--soft); color: #5f6368; border: 1px solid var(--border); border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 8px; font-size: 13px; }
-        .btn-next { flex: 2; padding: 12px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .q-stats { font-size: 12px; color: #1e8e3e; background: #e6f4ea; padding: 5px 10px; border-radius: 5px; margin-bottom: 10px; display: inline-block; }
+        #app { background: #fff; width: 100%; max-width: 500px; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 90vh; box-sizing: border-box; }
+        .btn-main { width: 100%; padding: 16px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 17px; cursor: pointer; margin-top: 10px; }
+        .btn-sub { width: 100%; padding: 12px; background: #fff; color: var(--p); border: 1px solid var(--p); border-radius: 8px; margin-top: 10px; cursor: pointer; }
+        .header { display: flex; justify-content: space-between; font-size: 13px; color: #70757a; margin-bottom: 15px; }
         .opt-item { padding: 16px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; cursor: pointer; }
-        .opt-item.correct { background: #e6f4ea; color: var(--suc); border-color: var(--suc); font-weight: bold; }
+        .opt-item.correct { background: #e6f4ea; color: var(--suc); border-color: var(--suc); }
         .opt-item.wrong { background: #fce8e6; color: var(--err); border-color: var(--err); }
-        .header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #70757a; margin-bottom: 10px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-        .menu-group { animation: fadeIn 0.5s; }
+        #loader { text-align: center; padding-top: 50px; font-weight: bold; color: var(--p); }
     </style>
 </head>
 <body>
 <div id="app">
-    <div id="loader" style="display:none; text-align:center; padding-top:100px;">📡 시트 서버 접속 중...</div>
-
-    <div id="step1" class="menu-group">
-        <h2 style="text-align:center;">✈️ 항공 훈련소 v5.5</h2>
+    <div id="step1">
+        <h2 style="text-align:center;">✈️ 항공 훈련소 v5.7</h2>
         <button class="btn-main" onclick="selectSubject('법규')">항공법규 훈련</button>
         <button class="btn-main" style="background:#5f6368" onclick="selectSubject('관제')">관제일반 훈련</button>
-        <button class="btn-stats" onclick="window.open(GAS_URL)">📊 통계 대시보드 열기</button>
     </div>
 
-    <div id="step2" class="menu-group" style="display:none">
+    <div id="loader" style="display:none;">📡 데이터 동기화 중...</div>
+
+    <div id="step2" style="display:none;">
         <h3 id="sub-title"></h3>
-        <button class="btn-main" onclick="selectType('객관식')">객관식</button>
-        <button class="btn-main" onclick="selectType('주관식')">주관식</button>
+        <button class="btn-main" onclick="selectType('객관식')">객관식 훈련</button>
+        <button class="btn-main" onclick="selectType('주관식')">주관식 훈련</button>
         <button class="btn-sub" onclick="goBack(1)">처음으로</button>
     </div>
 
-    <div id="step3" class="menu-group" style="display:none">
+    <div id="step3" style="display:none;">
         <h3 id="mission-title"></h3>
-        <button class="btn-main" style="background:#1e8e3e" onclick="startSession('omakase')">🍱 200문항 스마트 오마카세</button>
-        <button class="btn-main" style="background:#d93025" onclick="startSession('note')">📝 100문항 오답 노트</button>
+        <button class="btn-main" style="background:#1e8e3e" onclick="startSession('omakase')">🍱 200문항 오마카세</button>
+        <button class="btn-main" style="background:#d93025" onclick="startSession('note')">📝 100문항 오답노트</button>
         <button class="btn-sub" onclick="goBack(2)">이전으로</button>
     </div>
 
-    <div id="quiz-ui" style="display:none">
-        <div class="header"><span id="prog"></span> <span id="timer"></span></div>
+    <div id="quiz-ui" style="display:none;">
+        <div class="header"><span id="prog"></span></div>
         <div id="q-stat-area"></div>
         <div id="q" style="font-size:18px; font-weight:bold; margin-bottom:20px;"></div>
         <div id="opts"></div>
-        <div id="feedback" style="display:none; margin-top:20px; padding:15px; background:#f8f9fa; border-radius:10px;">
+        <div id="feedback" style="display:none; margin-top:20px; padding:15px; background:#f1f3f4; border-radius:10px;">
             <div id="f-res" style="font-weight:bold; margin-bottom:10px;"></div>
-            <div id="f-exp" style="font-size:14px; color:#666; margin-bottom:15px;"></div>
+            <div id="f-exp" style="font-size:14px; margin-bottom:15px;"></div>
             <div style="display:flex;">
-                <button class="btn-redo" id="btn-redo">♻️ 다시(기록제외)</button>
-                <button class="btn-next" onclick="goToNext()">다음 문제</button>
+                <button class="btn-sub" style="flex:1; margin-right:5px;" id="btn-redo">♻️ 기록제외</button>
+                <button class="btn-main" style="flex:2; margin-top:0;" onclick="goToNext()">다음 문제</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxtjoaIxCQy8e97qwIhHPhVv5JXRDFaJQxKqMyFUZ_j7aoS_t44vnP-gr4Z77YujA-A/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxtjoaIxCQy8e97qwIhHPhVv5JXRDFaJQxKqMyFUZ_j7aoS_t44vnP-gr4Z77YujA-A/exec'; 
     const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?output=csv';
-    const GID_MAP = { '법규': { '객관식': '0', '주관식': '2011973258' }, '관제': { '객관식': '1053182571', '주관식': '217691441' } };
+    const GID = { '법규':{'객관식':'0','주관식':'2011973258'}, '관제':{'객관식':'1053182571','주관식':'217691441'} };
 
     let currentSub='', currentType='', allData=[], filteredQuiz=[], quizStats={}, idx=0, score=0, isResolved=false;
 
+    // 시작 시 통계 로드 (실패해도 앱은 돌아가게 설정)
     window.onload = function() {
-        // 서버에서 통계 데이터 먼저 수신
-        google.script.run.withSuccessHandler(data => {
-            quizStats = JSON.parse(data);
-            console.log("Stats Sync Complete");
-        }).getTrainingStats();
+        try {
+            google.script.run.withSuccessHandler(data => {
+                quizStats = JSON.parse(data);
+                console.log("Stats Loaded");
+            }).getTrainingStats();
+        } catch(e) { console.log("GAS Sync Skipped"); }
     };
 
-    // [핵심] 쉼표 문제를 해결하는 정밀 파서
-    function parseCSVData(text) {
-    const rows = []; let currentRow = []; let currentCell = ''; let inQuotes = false;
-    // ... (CSV 분리 로직은 동일) ...
-    
-    const h = rows[0].map(name => name.trim()); // 헤더의 양끝 공백 제거
-    
-    // 유연한 인덱스 찾기: 해당 단어가 포함만 되어도 찾도록 수정
-    const find = (k) => h.findIndex(name => name.includes(k));
-    
-    const qIdx = find('문제');
-    const ansIdx = find('정답');
-    const expIdx = find('해설');
-    const opt1Idx = find('보기1');
-
-    // 만약 필수 열(문제, 보기1 등)을 못 찾으면 여기서 중단되므로 체크 필요
-    if (qIdx === -1 || opt1Idx === -1) {
-        console.error("필수 헤더를 찾을 수 없습니다. 시트의 1행을 확인하십시오.");
-        return;
+    function selectSubject(s) { 
+        currentSub=s; 
+        document.getElementById('step1').style.display='none';
+        document.getElementById('step2').style.display='block';
+        document.getElementById('sub-title').innerText = s + " 과정";
     }
 
-    allData = rows.slice(1).map(r => {
-        const opts = [r[opt1Idx], r[opt1Idx+1], r[opt1Idx+2], r[opt1Idx+3]].filter(Boolean);
-        let correctAns = "";
-        
-        if (currentType === '주관식') {
-            correctAns = r[opt1Idx];
-        } else {
-            const ansVal = parseInt(r[ansIdx]);
-            correctAns = opts[ansVal - 1] || r[ansIdx];
-        }
+    async function selectType(t) {
+        currentType=t; 
+        document.getElementById('step2').style.display='none';
+        document.getElementById('loader').style.display='block';
+        try {
+            const res = await fetch(`${BASE_URL}&gid=${GID[currentSub][t]}`);
+            const text = await res.text();
+            parseCSV(text);
+            document.getElementById('loader').style.display='none';
+            document.getElementById('step3').style.display='block';
+        } catch(e) { alert("데이터 로딩 실패!"); location.reload(); }
+    }
 
-        return {
-            q: r[qIdx],
-            ans: correctAns,
-            exp: r[expIdx] || "",
-            opts: opts,
-            lcat: r[0] // 대분류는 보통 첫 번째 열
-        };
-    }).filter(i => i.q); // 내용이 있는 문제만 추출
-}
+    function parseCSV(text) {
+        const rows = text.split('\n').map(r => r.split(',').map(c => c.replace(/^"|"$/g, '').trim()));
+        // 헤더가 있든 없든 데이터 위치 강제 지정 (C열: 문제, H열: 정답, I열: 해설)
+        // 아우님 시트 구조에 맞게 인덱스 고정: 문제(2), 보기1(3), 정답(7), 해설(8)
+        allData = rows.map(r => {
+            if(!r[2]) return null;
+            const opts = [r[3], r[4], r[5], r[6]].filter(Boolean);
+            let answer = r[7];
+            if(currentType === '객관식' && !isNaN(answer)) answer = opts[parseInt(answer)-1] || answer;
+            return { q: r[2], ans: answer, exp: r[8], opts: opts };
+        }).filter(item => item && item.q !== '문제'); 
+    }
 
     function startSession(mode) {
         let pool = [...allData];
-        if (mode === 'omakase') {
-            // 200문항 스마트 오마카세: 기출 적은 순 > 오답 많은 순
-            pool.sort((a,b) => {
-                const sA = quizStats[a.q] || {total:0, wrong:0};
-                const sB = quizStats[b.q] || {total:0, wrong:0};
-                if(sA.total !== sB.total) return sA.total - sB.total;
-                return sB.wrong - sA.wrong;
-            });
+        if(mode === 'omakase') {
+            pool.sort((a,b) => (quizStats[a.q]?.total || 0) - (quizStats[b.q]?.total || 0));
             filteredQuiz = pool.slice(0, 200);
         } else {
-            // 100문항 오답노트: 오답 많은 순
             pool.sort((a,b) => (quizStats[b.q]?.wrong || 0) - (quizStats[a.q]?.wrong || 0));
             filteredQuiz = pool.slice(0, 100);
         }
-        idx=0; score=0; move(3, 'quiz-ui'); render();
+        idx=0; score=0;
+        document.getElementById('step3').style.display='none';
+        document.getElementById('quiz-ui').style.display='block';
+        render();
     }
 
     function render() {
-        isResolved = false;
-        const item = filteredQuiz[idx];
-        const stat = quizStats[item.q] || {total:0, wrong:0};
-        const rate = stat.total > 0 ? Math.round(((stat.total - stat.wrong) / stat.total) * 100) : 100;
-
-        document.getElementById('prog').innerText = `${idx + 1} / ${filteredQuiz.length}`;
-        // 상단 통계 바 표시 [image_65ff00.png 반영]
-        document.getElementById('q-stat-area').innerHTML = `
-            <div style="font-size:12px; color:#1e8e3e; background:#e6f4ea; padding:8px; border-radius:5px; margin-bottom:10px;">
-                📊 누적 기출: ${stat.total}회 | 오답: ${stat.wrong}회 | 정답률: ${rate}%
-            </div>`;
+        isResolved = false; const item = filteredQuiz[idx];
+        const s = quizStats[item.q] || {total:0, wrong:0};
+        document.getElementById('prog').innerText = `${idx+1}/${filteredQuiz.length}`;
+        document.getElementById('q-stat-area').innerHTML = `<div style="font-size:12px; color:green; margin-bottom:10px;">📊 기출 ${s.total} | 오답 ${s.wrong}</div>`;
         document.getElementById('q').innerText = item.q;
-        
-        const container = document.getElementById('opts'); container.innerHTML = '';
-        document.getElementById('feedback-area').style.display = 'none';
+        const opts = document.getElementById('opts'); opts.innerHTML = '';
+        document.getElementById('feedback').style.display = 'none';
 
-        if (currentType === '주관식') {
-            container.innerHTML = `<input id="subj-input" style="width:100%; padding:15px; border:2px solid #ddd; border-radius:10px;">
-                                   <button class="btn-main" onclick="checkSubj()">제출</button>`;
-        } else {
-            [...item.opts].sort(() => Math.random() - 0.5).forEach(o => {
-                const btn = document.createElement('div'); btn.className = 'opt-item'; btn.innerText = o;
-                btn.onclick = () => { if(!isResolved) check(btn, item, o); };
-                container.appendChild(btn);
-            });
-        }
+        item.opts.forEach(o => {
+            const div = document.createElement('div'); div.className = 'opt-item'; div.innerText = o;
+            div.onclick = () => {
+                if(isResolved) return; isResolved=true;
+                const isCorrect = o.trim() === item.ans.trim();
+                div.classList.add(isCorrect ? 'correct' : 'wrong');
+                showFeedback(isCorrect, item, o);
+            };
+            opts.appendChild(div);
+        });
     }
 
-    function check(btn, item, userRes) {
-        isResolved = true;
-        const isCorrect = userRes.trim() === item.ans.trim();
-        if(isCorrect) score++;
-        btn.classList.add(isCorrect ? 'correct' : 'wrong');
-        
-        // 피드백 영역 표시
-        document.getElementById('feedback-res').innerText = isCorrect ? "✅ 정답" : "❌ 오답 (정답: " + item.ans + ")";
-        document.getElementById('exp-content').innerText = item.exp || "해설 없음";
-        document.getElementById('feedback-area').style.display = 'block';
-
-        item._res = userRes; item._isCorrect = isCorrect;
-        
-        // 반복 버튼 설정
-        document.getElementById('btn-redo-action').onclick = () => {
-            item._skip = true; alert("기록 제외! 다음 루프에 다시 나타납니다.");
-            goToNext();
-        };
+    function showFeedback(isCorrect, item, userRes) {
+        document.getElementById('f-res').innerText = isCorrect ? "✅ 정답" : "❌ 오답 (정답: " + item.ans + ")";
+        document.getElementById('f-exp').innerText = item.exp || "";
+        document.getElementById('feedback').style.display = 'block';
+        item._isCorrect = isCorrect; item._res = userRes;
+        document.getElementById('btn-redo').onclick = () => { item._skip=true; goToNext(); };
     }
 
-    function move(from, to) {
-    // 숫자면 stepID로, 문자면 일반 ID로 처리
-    const fromEl = typeof from === 'number' ? document.getElementById('step' + from) : document.getElementById(from);
-    const toEl = typeof to === 'number' ? document.getElementById('step' + to) : document.getElementById(to);
-    
-    if (fromEl) fromEl.style.display = 'none';
-    if (toEl) toEl.style.display = 'block';
-}
-    
     function goToNext() {
         const item = filteredQuiz[idx];
-        if (!item._skip) {
+        if(!item._skip) {
             const s = quizStats[item.q] || {total:0, wrong:0};
             const payload = new FormData();
             payload.append('subject', currentSub); payload.append('type', currentType);
@@ -207,12 +161,15 @@
             payload.append('isCorrect', item._isCorrect);
             payload.append('totalCount', s.total + 1);
             payload.append('wrongCount', s.wrong + (item._isCorrect ? 0 : 1));
-            fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: payload });
+            fetch(GAS_URL, {method:'POST', mode:'no-cors', body:payload});
         }
-        idx++;
-        if (idx < filteredQuiz.length) render(); else location.reload();
+        idx++; if(idx < filteredQuiz.length) render(); else location.reload();
     }
-    // move, goBack 등 유틸리티 함수 생략
+
+    function goBack(s) {
+        document.getElementById('step'+(s+1)).style.display='none';
+        document.getElementById('step'+s).style.display='block';
+    }
 </script>
 </body>
 </html>
