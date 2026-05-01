@@ -255,16 +255,17 @@ function sendWrongAnswer(problemId, cat, res) {
   const scriptURL = 'https://script.google.com/macros/s/AKfycbwBAnu1xLGBPe45_fWSC77EpZ4v82YbToUIrQZUxRMN32Ei93OGORCzuSfw2_qoJXTuIA/exec';
   
   const payload = new FormData();
-  payload.append('id', problemId);      // 문제 내용
-  payload.append('category', cat);      // 카테고리
-  payload.append('result', res);        // 내가 찍은 오답
+  payload.append('id', problemId);
+  payload.append('category', cat);
+  payload.append('result', res);
 
   fetch(scriptURL, {
-    method: 'POST', // ← 끝에 있던 's' 제거 완료
-    mode: 'no-cors',
+    method: 'POST',
+    mode: 'no-cors', // 쉼표 확인!
     body: payload
-  }).then(() => console.log("기록 완료!"))
-    .catch((err) => console.error("추락: ", err));
+  })
+  .then(() => console.log("기본 통계 발사 성공!"))
+  .catch((err) => console.error("발사 실패:", err));
 }
 
     window.onload = loadData;
