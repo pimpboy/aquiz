@@ -195,40 +195,68 @@
         document.getElementById('acc').innerText = `정답률: ${idx === 0 ? 0 : Math.round((score/idx)*100)}%`;
         document.getElementById('q').innerText = item.q;
         
-        const container = document.getElementById('opts'); container.innerHTML = '';
-        item.opts.filter(o => o).forEach(o => {
-            const btn = document.createElement('div');
-            btn.className = 'opt-item';
-            btn.innerText = o;
-            btn.onclick = () => check(btn, o === item.ans, item);
-            container.appendChild(btn);
-        });
+        const container = document.getElementById('opts'); 
+        container.innerHTML = '';
         document.getElementById('feedback-area').style.display = 'none';
+
+        if (currentType === '주관식') {
+            // ✍️ 주관식 전용 UI 생성
+            const input = document.createElement('input');
+            input.id = 'subjective-ans';
+            input.type = 'text';
+            input.placeholder = '답안을 입력하십시오...';
+            input.style = 'width:100%; padding:15px; font-size:18px; border:2px solid var(--border); border-radius:10px; box-sizing:border-box;';
+            
+            const subBtn = document.createElement('button');
+            subBtn.className = 'btn-main';
+            subBtn.innerText = '답안 제출';
+            subBtn.style.marginTop = '15px';
+            subBtn.onclick = () => {
+                const userAns = input.value.trim();
+                if(!userAns) return alert("답을 입력하십시오!");
+                checkSubjective(userAns, item);
+            };
+
+            container.appendChild(input);
+            container.appendChild(subBtn);
+            input.focus(); // 바로 입력 가능하게 포커스
+        } else {
+            // 🔘 객관식 전용 UI 생성
+            item.opts.filter(o => o).forEach(o => {
+                const btn = document.createElement('div');
+                btn.className = 'opt-item';
+                btn.innerText = o;
+                btn.onclick = () => check(btn, o === item.ans, item);
+                container.appendChild(btn);
+            });
+        }
     }
 
-    function check(btn, isCorrect, item) {
-        const btns = document.querySelectorAll('.opt-item');
-        btns.forEach(b => b.classList.add('disabled'));
+    // 🎯 주관식 정답 체크 로직
+    function checkSubjective(userAns, item) {
+        const input = document.getElementById('subjective-ans');
+        const isCorrect = userAns.replace(/\s/g, "") === item.ans.replace(/\s/g, ""); // 공백 무시 체크
         
+        input.disabled = true;
         if (isCorrect) {
-            score++; btn.classList.add('correct');
-            document.getElementById('feedback-res').innerText = "✅ CLEAR";
+            score++;
+            input.style.borderColor = "var(--suc)";
+            input.style.backgroundColor = "#e6f4ea";
+            document.getElementById('feedback-res').innerText = "✅ 정확합니다!";
             document.getElementById('feedback-res').style.color = "var(--suc)";
         } else {
-            btn.classList.add('wrong');
-            btns.forEach(b => { if(b.innerText === item.ans) b.classList.add('correct'); });
-            document.getElementById('feedback-res').innerText = "❌ 지뢰를 밟았읍니다!";
+            input.style.borderColor = "var(--err)";
+            input.style.backgroundColor = "#fce8e6";
+            document.getElementById('feedback-res').innerText = "❌ 틀렸읍니다!";
             document.getElementById('feedback-res').style.color = "var(--err)";
+            document.getElementById('feedback-res').innerHTML += `<br><span style="font-size:14px; color:#333;">(정답: ${item.ans})</span>`;
         }
-        
-        // 실시간 카운팅 신호 발사
-        sendDataToGAS(item.q, currentSub, currentType, btn.innerText, isCorrect);
-        
+
+        sendDataToGAS(item.q, currentSub, currentType, userAns, isCorrect);
         document.getElementById('exp-content').innerText = item.exp || "해설 데이터가 없읍니다.";
         document.getElementById('feedback-area').style.display = 'block';
-        setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
     }
-
+        
     function sendDataToGAS(q, sub, type, res, isCorrect) {
         const payload = new FormData();
         payload.append('subject', sub);
