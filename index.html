@@ -124,40 +124,41 @@
     }
 
     function parseCSVData(text) {
-        const rows = text.split('\n').map(row => {
-            const cells = [];
-            let cell = '', inQuotes = false;
-            for(let char of row) {
-                if(char === '"') inQuotes = !inQuotes;
-                else if(char === ',' && !inQuotes) { cells.push(cell.trim()); cell = ''; }
-                else cell += char;
-            }
-            cells.push(cell.trim());
-            return cells;
-        });
+    const rows = text.split('\n').map(row => {
+        const cells = [];
+        let cell = '', inQuotes = false;
+        for(let char of row) {
+            if(char === '"') inQuotes = !inQuotes;
+            else if(char === ',' && !inQuotes) { cells.push(cell.trim()); cell = ''; }
+            else cell += char;
+        }
+        cells.push(cell.trim());
+        return cells;
+    });
 
-        const h = rows[0];
-        const find = (k) => h.findIndex(name => name.includes(k));
-        
-        allData = rows.slice(1).map(r => {
-            let answer = '';
-            if (currentType === '주관식') {
-                answer = r[4]; // E열 (정답)
-            } else {
-                const ansIdx = r[find('정답')];
-                answer = r[find('보기' + ansIdx)];
-            }
+    const h = rows[0];
+    const find = (k) => h.findIndex(name => name.includes(k));
+    
+    allData = rows.slice(1).map(r => {
+        let answer = '';
+        if (currentType === '주관식') {
+            answer = r[4]; // E열 (Index 4)
+        } else {
+            answer = r[8]; // I열 (Index 8) - 객관식 정답 텍스트가 바로 있는 경우
+            // 만약 I열이 정답 번호(1,2,3,4)라면 아래 주석을 해제하고 위 줄을 지우십시오.
+            // answer = r[find('보기' + r[8])]; 
+        }
 
-            return {
-                lcat: r[find('대분류')],
-                q: r[find('문제')],
-                opts: [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]],
-                ans: answer,
-                exp: r[find('해설')],
-                wrongCount: parseInt(r[10]) || 0, // K열
-                totalCount: parseInt(r[11]) || 0  // L열
-            };
-        }).filter(i => i.q);
+        return {
+            lcat: r[find('대분류')],
+            q: r[3], // D열 (Index 3) 고정
+            opts: [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]],
+            ans: answer,
+            exp: r[find('해설')],
+            wrongCount: parseInt(r[10]) || 0, // K열
+            totalCount: parseInt(r[11]) || 0  // L열
+        };
+    }).filter(i => i.q);
 
         const lcats = [...new Set(allData.map(d => d.lcat))].filter(Boolean);
         const lSelect = document.getElementById('lcat-select');
