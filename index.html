@@ -201,24 +201,32 @@
     }
 
     function goToNext() {
-        const item = filteredQuiz[idx];
-        if (!item._skip && item._res !== undefined) {
-            const s = quizStats[item.q] || { total: 0, wrong: 0 };
-            const nTotal = Number(s.total) + 1; const nWrong = Number(s.wrong) + (item._isCorrect ? 0 : 1);
-            
-            // 데이터 전송
-            const payload = new FormData();
-            payload.append('subject', currentSub); payload.append('type', currentType); payload.append('id', item.q);
-            payload.append('result', item._res); payload.append('isCorrect', item._isCorrect);
-            payload.append('totalCount', nTotal); payload.append('wrongCount', nWrong);
-            const rate = ((nWrong / nTotal) * 100).toFixed(1) + "%";
-            payload.append('errorRateTrend', rate);
-            
-            fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: payload });
-            quizStats[item.q] = { total: nTotal, wrong: nWrong };
-        }
-        idx++; if (idx < filteredQuiz.length) render(); else finishMission();
+    const item = filteredQuiz[idx];
+    if (!item._skip && item._res !== undefined) {
+        const s = quizStats[item.q] || { total: 0, wrong: 0 };
+        const nTotal = Number(s.total) + 1; 
+        const nWrong = Number(s.wrong) + (item._isCorrect ? 0 : 1);
+        
+        const payload = new FormData();
+        payload.append('subject', currentSub);
+        payload.append('type', currentType);
+        payload.append('id', item.q);
+        payload.append('result', item._res);
+        payload.append('isCorrect', item._isCorrect);
+        payload.append('totalCount', nTotal);
+        payload.append('wrongCount', nWrong);
+        
+        // [추가] 이 한 줄을 넣어주세요!
+        payload.append('correctAns', item.ans); 
+        
+        const rate = ((nWrong / nTotal) * 100).toFixed(1) + "%";
+        payload.append('errorRateTrend', rate);
+        
+        fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: payload });
+        quizStats[item.q] = { total: nTotal, wrong: nWrong };
     }
+    idx++; if (idx < filteredQuiz.length) render(); else finishMission();
+}
 
     function finishMission() {
         document.getElementById('quiz-ui').style.display = 'none'; document.getElementById('review-ui').style.display = 'block';
