@@ -80,39 +80,45 @@
 
     // [핵심] 쉼표 문제를 해결하는 정밀 파서
     function parseCSVData(text) {
-        const rows = []; let currentRow = []; let currentCell = ''; let inQuotes = false;
-        for (let i = 0; i < text.length; i++) {
-            let char = text[i]; let nextChar = text[i+1];
-            if (inQuotes) {
-                if (char === '"' && nextChar === '"') { currentCell += '"'; i++; }
-                else if (char === '"') inQuotes = false;
-                else currentCell += char;
-            } else {
-                if (char === '"') inQuotes = true;
-                else if (char === ',') { currentRow.push(currentCell.trim()); currentCell = ''; }
-                else if (char === '\r' || char === '\n') {
-                    currentRow.push(currentCell.trim()); currentCell = '';
-                    if (currentRow.length > 1) { rows.push(currentRow); }
-                    currentRow = []; if (char === '\r' && nextChar === '\n') i++;
-                } else currentCell += char;
-            }
-        }
-        if (currentRow.length > 0) { currentRow.push(currentCell.trim()); rows.push(currentRow); }
+    const rows = []; let currentRow = []; let currentCell = ''; let inQuotes = false;
+    // ... (CSV 분리 로직은 동일) ...
+    
+    const h = rows[0].map(name => name.trim()); // 헤더의 양끝 공백 제거
+    
+    // 유연한 인덱스 찾기: 해당 단어가 포함만 되어도 찾도록 수정
+    const find = (k) => h.findIndex(name => name.includes(k));
+    
+    const qIdx = find('문제');
+    const ansIdx = find('정답');
+    const expIdx = find('해설');
+    const opt1Idx = find('보기1');
 
-        const h = rows[0]; // 헤더 행
-        const find = (k) => h.findIndex(name => name.trim().includes(k));
-
-        // 이미지의 "중분류 밀림" 현상을 잡기 위해 정확한 헤더 이름으로 매칭
-        allData = rows.slice(1).map(r => {
-            const opts = [r[find('보기1')], r[find('보기2')], r[find('보기3')], r[find('보기4')]].filter(Boolean);
-            return {
-                q: r[find('문제')], 
-                ans: (currentType === '주관식') ? r[find('보기1')] : opts[parseInt(r[find('정답')])-1],
-                exp: r[find('해설')],
-                opts: opts
-            };
-        }).filter(i => i.q);
+    // 만약 필수 열(문제, 보기1 등)을 못 찾으면 여기서 중단되므로 체크 필요
+    if (qIdx === -1 || opt1Idx === -1) {
+        console.error("필수 헤더를 찾을 수 없습니다. 시트의 1행을 확인하십시오.");
+        return;
     }
+
+    allData = rows.slice(1).map(r => {
+        const opts = [r[opt1Idx], r[opt1Idx+1], r[opt1Idx+2], r[opt1Idx+3]].filter(Boolean);
+        let correctAns = "";
+        
+        if (currentType === '주관식') {
+            correctAns = r[opt1Idx];
+        } else {
+            const ansVal = parseInt(r[ansIdx]);
+            correctAns = opts[ansVal - 1] || r[ansIdx];
+        }
+
+        return {
+            q: r[qIdx],
+            ans: correctAns,
+            exp: r[expIdx] || "",
+            opts: opts,
+            lcat: r[0] // 대분류는 보통 첫 번째 열
+        };
+    }).filter(i => i.q); // 내용이 있는 문제만 추출
+}
 
     function startSession(mode) {
         let pool = [...allData];
@@ -182,6 +188,15 @@
         };
     }
 
+    function move(from, to) {
+    // 숫자면 stepID로, 문자면 일반 ID로 처리
+    const fromEl = typeof from === 'number' ? document.getElementById('step' + from) : document.getElementById(from);
+    const toEl = typeof to === 'number' ? document.getElementById('step' + to) : document.getElementById(to);
+    
+    if (fromEl) fromEl.style.display = 'none';
+    if (toEl) toEl.style.display = 'block';
+}
+    
     function goToNext() {
         const item = filteredQuiz[idx];
         if (!item._skip) {
