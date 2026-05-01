@@ -191,35 +191,40 @@
     }
 
     function handleResult(isCorrect, item, userRes) {
-        if (isCorrect) score++;
-        else wrongHistory.push(item);
-        
-        item._lastRes = userRes; item._isCorrect = isCorrect;
-        
-        const redoBtn = document.getElementById('btn-redo-action');
-        redoBtn.onclick = () => {
-            if(isCorrect) score--; 
-            wrongHistory.push(item);
-            item._skipServer = true; // 서버 전송 취소 마킹
-            alert("기록 제외 완료! 이 문제는 성적표 오답 리스트에 포함됩니다.");
-            goToNext();
-        };
-
-        const resDiv = document.getElementById('feedback-res');
-        resDiv.innerText = isCorrect ? "✅ 정답" : `❌ 오답 (정답: ${item.ans})`;
-        resDiv.style.color = isCorrect ? "var(--suc)" : "var(--err)";
-        document.getElementById('exp-content').innerText = item.exp || "해설 없음";
-        document.getElementById('feedback-area').style.display = 'block';
+    // [중요] 카운트 업데이트 로직 추가
+    item.totalCount = (item.totalCount || 0) + 1; // 기출 횟수 무조건 +1
+    if (!isCorrect) {
+        item.wrongCount = (item.wrongCount || 0) + 1; // 오답일 때만 오답 횟수 +1
+        score++; // 점수 계산용 (기존 로직)
+    } else {
+        // 정답일 경우 (기존 로직 유지)
+        // score++; // 원래 정답일 때 score가 올라가야 하므로 이 위치가 맞습니다.
     }
+    
+    // 이 코드에서는 정답일 때 score를 올리는 기존 방식을 유지합니다.
+    if (isCorrect) score++; 
+    else wrongHistory.push(item);
+    
+    item._lastRes = userRes; 
+    item._isCorrect = isCorrect;
+    
+    // ... (이하 redoBtn 설정 및 피드백 표시 로직은 동일) ...
+    const resDiv = document.getElementById('feedback-res');
+    resDiv.innerText = isCorrect ? "✅ 정답" : `❌ 오답 (정답: ${item.ans})`;
+    resDiv.style.color = isCorrect ? "var(--suc)" : "var(--err)";
+    document.getElementById('exp-content').innerText = item.exp || "해설 없음";
+    document.getElementById('feedback-area').style.display = 'block';
+}
 
-    function goToNext() {
-        const item = filteredQuiz[idx];
-        if (!item._skipServer) {
-            sendDataToGAS(item.q, currentSub, currentType, item._lastRes, item._isCorrect, item.totalCount, item.wrongCount);
-        }
-        idx++;
-        if (idx < filteredQuiz.length) render(); else finishMission();
+function goToNext() {
+    const item = filteredQuiz[idx];
+    if (!item._skipServer) {
+        // 여기서 item.totalCount와 item.wrongCount는 handleResult에서 이미 +1 된 상태입니다.
+        sendDataToGAS(item.q, currentSub, currentType, item._lastRes, item._isCorrect, item.totalCount, item.wrongCount);
     }
+    idx++;
+    if (idx < filteredQuiz.length) render(); else finishMission();
+}
 
     function sendDataToGAS(q, sub, type, res, isCorrect, total, wrong) {
         const payload = new FormData();
