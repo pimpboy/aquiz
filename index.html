@@ -160,17 +160,46 @@
     }
 
     function goToNext() {
-        const item = filteredQuiz[idx];
-        if(!item._skip && item._res) {
-            const s = quizStats[item.q] || {total:0, wrong:0};
-            const payload = new FormData();
-            payload.append('subject', currentSub); payload.append('type', currentType); payload.append('id', item.q);
-            payload.append('result', item._res); payload.append('isCorrect', item._isCorrect);
-            payload.append('totalCount', s.total + 1); payload.append('wrongCount', s.wrong + (item._isCorrect ? 0 : 1));
-            fetch(GAS_URL, {method:'POST', mode:'no-cors', body:payload});
-        }
-        idx++; if (idx < filteredQuiz.length) render(); else finishMission();
+    const item = filteredQuiz[idx];
+    
+    // [중요] 기록제외 버튼을 누르지 않았고, 응답 기록이 있을 때만 전송
+    if (!item._skip && item._res !== undefined) {
+        const s = quizStats[item.q] || { total: 0, wrong: 0 };
+        
+        // 서버로 보낼 데이터 패키징
+        const payload = new FormData();
+        payload.append('subject', currentSub);
+        payload.append('type', currentType);
+        payload.append('id', item.q); // 문제 내용
+        payload.append('result', item._res); // 사용자 응답
+        payload.append('isCorrect', item._isCorrect); // true/false
+        
+        // 카운터 계산: 기존 값 + 1
+        const newTotal = s.total + 1;
+        const newWrong = s.wrong + (item._isCorrect ? 0 : 1);
+        
+        payload.append('totalCount', newTotal);
+        payload.append('wrongCount', newWrong);
+
+        // GAS 서버로 전송 (비동기)
+        fetch(GAS_URL, {
+            method: 'POST',
+            mode: 'no-cors', // CORS 문제 방지
+            body: payload
+        }).then(() => {
+            console.log("데이터 전송 완료:", item.q);
+            // 전송 후 로컬 quizStats도 업데이트 (중복 전송 방지 및 실시간 반영)
+            quizStats[item.q] = { total: newTotal, wrong: newWrong };
+        }).catch(err => console.error("전송 에러:", err));
     }
+
+    idx++;
+    if (idx < filteredQuiz.length) {
+        render();
+    } else {
+        finishMission();
+    }
+}
 
     // [핵심] 미션 종료 및 리뷰 화면 생성
     function finishMission() {
