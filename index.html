@@ -239,22 +239,33 @@ function nextQuestion() {
 async function stopSession() {
     if(!confirm("Sync with Tower?")) return;
     showPage('loading-page');
-    document.getElementById('loading-msg').innerText = "Transmitting...";
     
     const cfg = CONFIG[state.difficulty];
+    
+    // 결과 데이터에 문제 텍스트 등을 포함시킴
+    const detailedResults = state.sessionResults.map(res => {
+        const q = state.questions.find(item => item.ID === res.id);
+        return {
+            id: res.id,
+            isCorrect: res.isCorrect,
+            type: state.type, // MULTI 또는 SUBJ
+            questionText: q.문제,
+            userAns: res.userAns || "N/A"
+        };
+    });
+
     try {
         await fetch(cfg.URL, {
             method: 'POST',
-            mode: 'no-cors', // 단순 전송용
             body: JSON.stringify({
-                results: state.sessionResults,
+                results: detailedResults, // 상세 정보 포함
                 reportedIds: state.reportedIds,
                 excludedIds: state.excludedIds,
                 masterGid: cfg.GIDs[`${state.subject}_${state.type}`],
                 statsGid: cfg.GIDs[`${state.subject}_STATS`]
             })
         });
-    } catch (e) {}
+    } catch (e) { console.error(e); }
     location.reload();
 }
 </script>
