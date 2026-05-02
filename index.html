@@ -2,288 +2,223 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>항공 훈련소 v6.3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>항공 훈련 센터 : 통합 관제소</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;900&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #1a73e8; --bg: #f8f9fa; --txt: #202124; --err: #d93025; --suc: #1e8e3e; --border: #dadce0; --warn: #f9ab00; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--txt); margin: 0; padding: 15px; display: flex; justify-content: center; }
-        #app { background: #fff; width: 100%; max-width: 500px; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 90vh; display: flex; flex-direction: column; box-sizing: border-box; }
-        .btn-main { width: 100%; padding: 16px; background: var(--p); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 17px; cursor: pointer; margin-top: 10px; }
-        .btn-stats { width: 100%; padding: 16px; background: var(--warn); color: #000; border: none; border-radius: 8px; font-weight: bold; font-size: 17px; cursor: pointer; margin-top: 20px; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
-        .btn-sub { width: 100%; padding: 12px; background: #fff; color: var(--p); border: 1px solid var(--p); border-radius: 8px; margin-top: 10px; cursor: pointer; }
-        .btn-stop { background: #fee; color: var(--err); border: 1px solid #fadad7; padding: 6px 12px; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: bold; }
-        .header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #70757a; margin-bottom: 15px; }
-        .q-text { font-size: 19px; font-weight: bold; margin-bottom: 20px; line-height: 1.5; word-break: keep-all; }
-        .opt-item { padding: 16px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
-        .opt-item.correct { background: #e6f4ea; color: var(--suc); border-color: var(--suc); font-weight: bold; }
-        .opt-item.wrong { background: #fce8e6; color: var(--err); border-color: var(--err); }
-        #feedback-area { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 1px solid #ddd; }
-        .review-card { border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 15px; background: #fff; border-left: 5px solid var(--err); }
-        .summary-box { background: #202124; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        :root {
+            --bg-color: #f4f7fa;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+            --primary: #4361ee;
+            --accent: #4895ef;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.hell-mode {
+            --bg-color: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text-main: #eeeeee;
+            --primary: #d93025;
+            --accent: #ff4d4f;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: var(--card-bg);
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 550px;
+            transition: var(--transition);
+        }
+
+        h1 { font-weight: 900; font-size: 2.2rem; margin-bottom: 5px; }
+        .subtitle { color: #95a5a6; margin-bottom: 25px; font-size: 0.95rem; }
+
+        /* 🎚️ 슬라이딩 토글 스위치 */
+        .mode-switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 35px;
+            padding: 15px;
+            background: rgba(128, 128, 128, 0.1);
+            border-radius: 20px;
+        }
+
+        .switch { position: relative; display: inline-block; width: 70px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 26px; width: 26px;
+            left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #d93025; }
+        input:checked + .slider:before { transform: translateX(36px); }
+
+        /* 🔘 버튼 그룹 */
+        .subject-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid rgba(128, 128, 128, 0.2);
+            border-radius: 20px;
+            text-align: left;
+        }
+        .subject-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 15px; display: block; }
+
+        .btn-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px; }
+
+        .btn {
+            padding: 15px; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            color: white; background: var(--primary); transition: var(--transition);
+        }
+        .btn-stats { background: #636e72; font-size: 0.85rem; }
+        
+        .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn:disabled { background: #555 !important; opacity: 0.5; cursor: wait; }
+
+        #loader-msg {
+            margin-top: 15px; font-size: 0.85rem; font-weight: 600;
+            color: var(--primary); min-height: 1.2em;
+        }
+
+        body.hell-mode .container { border: 2px solid var(--primary); animation: shake 0.4s infinite; }
+        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(1px,1px); } 75% { transform: translate(-1px,1px); } }
     </style>
 </head>
 <body>
-<div id="app">
-    <div id="step1">
-        <h2 style="text-align:center;">✈️ 항공 훈련소 v6.3</h2>
-        <button class="btn-main" onclick="selectSubject('법규')">항공법규 훈련</button>
-        <button class="btn-main" style="background:#5f6368" onclick="selectSubject('관제')">관제일반 훈련</button>
-        <a id="stats-link" class="btn-stats" target="_blank">📊 나의 훈련 데이터 센터</a>
+
+<div class="container">
+    <h1 id="main-title">항공 훈련 관제소</h1>
+    <p class="subtitle">난이도를 선택하고 훈련 과목을 장전하십시오.</p>
+
+    <div class="mode-switch-container">
+        <span>NORMAL</span>
+        <label class="switch">
+            <input type="checkbox" id="mode-toggle">
+            <span class="slider"></span>
+        </label>
+        <span style="color:#d93025; font-weight:bold;">HELL</span>
     </div>
 
-    <div id="loader" style="display:none; text-align:center; padding-top:50px;">📡 관제탑 통계 수신 중...</div>
-
-    <div id="step2" style="display:none;">
-        <h3 id="sub-title"></h3>
-        <button class="btn-main" onclick="selectType('객관식')">객관식 훈련</button>
-        <button class="btn-main" onclick="selectType('주관식')">주관식 훈련</button>
-        <button class="btn-sub" onclick="goBack(1)">처음으로</button>
-    </div>
-
-    <div id="step3" style="display:none;">
-        <h3 id="mission-title"></h3>
-        <button class="btn-main" style="background:#1e8e3e" onclick="startSession('omakase')">🍱 200문항 오마카세</button>
-        <button class="btn-main" style="background:#d93025" onclick="startSession('note')">📝 100문항 오답노트</button>
-        <button class="btn-sub" onclick="goBack(2)">이전으로</button>
-    </div>
-
-    <div id="quiz-ui" style="display:none;">
-        <div class="header">
-            <span id="prog"></span>
-            <button class="btn-stop" onclick="finishMission()">🏁 훈련 중단</button>
-        </div>
-        <div id="q-stat-area"></div>
-        <div id="q" class="q-text"></div>
-        <div id="opts"></div>
-        <div id="feedback-area" style="display:none;">
-            <div id="f-res" style="font-weight:bold; margin-bottom:10px;"></div>
-            <div id="f-exp" style="font-size:14px; color:#555; margin-bottom:15px; line-height:1.4;"></div>
-            <div style="display:flex;">
-                <button class="btn-sub" style="flex:1; margin-right:5px; margin-top:0;" id="btn-redo">♻️ 기록제외</button>
-                <button class="btn-main" style="flex:2; margin-top:0;" onclick="goToNext()">다음 문제</button>
-            </div>
+    <div class="subject-group">
+        <span class="subject-title">✈️ 항공법규 (Law)</span>
+        <div class="btn-row">
+            <button class="btn" onclick="prepareTraining('law')">🚀 훈련 시작</button>
+            <button class="btn btn-stats" onclick="openDataCenter('law')">📊 데이터 센터</button>
         </div>
     </div>
 
-    <div id="review-ui" style="display:none;">
-        <h2 style="text-align:center;">📝 미션 디브리핑</h2>
-        <div id="report-summary" class="summary-box"></div>
-        <div id="review-container" style="max-height:400px; overflow-y:auto; margin-bottom:20px;"></div>
-        <button class="btn-main" onclick="location.reload()">새로운 훈련 시작</button>
+    <div class="subject-group">
+        <span class="subject-title">📡 항공관제 (Control)</span>
+        <div class="btn-row">
+            <button class="btn" onclick="prepareTraining('control')">🚀 훈련 시작</button>
+            <button class="btn btn-stats" onclick="openDataCenter('control')">📊 데이터 센터</button>
+        </div>
     </div>
+
+    <div id="loader-msg"></div>
 </div>
 
 <script>
-    // [중요] 아우님의 최신 GAS 배포 URL을 입력하세요!
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec'; 
-    const BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?output=csv';
-    const GID = { '법규':{'객관식':'0','주관식':'2011973258'}, '관제':{'객관식':'1053182571','주관식':'217691441'} };
-    
-    document.getElementById('stats-link').href = GAS_URL;
-    let currentSub='', currentType='', allData=[], filteredQuiz=[], quizStats={}, idx=0, score=0, wrongHistory=[], isResolved=false;
-
-    // 시작 시 통계 로드
-  window.onload = function() {
-    const mainButtons = document.querySelectorAll('.btn-main');
-    // 데이터 로딩 전까지 버튼 비활성화 (선택 사항)
-    mainButtons.forEach(b => b.disabled = true);
-    
-    fetch(GAS_URL + "?action=getStats")
-        .then(res => res.json())
-        .then(data => {
-            quizStats = data;
-            console.log("✅ 오답 통계 시트와 메모리 동기화 완료!");
-            // 데이터 로드 완료 후 버튼 활성화
-            mainButtons.forEach(b => b.disabled = false);
-            document.getElementById('stats-link').innerText = "📊 나의 훈련 데이터 센터 (연결됨)";
-        })
-        .catch(e => {
-            console.error("❌ 통계 로드 실패:", e);
-            alert("통계 데이터를 가져오지 못했습니다. 네트워크를 확인하세요.");
-        });
-};
-
-    function selectSubject(s) { 
-        currentSub=s; document.getElementById('step1').style.display='none';
-        document.getElementById('step2').style.display='block';
-        document.getElementById('sub-title').innerText = "🛸 " + s + " 과정";
-    }
-
-    async function selectType(t) {
-        currentType=t; document.getElementById('step2').style.display='none'; document.getElementById('loader').style.display='block';
-        try {
-            const res = await fetch(`${BASE_URL}&gid=${GID[currentSub][t]}`);
-            const text = await res.text(); parseCSV(text);
-            document.getElementById('loader').style.display='none'; document.getElementById('step3').style.display='block';
-            document.getElementById('mission-title').innerText = "🎯 " + currentSub + " " + t;
-        } catch(e) { alert("데이터 로드 실패!"); location.reload(); }
-    }
-
-    function parseCSV(text) {
-        const rows = []; let row = []; let cell = ''; let inQuotes = false;
-        for (let i = 0; i < text.length; i++) {
-            let c = text[i];
-            if (c === '"') inQuotes = !inQuotes;
-            else if (c === ',' && !inQuotes) { row.push(cell.trim()); cell = ''; }
-            else if ((c === '\n' || c === '\r') && !inQuotes) {
-                row.push(cell.trim()); cell = ''; if (row.length > 1) rows.push(row);
-                row = []; if (c === '\r' && text[i+1] === '\n') i++;
-            } else cell += c;
-        }
-        if (cell || row.length > 0) { row.push(cell.trim()); rows.push(row); }
-        const h = rows[0].map(v => v.replace(/\s/g, ''));
-        const find = (k) => h.findIndex(v => v.includes(k));
-        const qIdx = find('문제'), bIdx = find('보기1'), aIdx = find('정답'), eIdx = find('해설');
-        allData = rows.slice(1).map(r => {
-            if(!r[qIdx]) return null;
-            const options = [r[bIdx], r[bIdx+1], r[bIdx+2], r[bIdx+3]].filter(Boolean);
-            let ans = r[aIdx];
-            if(currentType === '객관식' && !isNaN(ans)) ans = options[parseInt(ans)-1] || ans;
-            return { q: r[qIdx], ans: ans, exp: r[eIdx] || "해설 없음", opts: options };
-        }).filter(v => v);
-    }
-
-    function startSession(mode) {
-        let pool = [...allData];
-        if(mode === 'omakase') {
-            pool.sort((a,b) => (quizStats[a.q]?.total || 0) - (quizStats[b.q]?.total || 0));
-            filteredQuiz = pool.slice(0, 200);
-        } else {
-            pool.sort((a,b) => (quizStats[b.q]?.wrong || 0) - (quizStats[a.q]?.wrong || 0));
-            filteredQuiz = pool.slice(0, 100);
-        }
-        // 문제 셔플
-        filteredQuiz.sort(() => Math.random() - 0.5);
-        idx=0; score=0; wrongHistory=[];
-        document.getElementById('step3').style.display='none';
-        document.getElementById('quiz-ui').style.display='block';
-        render();
-    }
-
-    function render() {
-        isResolved = false; 
-        const item = filteredQuiz[idx];
-        
-        // [수정] quizStats에서 최신 데이터를 가져오고 숫자로 확실히 변환
-        const s = quizStats[item.q] || {total: 0, wrong: 0};
-        const t = Number(s.total) || 0;
-        const w = Number(s.wrong) || 0;
-        
-        // 정답률 계산 (정답수 / 총 횟수)
-        const rate = t > 0 ? Math.round(((t - w) / t) * 100) : 100;
-        
-        document.getElementById('prog').innerText = `${idx + 1} / ${filteredQuiz.length}`;
-        
-        // [상단바 업데이트]
-        document.getElementById('q-stat-area').innerHTML = `
-            <div style="font-size:12px; color:#1e8e3e; background:#e6f4ea; padding:8px; border-radius:5px; margin-bottom:15px;">
-                📊 기출: ${t} | 오답: ${w} | 정답률: ${rate}%
-            </div>`;
-            
-        document.getElementById('q').innerText = item.q;
-        const container = document.getElementById('opts'); container.innerHTML = '';
-        document.getElementById('feedback-area').style.display = 'none';
-
-        if(currentType === '주관식') {
-            container.innerHTML = `<input id="subj-input" style="width:100%; padding:15px; border:2px solid #ddd; border-radius:10px; box-sizing:border-box;" autocomplete="off">
-                                   <button class="btn-main" onclick="checkSubj()">제출</button>`;
-        } else {
-            const shuffledOpts = [...item.opts].sort(() => Math.random() - 0.5);
-            shuffledOpts.forEach(o => {
-                const div = document.createElement('div'); div.className = 'opt-item'; div.innerText = o;
-                div.onclick = () => { if(!isResolved) check(div, item, o); }; container.appendChild(div);
-            });
-        }
-    }
-    function check(btn, item, userRes) {
-        isResolved = true; const isCorrect = userRes.trim() === item.ans.trim();
-        if(isCorrect) score++; else wrongHistory.push(item);
-        btn.classList.add(isCorrect ? 'correct' : 'wrong');
-        document.querySelectorAll('.opt-item').forEach(el => { if(el.innerText.trim() === item.ans.trim()) el.classList.add('correct'); });
-        showFeedback(isCorrect, item, userRes);
-    }
-
-    function checkSubj() {
-    const input = document.getElementById('subj-input');
-    const item = filteredQuiz[idx];
-    
-    // 1. 공백 제거 및 소문자 변환 (기본 전처리)
-    let userVal = input.value.trim().replace(/\s/g, '');
-    let correctVal = item.ans.trim().replace(/\s/g, '');
-    
-    // 2. 콤마(,)나 슬래시(/)로 구분된 여러 답안 처리 (순서 무관 판정)
-    // 예: "A, B"와 "B, A"를 똑같이 취급합니다.
-    let isCorrect = false;
-    if (correctVal.includes(',') || correctVal.includes('/')) {
-        let userArray = userVal.split(/[,/]/).sort().join('');
-        let correctArray = correctVal.split(/[,/]/).sort().join('');
-        isCorrect = userArray === correctArray;
-    } else {
-        isCorrect = userVal === correctVal;
-    }
-
-    isResolved = true;
-    if(isCorrect) score++; else wrongHistory.push(item);
-    showFeedback(isCorrect, item, input.value);
-}
-
-    function showFeedback(isCorrect, item, userRes) {
-        document.getElementById('f-res').innerText = isCorrect ? "✅ 정답" : "❌ 오답 (정답: " + item.ans + ")";
-        document.getElementById('f-res').style.color = isCorrect ? "var(--suc)" : "var(--err)";
-        document.getElementById('f-exp').innerText = item.exp;
-        document.getElementById('feedback-area').style.display = 'block';
-        item._isCorrect = isCorrect; item._res = userRes;
-        document.getElementById('btn-redo').onclick = () => { item._skip=true; goToNext(); };
-    }
-
-    function goToNext() {
-        const item = filteredQuiz[idx];
-        
-        // [중요] 기록 제외가 아니고 응답이 있을 때만 실행
-        if (!item._skip && item._res !== undefined) {
-            // 1. 현재 로컬 메모리의 통계 업데이트 (이게 있어야 다음 렌더링 때 반영됨)
-            if (!quizStats[item.q]) quizStats[item.q] = { total: 0, wrong: 0 };
-            
-            quizStats[item.q].total = (Number(quizStats[item.q].total) || 0) + 1;
-            if (!item._isCorrect) {
-                quizStats[item.q].wrong = (Number(quizStats[item.q].wrong) || 0) + 1;
+    // 🔗 아우님의 12개 CSV 및 GAS URL을 여기에 매핑하십시오.
+    const CONFIG = {
+        normal: {
+            law: {
+                db: ["https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=0&single=true", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=2011973258&single=true"],
+                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=1384146265&single=true",
+                gas: "https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec"
+            },
+            control: {
+                db: ["https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=1053182571&single=true", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=217691441&single=true"],
+                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=1522345468&single=true",
+                gas: "https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec"
             }
+        },
+        hell: {
+            law: {
+                db: ["https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=0&single=true&output=csv", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=606421897&single=true&output=csv"],
+                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=1366188626&single=true&output=csv",
+                gas: "https://script.google.com/macros/s/AKfycbyhGW6_7Zl5P2Z-hDOvd4r_4Iw0FXF0-ygQduMJJAAqkqvEhHRxskPMn4st2LFshxUc/exec"
+            },
+            control: {
+                db: ["https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=371932808&single=true&output=csv", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=157857311&single=true&output=csv"],
+                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=720487079&single=true&output=csv",
+                gas: "https://script.google.com/macros/s/AKfycbyhGW6_7Zl5P2Z-hDOvd4r_4Iw0FXF0-ygQduMJJAAqkqvEhHRxskPMn4st2LFshxUc/exec"
+            }
+        }
+    };
 
-            // 2. 서버 전송용 데이터 준비
-            const payload = new FormData();
-            payload.append('subject', currentSub);
-            payload.append('type', currentType);
-            payload.append('id', item.q);
-            payload.append('result', item._res);
-            payload.append('isCorrect', item._isCorrect);
-            payload.append('correctAns', item.ans); 
+    let currentMode = 'normal';
+    const toggle = document.getElementById('mode-toggle');
+    const loaderMsg = document.getElementById('loader-msg');
+
+    toggle.addEventListener('change', () => {
+        currentMode = toggle.checked ? 'hell' : 'normal';
+        document.body.classList.toggle('hell-mode', toggle.checked);
+        document.getElementById('main-title').innerText = toggle.checked ? "🔥 불지옥 커리큘럼" : "항공 훈련 관제소";
+        loaderMsg.innerText = ""; // 모드 바꿀 때 메시지 초기화
+    });
+
+    async function prepareTraining(subject) {
+        const btns = document.querySelectorAll('.btn');
+        btns.forEach(b => b.disabled = true);
+        loaderMsg.innerText = `⚠️ [${currentMode.toUpperCase()}] 데이터 메모리 로딩 중...`;
+
+        try {
+            const target = CONFIG[currentMode][subject];
             
-            // 3. 서버로 POST 전송
-            fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: payload })
-            .catch(e => console.error("데이터 전송 실패:", e));
-        }
+            // 1. 객관식/주관식 CSV 2개를 병렬로 fetch
+            const [objRes, subRes] = await Promise.all(target.db.map(url => fetch(url)));
+            const objData = await objRes.text();
+            const subData = await subRes.text();
 
-        // 다음 문제로 이동
-        idx++; 
-        if (idx < filteredQuiz.length) {
-            render(); 
-        } else {
-            finishMission();
+            // 2. 세션 스토리지에 데이터 장전 (다음 페이지에서 사용)
+            sessionStorage.setItem('quiz_obj', objData);
+            sessionStorage.setItem('quiz_sub', subData);
+            sessionStorage.setItem('quiz_config', JSON.stringify({
+                mode: currentMode,
+                subject: subject,
+                gasUrl: target.gas
+            }));
+
+            loaderMsg.innerText = "✅ 로딩 완료! 훈련지로 이동합니다.";
+            
+            setTimeout(() => {
+                location.href = `quiz.html`; // 퀴즈 페이지 주소
+            }, 800);
+
+        } catch (e) {
+            loaderMsg.innerText = "❌ 로드 실패! URL 설정을 확인하십시오.";
+            btns.forEach(b => b.disabled = false);
         }
     }
 
-    function finishMission() {
-        document.getElementById('quiz-ui').style.display = 'none'; document.getElementById('review-ui').style.display = 'block';
-        const rate = idx > 0 ? Math.round((score / idx) * 100) : 0;
-        document.getElementById('report-summary').innerHTML = `<h3>정답률 ${rate}% (${score}/${idx})</h3><p>오늘도 안전 비행하셨읍니다!</p>`;
-        const container = document.getElementById('review-container'); container.innerHTML = '<h4>❌ 오답 다시보기</h4>';
-        if(wrongHistory.length === 0) container.innerHTML += '<p>틀린 문제가 없읍니다. 완벽합니다!</p>';
-        wrongHistory.forEach((m, i) => {
-            container.innerHTML += `<div class="review-card"><b>${i+1}. ${m.q}</b><br><small style="color:red">정답: ${m.ans}</small><p style="font-size:12px; color:#666; margin-top:5px;">${m.exp}</p></div>`;
-        });
+    function openDataCenter(subject) {
+        // 현재 모드와 과목에 맞는 GAS 대시보드 URL 호출
+        const url = CONFIG[currentMode][subject].gas;
+        window.open(url, '_blank');
     }
-
-    function goBack(s) { document.getElementById('step'+(s+1)).style.display = 'none'; document.getElementById('step'+s).style.display = 'block'; }
 </script>
+
 </body>
 </html>
