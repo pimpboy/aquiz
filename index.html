@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATC Training Center v3.0</title>
+    <title>ATC Training Center v3.1</title>
     <style>
         :root {
             --bg: #0a0a0a;
@@ -14,66 +14,63 @@
             --text-white: #e0e0e0;
             --border: #2a2a2a;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Pretendard', -apple-system, sans-serif; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Pretendard', sans-serif; }
         body { background: var(--bg); color: var(--text-white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 600px; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* UI Components */
         .card { background: var(--card-bg); border-radius: 20px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border); }
         button { border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight: bold; border: none; padding: 16px; width: 100%; font-size: 1rem; }
         button:active { transform: scale(0.98); }
         .btn-primary { background: #4f46e5; color: white; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: #888; text-align: left; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: #888; text-align: center; }
+        .btn-abort { width: auto; padding: 6px 12px; background: #222; color: #ff6666; font-size: 0.7rem; border: 1px solid #333; border-radius: 6px; }
         .hidden { display: none !important; }
 
         /* Difficulty Toggle */
-        .toggle-area { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 20px 0 30px; background: #222; padding: 10px 20px; border-radius: 50px; width: fit-content; }
-        .switch { position: relative; width: 50px; height: 26px; }
+        .toggle-area { display: flex; align-items: center; justify-content: center; gap: 15px; margin: 20px 0 30px; background: #1a1a1a; padding: 10px 20px; border-radius: 50px; border: 1px solid #333; }
+        .switch { position: relative; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #444; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background: white; transition: .4s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background: var(--danger-red); }
-        input:checked + .slider:before { transform: translateX(24px); }
+        input:checked + .slider:before { transform: translateX(22px); }
 
         /* Quiz Page */
         .progress-container { width: 100%; background: #222; height: 4px; border-radius: 10px; margin: 15px 0; }
-        .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: 0.4s; box-shadow: 0 0 10px var(--radar-green); }
-        #question-text { font-size: 1.2rem; line-height: 1.6; margin: 30px 0; min-height: 100px; }
+        .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: 0.4s; box-shadow: 0 0 8px var(--radar-green); }
+        #question-text { font-size: 1.15rem; line-height: 1.6; margin: 30px 0; min-height: 80px; }
         input[type="text"] { width: 100%; padding: 18px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 15px; font-size: 1.1rem; margin-bottom: 15px; outline: none; }
-        input[type="text"]:focus { border-color: var(--radar-green); }
 
-        /* Feedback Layer */
-        #feedback-layer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: #0f0f0f; border-top: 3px solid var(--radar-green); padding: 25px; display: none; z-index: 1000; border-radius: 25px 25px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.9); }
+        #feedback-layer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: #0f0f0f; border-top: 3px solid var(--radar-green); padding: 25px; display: none; z-index: 1000; border-radius: 25px 25px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="page-home">
-        <h1 style="text-align:center; color:var(--radar-green); letter-spacing:2px; margin-top:40px;">ATC TOWER v3.0</h1>
-        
+        <h1 style="text-align:center; color:var(--radar-green); letter-spacing:2px; margin: 40px 0 10px;">ATC TOWER v3.1</h1>
         <div style="display:flex; justify-content:center;">
             <div class="toggle-area">
-                <span style="font-size:0.8rem; color:#888; font-weight:bold;">NORMAL</span>
+                <span style="font-size:0.75rem; color:#666; font-weight:bold;">NORMAL</span>
                 <label class="switch">
                     <input type="checkbox" id="diff-toggle" onchange="toggleDifficulty(this.checked)">
                     <span class="slider"></span>
                 </label>
-                <span style="font-size:0.8rem; color:var(--danger-red); font-weight:bold;">HELL</span>
+                <span style="font-size:0.75rem; color:var(--danger-red); font-weight:bold;">HELL</span>
             </div>
         </div>
 
         <div id="subject-cards">
             <div class="card">
-                <h3 style="margin-top:0;">✈️ 항공법규 (LAW)</h3>
+                <h3 style="margin-top:0; font-size:1rem;">✈️ 항공법규 (LAW)</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <button class="btn-primary" onclick="prepSession('LAW', 'MULTI')">객관식</button>
                     <button class="btn-primary" onclick="prepSession('LAW', 'SUBJ')">주관식</button>
                 </div>
             </div>
             <div class="card">
-                <h3 style="margin-top:0;">📡 항공관제 (CTRL)</h3>
+                <h3 style="margin-top:0; font-size:1rem;">📡 항공관제 (CTRL)</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <button class="btn-primary" onclick="prepSession('CTRL', 'MULTI')">객관식</button>
                     <button class="btn-primary" onclick="prepSession('CTRL', 'SUBJ')">주관식</button>
@@ -84,67 +81,60 @@
         <div id="mission-profile" class="hidden">
             <div class="card" style="text-align:center; border-color: var(--radar-green);">
                 <p id="profile-title" style="font-weight:bold; color:var(--radar-green); margin-bottom:20px;"></p>
-                <button class="btn-outline" onclick="startMission('OMAKASE')" style="margin-bottom:10px; color:white;">🍱 100문항 오마카세 (신규 위주)</button>
-                <button class="btn-outline" onclick="startMission('WRONG')" style="color:white;">📝 100문항 오답노트 (취약 위주)</button>
-                <button onclick="location.reload()" style="background:none; color:#555; margin-top:15px; font-size:0.8rem;">BACK TO TOWER</button>
+                <button class="btn-outline" onclick="startMission('OMAKASE')" style="margin-bottom:10px; color:white;">🍱 100문항 오마카세</button>
+                <button class="btn-outline" onclick="startMission('WRONG')" style="color:white;">📝 100문항 오답노트</button>
+                <button onclick="location.reload()" style="background:none; color:#555; margin-top:15px; font-size:0.8rem;">CANCEL</button>
             </div>
         </div>
     </div>
 
     <div id="page-quiz" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; color:var(--radar-green); font-weight:bold; font-size:0.8rem;">
-            <span id="quiz-pos">POS: 0 / 100</span>
-            <span id="diff-label">MODE: NORMAL</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+            <span id="quiz-pos" style="color:var(--radar-green); font-size:0.8rem; font-weight:bold;">POS: 0 / 100</span>
+            <button class="btn-abort" onclick="confirmAbort()">ABORT MISSION</button>
+            <span id="diff-label" style="color:var(--radar-green); font-size:0.8rem; font-weight:bold;">MODE: NORMAL</span>
         </div>
         <div class="progress-container"><div class="progress-bar" id="quiz-pb"></div></div>
         <div id="question-text"></div>
         <div id="quiz-options"></div>
+        
+        <div style="margin-top: 30px; border-top: 1px dashed #333; padding-top: 20px;">
+            <button class="btn-outline" onclick="goAround()" style="font-size:0.9rem; border:none; color:#555;">🔄 GO AROUND (Skip this task)</button>
+        </div>
     </div>
 
     <div id="page-loading" class="hidden">
         <div style="text-align:center; margin-top:150px;">
-            <div style="width:40px; height:40px; border:3px solid var(--radar-dim); border-top-color:var(--radar-green); border-radius:50%; animation: spin 1s linear infinite; margin:0 auto 20px;"></div>
-            <p id="loading-text" style="color:var(--radar-green); font-weight:bold;">LINKING TO TOWER...</p>
+            <div style="width:40px; height:40px; border:3px solid #222; border-top-color:var(--radar-green); border-radius:50%; animation: spin 1s linear infinite; margin:0 auto 20px;"></div>
+            <p id="loading-text" style="color:var(--radar-green); font-weight:bold; letter-spacing:1px;">LINKING TO TOWER...</p>
         </div>
     </div>
 </div>
 
 <div id="feedback-layer">
-    <div id="fb-status" style="text-align:center; padding:12px; border-radius:12px; font-weight:900; margin-bottom:20px;"></div>
-    <div style="background:#1a1a1a; padding:20px; border-radius:15px; margin-bottom:20px; border:1px solid #333;">
-        <div id="fb-answer" style="color:var(--radar-green); font-weight:bold; margin-bottom:10px;"></div>
-        <div id="fb-explan" style="font-size:0.95rem; color:#aaa; line-height:1.6; white-space:pre-wrap;"></div>
+    <div id="fb-status" style="text-align:center; padding:10px; border-radius:10px; font-weight:bold; margin-bottom:15px;"></div>
+    <div style="background:#1a1a1a; padding:18px; border-radius:12px; margin-bottom:15px; border:1px solid #222;">
+        <div id="fb-answer" style="color:var(--radar-green); font-weight:bold; margin-bottom:8px; font-size:0.9rem;"></div>
+        <div id="fb-explan" style="font-size:0.85rem; color:#aaa; line-height:1.5; white-space:pre-wrap;"></div>
     </div>
     <button id="btn-next" class="btn-primary">NEXT CONTACT</button>
 </div>
 
 <script>
-/** ATC Engine v3.0 - Configuration */
 const CONFIG = {
-    EZ: {
-        URL: "https://script.google.com/macros/s/AKfycbxQdRw8bAcYSfZWNV6r808lVpwED88FaZj6bviR1pMZ2DimYDKHYu13jeT7oXaT04ErGw/exec",
-        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1036407965, CTRL_MULTI: 438358690, CTRL_SUBJ: 1403157384, LAW_STATS: 1846282036, CTRL_STATS: 1880986641 }
-    },
-    INFERNO: {
-        URL: "https://script.google.com/macros/s/AKfycbzjGLlSq7-xpO0dZxCWExg06paUtwsP1kcPBXTCXhDzm8wkU0CJCyCADB0gJKsU76z7RA/exec",
-        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1805786990, CTRL_MULTI: 2049752243, CTRL_SUBJ: 570358631, LAW_STATS: 668283973, CTRL_STATS: 1546545747 }
-    }
+    EZ: { URL: "여기에_NORMAL_GAS_URL_입력", GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1, CTRL_MULTI: 2, CTRL_SUBJ: 3, LAW_STATS: 4, CTRL_STATS: 5 } },
+    INFERNO: { URL: "여기에_HELL_GAS_URL_입력", GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1, CTRL_MULTI: 2, CTRL_SUBJ: 3, LAW_STATS: 4, CTRL_STATS: 5 } }
 };
 
-let state = {
-    difficulty: 'EZ', subject: '', type: '', 
-    questions: [], currentIndex: 0, results: []
-};
+let state = { difficulty: 'EZ', subject: '', type: '', questions: [], currentIndex: 0, results: [] };
 
 function toggleDifficulty(isHell) {
     state.difficulty = isHell ? 'INFERNO' : 'EZ';
     const label = document.getElementById('diff-label');
-    const pb = document.getElementById('quiz-pb');
     const color = isHell ? 'var(--danger-red)' : 'var(--radar-green)';
     label.innerText = `MODE: ${isHell ? 'INFERNO' : 'NORMAL'}`;
     label.style.color = color;
-    pb.style.backgroundColor = color;
-    pb.style.boxShadow = `0 0 10px ${color}`;
+    document.getElementById('quiz-pb').style.backgroundColor = color;
 }
 
 function showPage(id) {
@@ -154,7 +144,7 @@ function showPage(id) {
 
 function prepSession(sub, type) {
     state.subject = sub; state.type = type;
-    document.getElementById('profile-title').innerText = `[${sub}] MISSION: ${type === 'MULTI' ? '객관식' : '주관식'}`;
+    document.getElementById('profile-title').innerText = `[${sub}] ${type === 'MULTI' ? '객관식' : '주관식'} 훈련`;
     document.getElementById('subject-cards').classList.add('hidden');
     document.getElementById('mission-profile').classList.remove('hidden');
 }
@@ -174,40 +164,30 @@ async function startMission(mode) {
     const targetGid = cfg.GIDs[`${state.subject}_${state.type}`];
 
     try {
-        const [sRes, qRes] = await Promise.all([
-            fetch(`${cfg.URL}?gid=${statsGid}`),
-            fetch(`${cfg.URL}?gid=${targetGid}`)
-        ]);
+        const [sRes, qRes] = await Promise.all([ fetch(`${cfg.URL}?gid=${statsGid}`), fetch(`${cfg.URL}?gid=${targetGid}`) ]);
         const stats = await sRes.json();
         const questions = await qRes.json();
 
-        // 모드별 정렬 (통계 데이터 매칭)
         questions.sort((a, b) => {
-            const stA = stats.find(s => s.problem === a.problem) || { count: 0, wrong: 0, rate: 0 };
-            const stB = stats.find(s => s.problem === b.problem) || { count: 0, wrong: 0, rate: 0 };
-            return mode === 'OMAKASE' 
-                ? (stA.count - stB.count || stB.rate - stA.rate)
-                : (stB.wrong - stA.wrong);
+            const stA = stats.find(s => s.problem === a.problem) || { count: 0, rate: 0, wrong: 0 };
+            const stB = stats.find(s => s.problem === b.problem) || { count: 0, rate: 0, wrong: 0 };
+            return mode === 'OMAKASE' ? (stA.count - stB.count || stB.rate - stA.rate) : (stB.wrong - stA.wrong);
         });
 
         state.questions = shuffle([...questions.slice(0, 100)]);
-        state.currentIndex = 0;
-        state.results = [];
-        
+        state.currentIndex = 0; state.results = [];
         renderQuestion();
         showPage('page-quiz');
     } catch (e) {
-        alert("Tower Link Failed. URL을 확인하세요.");
+        alert("데이터 연동 실패. GID 또는 URL을 확인하세요.");
         location.reload();
     }
 }
 
 function renderQuestion() {
     const q = state.questions[state.currentIndex];
-    const total = state.questions.length;
-    
-    document.getElementById('quiz-pos').innerText = `POS: ${state.currentIndex + 1} / ${total}`;
-    document.getElementById('quiz-pb').style.width = `${((state.currentIndex + 1) / total) * 100}%`;
+    document.getElementById('quiz-pos').innerText = `POS: ${state.currentIndex + 1} / ${state.questions.length}`;
+    document.getElementById('quiz-pb').style.width = `${((state.currentIndex + 1) / state.questions.length) * 100}%`;
     document.getElementById('question-text').innerText = `[${q.category}] ${q.problem}`;
     
     const area = document.getElementById('quiz-options');
@@ -218,22 +198,18 @@ function renderQuestion() {
         shuffle(indexed).forEach((choice, idx) => {
             const btn = document.createElement('button');
             btn.className = 'btn-outline';
-            btn.style.marginBottom = '10px';
+            btn.style.marginBottom = '10px'; btn.style.color = 'white';
             btn.innerText = `${idx + 1}. ${choice.text}`;
             btn.onclick = () => processAnswer(choice.originalIdx, choice.text);
             area.appendChild(btn);
         });
     } else {
         const input = document.createElement('input');
-        input.type = 'text';
-        input.id = 'ans-input';
-        input.placeholder = 'Type command...';
+        input.type = 'text'; input.id = 'ans-input'; input.placeholder = 'Type command...';
         input.onkeyup = (e) => e.key === 'Enter' && processAnswer(input.value, input.value);
         area.appendChild(input);
-        
         const btn = document.createElement('button');
-        btn.className = 'btn-primary';
-        btn.innerText = 'SEND CONTACT';
+        btn.className = 'btn-primary'; btn.innerText = 'SEND CONTACT';
         btn.onclick = () => processAnswer(input.value, input.value);
         area.appendChild(btn);
         input.focus();
@@ -243,52 +219,48 @@ function renderQuestion() {
 function processAnswer(userVal, userText) {
     const q = state.questions[state.currentIndex];
     const clean = (s) => String(s || '').replace(/\s+/g, '').toLowerCase();
-    
-    // 번호 일치 OR 텍스트 일치 크로스 체크
     const isCorrect = (q.sheetType === 'MULTI')
         ? (String(userVal) === q.answer || clean(userText) === clean(q.answer))
         : (clean(userVal) === clean(q.answer));
 
     state.results.push({ problem: q.problem, isCorrect });
-
     const layer = document.getElementById('feedback-layer');
     const status = document.getElementById('fb-status');
     const color = isCorrect ? 'var(--radar-green)' : 'var(--danger-red)';
     
     status.innerText = isCorrect ? "● CORRECT" : "● INCORRECT";
-    status.style.color = color;
-    status.style.border = `1px solid ${color}`;
-    status.style.background = isCorrect ? "rgba(0,255,65,0.1)" : "rgba(255,51,51,0.1)";
-    
-    document.getElementById('fb-answer').innerText = `IDENTIFIED: ${q.answer}`;
-    document.getElementById('fb-explan').innerText = q.explan || "No manual instructions.";
-
-    document.getElementById('btn-next').onclick = () => {
-        layer.style.display = 'none';
-        state.currentIndex++;
-        if (state.currentIndex < state.questions.length) renderQuestion();
-        else finishSession();
-    };
+    status.style.color = color; status.style.background = isCorrect ? "rgba(0,255,65,0.1)" : "rgba(255,51,51,0.1)";
+    document.getElementById('fb-answer').innerText = `정답: ${q.answer}`;
+    document.getElementById('fb-explan').innerText = q.explan || "설명 없음.";
+    document.getElementById('btn-next').onclick = () => { layer.style.display = 'none'; nextQuestion(); };
     layer.style.display = 'block';
 }
 
-async function finishSession() {
-    showPage('page-loading');
-    document.getElementById('loading-text').innerText = "SYNCING WITH TOWER...";
-    const cfg = CONFIG[state.difficulty];
+function nextQuestion() {
+    state.currentIndex++;
+    if (state.currentIndex < state.questions.length) renderQuestion();
+    else finishSession();
+}
 
+function goAround() {
+    if (confirm("이 문제를 기록하지 않고 건너뛰시겠습니까?")) nextQuestion();
+}
+
+function confirmAbort() {
+    if (confirm("현재까지의 기록만 저장하고 훈련을 중단하시겠습니까?")) finishSession();
+}
+
+async function finishSession() {
+    if (state.results.length === 0) { location.reload(); return; }
+    showPage('page-loading');
+    document.getElementById('loading-text').innerText = "SYNCING LOGS...";
+    const cfg = CONFIG[state.difficulty];
     try {
-        await fetch(cfg.URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                results: state.results,
-                statsGid: cfg.GIDs[`${state.subject}_STATS`]
-            })
-        });
-        alert("Mission Accomplished. Logs updated.");
+        await fetch(cfg.URL, { method: 'POST', body: JSON.stringify({ results: state.results, statsGid: cfg.GIDs[`${state.subject}_STATS`] }) });
+        alert("훈련 종료. 기록이 동기화되었습니다.");
         location.reload();
     } catch (e) {
-        alert("Sync Error. Tower Connection Lost.");
+        alert("동기화 실패. 메인으로 돌아갑니다.");
         location.reload();
     }
 }
