@@ -106,60 +106,90 @@
         }).sort(() => Math.random() - 0.5); // 셔플
     }
 
-   function parseCSV(csv) {
-    const lines = csv.split('\n').filter(line => line.trim() !== "");
-    
-    questions = lines.slice(1).map(line => {
-        // 큰따옴표 안의 콤마를 무시하는 정규식 파싱
-        const cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-        const cleanCols = cols.map(c => c.replace(/^"|"$/g, "").trim());
+   // 1. CSV 파싱 로직 (이걸로 교체하십시오)
+function parseCSV(csv) {
+    const rows = [];
+    let currentRow = [];
+    let currentCell = '';
+    let inQuotes = false;
 
-        // 알려주신 순서에 따른 인덱스 배정 (0부터 시작)
+    // 문자 단위로 정밀 분석 (따옴표 내 콤마 무시 로직)
+    for (let i = 0; i < csv.length; i++) {
+        const char = csv[i];
+        const nextChar = csv[i + 1];
+
+        if (inQuotes) {
+            if (char === '"' && nextChar === '"') { currentCell += '"'; i++; }
+            else if (char === '"') { inQuotes = false; }
+            else { currentCell += char; }
+        } else {
+            if (char === '"') { inQuotes = true; }
+            else if (char === ',') { currentRow.push(currentCell.trim()); currentCell = ''; }
+            else if (char === '\n' || char === '\r') {
+                if (currentCell || currentRow.length > 0) {
+                    currentRow.push(currentCell.trim());
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentCell = '';
+                }
+                if (char === '\r' && nextChar === '\n') i++;
+            } else { currentCell += char; }
+        }
+    }
+    if (currentCell || currentRow.length > 0) {
+        currentRow.push(currentCell.trim());
+        rows.push(currentRow);
+    }
+
+    // 데이터 매핑 (아우님의 열 순서: ID(0), 대(1), 중(2), 문제(3), 보기1-4(4-7), 정답(8), 해설(9))
+    questions = rows.slice(1).map(cols => {
+        if (cols.length < 5) return null; // 유효하지 않은 행 제외
+
         return {
-            mainCat: cleanCols[1], // 대분류
-            subCat: cleanCols[2],  // 중분류
-            id: cleanCols[3],      // 문제 내용
-            options: [
-                cleanCols[4],      // 보기1
-                cleanCols[5],      // 보기2
-                cleanCols[6],      // 보기3
-                cleanCols[7]       // 보기4
-            ],
-            ansIdx: cleanCols[8],  // 정답 번호 (예: "1" 또는 "1.0")
-            desc: cleanCols[9]     // 해설
+            mainCat: cols[1] || "",
+            subCat: cols[2] || "",
+            id: cols[3] ? cols[3].replace(/^[0-9]+\.\s*/, "") : "내용 없음", // 문제 앞 '1. ' 제거
+            options: [cols[4], cols[5], cols[6], cols[7]].map(opt => opt ? opt.replace(/^[0-9]+\.\s*/, "") : ""), // 보기 앞 '1. ' 제거
+            ansIdx: cols[8] ? Math.floor(parseFloat(cols[8].toString().replace(/[^0-9.]/g, ""))).toString() : "",
+            desc: cols[9] || ""
         };
-    }).filter(q => q.id && q.id !== "undefined"); // 유효한 문제만 선별
+    }).filter(q => q && q.id !== "내용 없음");
 
-    questions.sort(() => Math.random() - 0.5); 
+    questions.sort(() => Math.random() - 0.5);
+    console.log("장전 완료된 문제 수:", questions.length);
 }
 
+// 2. 문제 표시 로직 (정제된 데이터 출력)
 function showQuestion() {
     const q = questions[currentIdx];
-    if (!q) return;
+    if (!q) {
+        document.getElementById('q-text').innerText = "문제를 찾을 수 없읍니다. (Index Error)";
+        return;
+    }
 
-    // 문제 상단에 분류 표시
+    // 상단 분류 표시
     document.getElementById('q-text').innerHTML = `
-        <div style="font-size:0.8em; color:var(--primary); opacity:0.8; margin-bottom:10px;">
+        <div style="font-size:0.75em; color:var(--primary); font-weight:600; margin-bottom:8px; opacity:0.8;">
             ${q.mainCat} > ${q.subCat}
         </div>
-        ${q.id}
+        <div style="line-height:1.4;">${q.id}</div>
     `;
+    
+    document.getElementById('score-board').innerText = `Q. ${currentIdx + 1}/${questions.length}`;
     
     const optBox = document.getElementById('q-options');
     optBox.innerHTML = "";
     
     q.options.forEach((opt, i) => {
-        if(opt) {
+        if (opt) {
             const btn = document.createElement('button');
             btn.className = "opt-btn";
-            btn.innerText = `${i+1}. ${opt}`;
-            // 클릭 시 선택한 번호(i+1)를 전달
+            btn.innerText = `${i + 1}. ${opt}`; // 깔끔하게 번호 붙여서 출력
             btn.onclick = () => checkAnswer((i + 1).toString(), q);
             optBox.appendChild(btn);
         }
     });
 }
-
 function checkAnswer(selectedIdx, q) {
     // 정답 번호에서 소수점 제거 (1.0 -> 1)
     const correctIdx = Math.floor(parseFloat(q.ansIdx)).toString();
