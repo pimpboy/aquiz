@@ -6,82 +6,49 @@
     <title>ATC Modern Console</title>
     <style>
         :root {
-            /* Light Mode (Default in CA) */
-            --bg-color: #f5f5f7;
-            --card-bg: rgba(255, 255, 255, 0.8);
-            --text-main: #1d1d1f;
-            --accent: #4f46e5;
-            --radar-green: #10b981;
-            --danger: #ef4444;
-            --border: rgba(0,0,0,0.1);
+            --bg-color: #f5f5f7; --card-bg: rgba(255, 255, 255, 0.8);
+            --text-main: #1d1d1f; --accent: #4f46e5;
+            --radar-green: #10b981; --danger: #ef4444; --border: rgba(0,0,0,0.1);
         }
-
         [data-theme="dark"] {
-            --bg-color: #000000;
-            --card-bg: rgba(28, 28, 30, 0.7);
-            --text-main: #f5f5f7;
-            --accent: #6366f1;
-            --radar-green: #34d399;
-            --danger: #f87171;
-            --border: rgba(255,255,255,0.1);
+            --bg-color: #000000; --card-bg: rgba(28, 28, 30, 0.7);
+            --text-main: #f5f5f7; --accent: #6366f1;
+            --radar-green: #34d399; --danger: #f87171; --border: rgba(255,255,255,0.1);
         }
-
         body {
             background-color: var(--bg-color); color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif;
             margin: 0; padding: 20px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
-
         .container { width: 100%; max-width: 500px; padding-bottom: 80px; }
-
-        /* Typography */
         h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.05rem; margin-bottom: 8px; text-align: center; }
         .subtitle { color: #86868b; text-align: center; margin-bottom: 30px; font-weight: 500; }
-
-        /* Cards & Buttons */
         .glass-card {
             background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-radius: 24px; padding: 24px; margin-bottom: 20px;
             border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.05);
         }
-
         button {
             border-radius: 16px; cursor: pointer; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 600; border: none; padding: 16px; width: 100%; font-size: 1rem;
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-
         button:active { transform: scale(0.96); opacity: 0.8; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-secondary { background: var(--border); color: var(--text-main); font-size: 0.85rem; padding: 8px 16px; width: auto; }
-
-        /* Toggle & Switch */
         .mode-selector { display: flex; background: var(--border); border-radius: 100px; padding: 4px; margin-bottom: 30px; }
         .mode-selector span { flex: 1; text-align: center; padding: 8px; border-radius: 100px; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
         .mode-active { background: white; color: black; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         [data-theme="dark"] .mode-active { background: #3a3a3c; color: white; }
-
-        /* Dark Mode Floating Button */
         #theme-toggle {
             position: fixed; bottom: 24px; right: 24px; width: 50px; height: 50px;
             border-radius: 25px; background: var(--accent); color: white;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 2000; font-size: 1.2rem;
         }
-
-        /* Progress Bar */
         .pb-wrap { height: 6px; background: var(--border); border-radius: 100px; margin: 20px 0; overflow: hidden; }
         .pb-fill { height: 100%; background: var(--accent); transition: 0.4s ease; width: 0%; }
-
-        /* Table Style */
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        td { background: var(--card-bg); padding: 16px; }
-        td:first-child { border-radius: 16px 0 0 16px; }
-        td:last-child { border-radius: 0 16px 16px 0; }
-
         .hidden { display: none !important; }
-
-        /* Loading Animation */
         .radar-pulse {
             width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--accent);
             animation: pulse 1.5s infinite; margin: 0 auto 20px;
@@ -95,12 +62,10 @@
     <div id="main-page">
         <h1>ATC Center</h1>
         <p class="subtitle">Designed for poker. Clear for takeoff.</p>
-
         <div class="mode-selector">
             <span id="ez-label" class="mode-active" onclick="window.setDiffUI(false)">Normal</span>
             <span id="hell-label" onclick="window.setDiffUI(true)">Hell Mode</span>
         </div>
-
         <div id="subject-cards">
             <div class="glass-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -112,7 +77,6 @@
                     <button class="btn-primary" onclick="window.prepMission('LAW', 'SUBJ')">주관식</button>
                 </div>
             </div>
-
             <div class="glass-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                     <span style="font-size:1.1rem; font-weight:700;">📡 항공관제</span>
@@ -124,7 +88,6 @@
                 </div>
             </div>
         </div>
-
         <div id="mode-selection" class="hidden glass-card">
             <p style="text-align:center; font-weight:700; color:var(--accent);">MISSION PROFILE</p>
             <button class="btn-primary" onclick="window.loadQuiz('OMAKASE')" style="margin-bottom:12px; background:var(--text-main); color:var(--bg-color);">🍱 오마카세 100</button>
@@ -158,9 +121,9 @@
 
 <button id="theme-toggle" onclick="window.toggleTheme()">🌓</button>
 
-<div id="feedback-layer">
+<div id="feedback-layer" style="position:fixed; bottom:0; left:0; right:0; background:var(--card-bg); backdrop-filter:blur(20px); border-top:1px solid var(--border); padding:24px; display:none; z-index:1000; border-radius:32px 32px 0 0;">
     <div id="result-status" style="text-align:center; padding:12px; font-weight:800; border-radius:12px; margin-bottom:16px;"></div>
-    <div class="glass-card">
+    <div class="glass-card" style="margin-bottom:16px;">
         <div id="correct-ans-show" style="color:var(--radar-green); font-weight:800; margin-bottom:8px;"></div>
         <div id="explanation-box" style="font-size:0.95rem; line-height:1.6; color:#86868b; white-space:pre-wrap;"></div>
     </div>
@@ -175,9 +138,10 @@
 window.state = {
     difficulty: 'EZ', subject: '', type: '', questions: [], currentIndex: 0,
     sessionResults: [], reportedIds: [], excludedIds: [], statsData: [],
-    isProcessing: false, theme: 'dark'
+    isProcessing: false
 };
 
+/** [중요] 소좌님, 아래 주소를 실제 GAS URL로, GID를 실제 번호로 꼭 맞춰주세요! */
 const CONFIG = {
     EZ: {
         URL: "https://script.google.com/macros/s/AKfycbxQdRw8bAcYSfZWNV6r808lVpwED88FaZj6bviR1pMZ2DimYDKHYu13jeT7oXaT04ErGw/exec",
@@ -188,8 +152,6 @@ const CONFIG = {
         GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1805786990, CTRL_MULTI: 2049752243, CTRL_SUBJ: 570358631, LAW_STATS: 668283973, CTRL_STATS: 1546545747 }
     }
 };
-
-// [UI] Radar Contact 효과음 같은 로딩 메시지
 window.showLoading = async function() {
     window.showPage('loading-page');
     const msg = document.getElementById('loading-msg');
@@ -203,8 +165,7 @@ window.showLoading = async function() {
 window.toggleTheme = function() {
     const html = document.documentElement;
     const current = html.getAttribute('data-theme');
-    const next = current === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', next);
+    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
 };
 
 window.setDiffUI = function(isHell) {
@@ -230,6 +191,7 @@ window.loadQuiz = async function(mode) {
     const targetGid = cfg.GIDs[`${window.state.subject}_${window.state.type}`];
     try {
         const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
+        if (!res.ok) throw new Error();
         let data = await res.json();
         if (mode === 'OMAKASE') data.sort((a,b) => (Number(a['누적 기출 횟수'])||0)-(Number(b['누적 기출 횟수'])||0));
         else data.sort((a,b) => (Number(b['누적 오답 횟수'])||0)-(Number(a['누적 오답 횟수'])||0));
@@ -238,7 +200,7 @@ window.loadQuiz = async function(mode) {
         window.state.isProcessing = false;
         window.renderQuestion();
         window.showPage('quiz-page');
-    } catch(e) { alert("Link Error"); location.reload(); }
+    } catch(e) { alert("Link Error: Check URL/GID"); location.reload(); }
 };
 
 window.renderQuestion = function() {
@@ -252,8 +214,7 @@ window.renderQuestion = function() {
     if (window.state.type === 'MULTI') {
         for(let i=1; i<=4; i++) {
             const btn = document.createElement('button');
-            btn.className = "glass-card";
-            btn.style = "margin-bottom:12px; text-align:left; border:1px solid var(--border);";
+            btn.className = "glass-card"; btn.style = "margin-bottom:12px; text-align:left; border:1px solid var(--border);";
             btn.innerText = q['보기'+i];
             btn.onclick = () => window.checkAnswer(i);
             area.appendChild(btn);
@@ -294,20 +255,16 @@ window.checkAnswer = function(userAns) {
     document.getElementById('correct-ans-show').innerText = "IDENTIFIED: " + realAnsText;
     document.getElementById('explanation-box').innerText = q.해설 || "No additional manual available.";
     
-    document.getElementById('go-around-btn').onclick = () => { if(!window.state.excludedIds.includes(q.ID)) window.state.excludedIds.push(q.ID); };
-    document.getElementById('deviation-btn').onclick = () => { if(!window.state.reportedIds.includes(q.ID)) window.state.reportedIds.push(q.ID); };
+    document.getElementById('go-around-btn').onclick = () => { if(!window.state.excludedIds.includes(q.ID)) window.state.excludedIds.push(q.ID); alert("Go Around Logged."); };
+    document.getElementById('deviation-btn').onclick = () => { if(!window.state.reportedIds.includes(q.ID)) window.state.reportedIds.push(q.ID); alert("Deviation Reported."); };
     document.getElementById('next-btn').onclick = () => {
         document.getElementById('feedback-layer').style.display = 'none';
-        window.nextQuestion();
+        window.state.isProcessing = false;
+        window.state.currentIndex++;
+        if (window.state.currentIndex < window.state.questions.length) window.renderQuestion();
+        else window.stopSession();
     };
     document.getElementById('feedback-layer').style.display = 'block';
-};
-
-window.nextQuestion = function() {
-    window.state.isProcessing = false;
-    window.state.currentIndex++;
-    if (window.state.currentIndex < window.state.questions.length) window.renderQuestion();
-    else window.stopSession();
 };
 
 window.stopSession = async function() {
@@ -335,21 +292,27 @@ window.loadStats = async function(subject) {
             .map(row => {
                 const c = Number(row['누적 기출 횟수'])||0;
                 const w = Number(row['누적 오답 횟수'])||0;
-                return { problem: row['문제'], answer: row['실제정답']||row['정답'], exp: row['해설'], count: c, wrong: w, rate: c>0?(w/c)*100:0 };
+                // 정답 필드 유연하게 매핑
+                const ans = row['실제정답'] || row['정답'] || row['정답번호'] || 'N/A';
+                return { problem: row['문제'], answer: ans, exp: row['해설'], count: c, wrong: w, rate: c>0?(w/c)*100:0 };
             });
         
         const container = document.getElementById('stats-body');
-        container.innerHTML = window.state.statsData.map((d, i) => `
-            <div class="glass-card">
-                <div style="font-weight:700; margin-bottom:8px;">${d.problem}</div>
-                <div style="color:var(--radar-green); font-size:0.9rem; margin-bottom:8px;">정답: ${d.answer}</div>
-                <div style="font-size:0.8rem; color:#86868b; margin-bottom:12px;">오답률: ${d.rate.toFixed(0)}% (기출 ${d.count} / 오답 ${d.wrong})</div>
-                <button class="btn-secondary" onclick="const e=document.getElementById('st-exp-${i}'); e.classList.toggle('hidden')">Manual</button>
-                <div id="st-exp-${i}" class="hidden" style="margin-top:12px; font-size:0.9rem; border-top:1px solid var(--border); padding-top:12px;">${d.exp}</div>
-            </div>
-        `).join('');
+        if(window.state.statsData.length === 0) {
+            container.innerHTML = "<p style='text-align:center; padding:40px;'>Perfect Clean Sheet!</p>";
+        } else {
+            container.innerHTML = window.state.statsData.map((d, i) => `
+                <div class="glass-card">
+                    <div style="font-weight:700; margin-bottom:8px;">${d.problem}</div>
+                    <div style="color:var(--radar-green); font-size:0.9rem; margin-bottom:8px;">정답: ${d.answer}</div>
+                    <div style="font-size:0.8rem; color:#86868b; margin-bottom:12px;">오답률: ${d.rate.toFixed(0)}% (기출 ${d.count} / 오답 ${d.wrong})</div>
+                    <button class="btn-secondary" onclick="const e=document.getElementById('st-exp-${i}'); e.classList.toggle('hidden')">Manual</button>
+                    <div id="st-exp-${i}" class="hidden" style="margin-top:12px; font-size:0.9rem; border-top:1px solid var(--border); padding-top:12px;">${d.exp}</div>
+                </div>
+            `).join('');
+        }
         window.showPage('stats-page');
-    } catch(e) { location.reload(); }
+    } catch(e) { alert("Data Load Error"); location.reload(); }
 };
 </script>
 </body>
