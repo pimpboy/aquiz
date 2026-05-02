@@ -38,7 +38,7 @@
         const btns = document.querySelectorAll('.btn');
         btns.forEach(b => b.disabled = true);
         const loaderMsg = document.getElementById('loader-msg');
-        loaderMsg.innerText = `[${currentMode.toUpperCase()}] 전 탄종(객/주/통) 장전 중...`;
+        loaderMsg.innerText = `[${currentMode.toUpperCase()}] Checklist(객/주/통) 수행 중...`;
 
         try {
             const target = CONFIG[currentMode][subject];
@@ -65,7 +65,7 @@
                 gasUrl: target.gas
             }));
 
-            loaderMsg.innerText = "✅ 데이터 동기화 완료! 출격합니다.";
+            loaderMsg.innerText = "✅ 데이터 동기화 완료! Cleared for takeoff";
             setTimeout(() => { location.href = 'quiz.html'; }, 800);
 
         } catch (e) {
