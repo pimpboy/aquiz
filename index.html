@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATC Training Center - Engine v2.0</title>
+    <title>ATC Training Center - Engine v2.1</title>
     <style>
         :root {
             --bg-color: #0a0a0a;
@@ -79,7 +79,6 @@
         </div>
 
         <div id="subject-selector">
-            <!-- 항공법규 카드 -->
             <div class="mode-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <span style="font-weight:900; font-size:1.1rem;">✈️ 항공법규 (Law)</span>
@@ -90,7 +89,6 @@
                     <button class="btn-primary" onclick="window.prepSession('LAW', 'SUBJ')">주관식</button>
                 </div>
             </div>
-            <!-- 항공관제 카드 -->
             <div class="mode-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <span style="font-weight:900; font-size:1.1rem;">📡 항공관제 (Control)</span>
@@ -103,7 +101,6 @@
             </div>
         </div>
 
-        <!-- 모드 선택 (Profile) -->
         <div id="profile-selector" class="hidden">
             <div class="mode-card" style="text-align:center;">
                 <p style="color:var(--radar-green); font-weight:900; font-size:0.8rem; margin-bottom:5px;">MISSION PROFILE</p>
@@ -172,7 +169,7 @@
 </div>
 
 <script>
-/** * ATC Engine v2.0 - 9-Column Schema Scratch Version 
+/** * ATC Engine v2.1 - 9-Column Schema with Shuffle & Text-Check 
  * A(0):Date, B(1):Type, C(2):Category, D(3):Problem, E(4):Answer, F(5):Explan, G(6):Count, H(7):Wrong, I(8):Rate
  */
 
@@ -194,7 +191,15 @@ const CONFIG = {
     }
 };
 
-// UI 제어
+// [Update] 유틸리티: 피셔-예이츠 셔플 알고리즘
+window.shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+};
+
 window.showPage = (id) => {
     ['page-home', 'page-quiz', 'page-stats', 'page-loading'].forEach(p => {
         document.getElementById(p).classList.add('hidden');
@@ -217,7 +222,6 @@ window.prepSession = (sub, type) => {
     document.getElementById('profile-selector').classList.remove('hidden');
 };
 
-// 미션 시작 및 데이터 로드 (9열 스키마 완벽 대응)
 window.startMission = async (mode) => {
     window.showPage('page-loading');
     const cfg = CONFIG[window.state.difficulty];
@@ -226,17 +230,19 @@ window.startMission = async (mode) => {
     try {
         const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
         const data = await res.json();
-        
-        // 9열 스키마에 최적화된 수치 추출 로직
         const getVal = (v) => Number(String(v || '0').replace(/[^0-9.-]+/g, "")) || 0;
 
+        // 1단계: 모드별 정렬 (Top 100 추출)
         if (mode === 'OMAKASE') {
             data.sort((a,b) => getVal(a.count) - getVal(b.count));
         } else {
             data.sort((a,b) => getVal(b.wrong) - getVal(a.wrong));
         }
 
-        window.state.questions = data.slice(0, 100);
+        // 2단계: 상위 100개 추출 후 [Update] 무작위 셔플 적용
+        let selected = data.slice(0, 100);
+        window.state.questions = window.shuffleArray([...selected]); 
+
         window.state.currentIndex = 0;
         window.state.sessionResults = [];
         window.state.reportedIds = [];
@@ -268,20 +274,23 @@ window.renderQuestion = () => {
     optionsArea.innerHTML = '';
 
     if (window.state.type === 'MULTI') {
-        // [SCRATCH LOGIC] 객관식 선택지 파싱 - 9열 스키마 이후 모든 열을 선택지로 간주
+        // [Update] 객관식 선택지 파싱 및 보기 셔플
         const rawChoices = Object.keys(q)
             .filter(key => key.includes('보기') || key.toLowerCase().includes('choice'))
             .map(key => q[key])
             .filter(val => val !== "");
 
-        rawChoices.forEach((choice, idx) => {
+        // 보기와 원본 인덱스를 묶어서 셔플 (번호 비교 무결성을 위해)
+        let indexedChoices = rawChoices.map((text, i) => ({ text, originalIdx: i + 1 }));
+        window.shuffleArray(indexedChoices);
+
+        indexedChoices.forEach((choice, displayIdx) => {
             const btn = document.createElement('button');
             btn.className = 'btn-outline';
-            btn.style.marginBottom = '10px';
-            btn.style.textAlign = 'left';
-            btn.style.color = '#eee';
-            btn.innerText = `${idx + 1}. ${choice}`;
-            btn.onclick = () => window.processAnswer(idx + 1, choice);
+            btn.style.cssText = 'margin-bottom:10px; text-align:left; color:#eee;';
+            btn.innerText = `${displayIdx + 1}. ${choice.text}`;
+            // [Update] 클릭 시 원본 인덱스와 텍스트를 모두 전달하여 크로스 체크 수행
+            btn.onclick = () => window.processAnswer(choice.originalIdx, choice.text);
             optionsArea.appendChild(btn);
         });
     } else {
@@ -307,17 +316,15 @@ window.processAnswer = (userVal, userText) => {
     const q = window.state.questions[window.state.currentIndex];
     let isCorrect = false;
 
-    // [9열 스키마 핵심] 백엔드에서 내려준 'answer' 필드와 직접 비교
     const clean = (s) => String(s || '').replace(/\s+/g, '').toLowerCase();
     
     if (window.state.type === 'MULTI') {
-        // 객관식은 정답 인덱스(숫자) 또는 정답 텍스트와 비교
+        // [Update] 무결성 검사: (번호가 정답과 일치) OR (텍스트 내용이 정답과 일치)
         isCorrect = (String(userVal) === String(q.answer)) || (clean(userText) === clean(q.answer));
     } else {
         isCorrect = clean(userVal) === clean(q.answer);
     }
 
-    // 결과 기록
     window.state.sessionResults.push({
         problem: q.problem,
         isCorrect: isCorrect,
@@ -326,7 +333,6 @@ window.processAnswer = (userVal, userText) => {
         explanation: q.explan
     });
 
-    // 피드백 UI
     const fbLayer = document.getElementById('feedback-layer');
     const status = document.getElementById('fb-status');
     status.innerText = isCorrect ? "● CORRECT (CLEARED)" : "● INCORRECT (DEVIATION)";
@@ -337,9 +343,8 @@ window.processAnswer = (userVal, userText) => {
     document.getElementById('fb-answer').innerText = `IDENTIFIED: ${q.answer}`;
     document.getElementById('fb-explan').innerText = q.explan || "No manual instructions available.";
 
-    // 특수 버튼 바인딩
     document.getElementById('btn-goaround').onclick = () => {
-        window.state.excludedIds.push(q.problem); // 문제 텍스트를 식별자로 사용 (백엔드와 통일)
+        window.state.excludedIds.push(q.problem);
         alert("Marked: Go Around (Excluded from Stats)");
     };
     document.getElementById('btn-deviation').onclick = () => {
@@ -389,18 +394,16 @@ window.exitSession = async () => {
     }
 };
 
-// 데이터 센터 (9열 스키마 최적화 로드)
 window.loadStats = async (subject) => {
     window.showPage('page-loading');
     const cfg = CONFIG[window.state.difficulty];
     try {
         const res = await fetch(`${cfg.URL}?gid=${cfg.GIDs[subject+'_STATS']}`);
         const data = await res.json();
-        
         const getNum = (v) => Number(String(v || '0').replace(/[^0-9.-]+/g, "")) || 0;
 
         window.state.statsData = data
-            .filter(d => getNum(d.count) > 0) // 기출 이력 있는 것만
+            .filter(d => getNum(d.count) > 0)
             .map(d => ({
                 type: d.type,
                 problem: d.problem,
