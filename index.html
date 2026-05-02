@@ -91,7 +91,7 @@
         /* Stats Table */
         .stats-wrap { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 12px; border: 1px solid #333; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #0a0a0a; min-width: 600px; }
-        th { background: #1a1a1a; padding: 15px; text-align: center; color: var(--radar-green); border-bottom: 2px solid #333; }
+        th { background: #1a1a1a; padding: 15px; text-align: center; color: var(--radar-green); border-bottom: 2px solid #333; cursor: pointer; }
         td { padding: 15px; border-bottom: 1px solid #222; text-align: center; }
 
         /* Feedback Layer */
@@ -113,10 +113,10 @@
 <body>
 
 <div class="container">
-    <!-- 메인 페이지 -->
+    <!-- Main Page -->
     <div id="main-page">
         <header style="text-align: center; margin-top: 40px; margin-bottom: 40px;">
-            <h1 style="margin: 0; letter-spacing: -1px;">ATC Training Center</h1>
+            <h1 style="margin: 0; color: var(--radar-green); letter-spacing: -1px;">ATC TRAINING CENTER</h1>
             <p style="color: #666; font-size: 0.95rem; margin-top: 8px;">Squadron Leader <strong>Porker</strong>, 시스템 가동 중...</p>
         </header>
 
@@ -130,7 +130,6 @@
         </div>
 
         <div id="subject-cards">
-            <!-- 항공법규 Card -->
             <div class="mode-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <span style="font-size: 1.1rem; font-weight: bold;">✈️ 항공법규 (Law)</span>
@@ -142,7 +141,6 @@
                 </div>
             </div>
 
-            <!-- 항공관제 Card -->
             <div class="mode-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <span style="font-size: 1.1rem; font-weight: bold;">📡 항공관제 (Control)</span>
@@ -163,19 +161,18 @@
         </div>
     </div>
 
-    <!-- 퀴즈 페이지 -->
+    <!-- Quiz Page -->
     <div id="quiz-page" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div id="pos-display" style="color: var(--radar-green); font-weight: bold; font-family: monospace;">POS: 0 / 100</div>
             <button class="abort-btn" onclick="window.stopSession()">ABORT MISSION</button>
         </div>
         <div class="progress-container"><div class="progress-bar" id="pb"></div></div>
-        
         <div id="question-box" style="margin: 40px 0; font-size: 1.25rem; font-weight: 500; line-height: 1.6; min-height: 100px;"></div>
         <div id="answer-area"></div>
     </div>
 
-    <!-- 로딩 페이지 -->
+    <!-- Loading Page -->
     <div id="loading-page" class="hidden">
         <div style="text-align: center; margin-top: 150px;">
             <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid var(--radar-dim); border-top-color: var(--radar-green); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
@@ -183,11 +180,11 @@
         </div>
     </div>
 
-    <!-- 통계 페이지 -->
+    <!-- Data Center Page -->
     <div id="stats-page" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
             <h2 style="margin: 0; color: var(--radar-green);">DATA CENTER</h2>
-            <button onclick="location.reload()" style="width: auto; padding: 10px 20px; background: #222; border: 1px solid #444; color: white;">EXIT</button>
+            <button onclick="location.reload()" style="width: auto; padding: 10px 20px; background: #222; border: 1px solid #444; color: white; border-radius: 8px;">EXIT</button>
         </div>
         <div class="stats-wrap">
             <table>
@@ -206,13 +203,10 @@
     </div>
 </div>
 
-<!-- 피드백 레이어 -->
 <div id="feedback-layer">
     <div id="result-status" style="text-align: center; padding: 12px; border-radius: 12px; font-weight: bold; margin-bottom: 20px; font-size: 1.1rem;"></div>
-    <div style="margin-bottom: 20px;">
-        <div id="correct-ans-show" style="color: var(--radar-green); font-weight: bold; font-size: 1.1rem; margin-bottom: 10px;"></div>
-        <div id="explanation-box" class="exp-box"></div>
-    </div>
+    <div id="correct-ans-show" style="color: var(--radar-green); font-weight: bold; font-size: 1.1rem; margin-bottom: 10px;"></div>
+    <div id="explanation-box" class="exp-box"></div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px;">
         <button id="go-around-btn" style="background: none; border: 1px solid var(--radar-green); color: var(--radar-green);">✈️ Go Around (제외)</button>
         <button id="deviation-btn" style="background: none; border: 1px solid orange; color: orange;">⚠️ Deviation (보고)</button>
@@ -221,7 +215,6 @@
 </div>
 
 <script>
-/** [ENGINE] System Global State */
 window.state = {
     difficulty: 'EZ',
     subject: '',
@@ -232,7 +225,8 @@ window.state = {
     reportedIds: [],
     excludedIds: [],
     statsData: [],
-    isProcessing: false
+    isProcessing: false,
+    sortAsc: true
 };
 
 const CONFIG = {
@@ -246,49 +240,37 @@ const CONFIG = {
     }
 };
 
-/** [UTIL] Page Navigation */
 window.showPage = function(pageId) {
     const pages = ['main-page', 'quiz-page', 'loading-page', 'stats-page'];
-    pages.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-    });
+    pages.forEach(id => document.getElementById(id).classList.add('hidden'));
     document.getElementById(pageId).classList.remove('hidden');
 };
 
-window.setDifficulty = function(isInferno) {
-    window.state.difficulty = isInferno ? 'INFERNO' : 'EZ';
-};
+window.setDifficulty = (val) => window.state.difficulty = val ? 'INFERNO' : 'EZ';
 
-window.prepMission = function(subject, type) {
+window.prepMission = (subject, type) => {
     window.state.subject = subject;
     window.state.type = type;
     document.getElementById('subject-cards').classList.add('hidden');
     document.getElementById('mode-selection').classList.remove('hidden');
 };
 
-/** [CORE] Data Fetching & Processing */
 window.loadQuiz = async function(mode) {
     window.showPage('loading-page');
     const cfg = CONFIG[window.state.difficulty];
     const gid = cfg.GIDs[`${window.state.subject}_${window.state.type}`];
 
     try {
-        const response = await fetch(`${cfg.URL}?gid=${gid}`);
-        if (!response.ok) throw new Error("Link Lost");
-        
-        let data = await response.json();
-        // Missing Data Guard
-        data = data.filter(row => row.문제 && row.ID);
+        const res = await fetch(`${cfg.URL}?gid=${gid}`);
+        let data = await res.json();
+        data = data.filter(row => row.문제 && (row.정답번호 || row.정답));
 
-        // Sorting Logic
         if (mode === 'OMAKASE') {
             data.sort((a, b) => (Number(a['누적 기출 횟수']) || 0) - (Number(b['누적 기출 횟수']) || 0));
         } else {
             data.sort((a, b) => (Number(b['누적 오답 횟수']) || 0) - (Number(a['누적 오답 횟수']) || 0));
         }
 
-        // 100문항 추출 후 셔플
         window.state.questions = data.slice(0, 100).sort(() => Math.random() - 0.5);
         window.state.currentIndex = 0;
         window.state.sessionResults = [];
@@ -298,38 +280,31 @@ window.loadQuiz = async function(mode) {
         window.renderQuestion();
         window.showPage('quiz-page');
     } catch (e) {
-        alert("관제탑 연결 실패. 통신 환경을 확인하십시오.");
+        alert("관제탑 연결 실패.");
         location.reload();
     }
 };
 
-/** [CORE] Render & Event Binding */
 window.renderQuestion = function() {
     const q = window.state.questions[window.state.currentIndex];
     const area = document.getElementById('answer-area');
     area.innerHTML = '';
     window.state.isProcessing = false;
 
-    // Progress Update
     document.getElementById('pos-display').innerText = `POS: ${window.state.currentIndex + 1} / ${window.state.questions.length}`;
     document.getElementById('pb').style.width = `${((window.state.currentIndex + 1) / window.state.questions.length) * 100}%`;
     document.getElementById('question-box').innerText = `[${q.대분류 || 'GEN'}] ${q.문제}`;
 
     if (window.state.type === 'MULTI') {
-        // Option Shuffling with ID mapping (3회 검증 로직 반영)
         const options = [
-            { id: 1, text: q['보기1'] },
-            { id: 2, text: q['보기2'] },
-            { id: 3, text: q['보기3'] },
-            { id: 4, text: q['보기4'] }
-        ].sort(() => Math.random() - 0.5);
+            { id: 1, text: q['보기1'] }, { id: 2, text: q['보기2'] },
+            { id: 3, text: q['보기3'] }, { id: 4, text: q['보기4'] }
+        ].filter(o => o.text).sort(() => Math.random() - 0.5);
 
         options.forEach(opt => {
-            if (!opt.text) return;
             const btn = document.createElement('button');
             btn.style = "margin-bottom: 12px; text-align: left; background: #1a1a1a; color: #ddd; border: 1px solid #333;";
             btn.innerText = opt.text;
-            // 셔플된 버튼은 클릭 시 '원본 인덱스(opt.id)'를 전달함.
             btn.onclick = () => window.checkAnswer(opt.id);
             area.appendChild(btn);
         });
@@ -341,17 +316,15 @@ window.renderQuestion = function() {
         input.onkeyup = (e) => e.key === 'Enter' && window.checkAnswer(input.value);
         area.appendChild(input);
 
-        const sendBtn = document.createElement('button');
-        sendBtn.innerText = "SEND COMMAND";
-        sendBtn.className = "btn-start";
-        sendBtn.onclick = () => window.checkAnswer(input.value);
-        area.appendChild(sendBtn);
-
+        const btn = document.createElement('button');
+        btn.innerText = "SEND COMMAND";
+        btn.className = "btn-start";
+        btn.onclick = () => window.checkAnswer(input.value);
+        area.appendChild(btn);
         setTimeout(() => document.getElementById('subj-input')?.focus(), 300);
     }
 };
 
-/** [CORE] Judgment Logic */
 window.checkAnswer = function(userAns) {
     if (window.state.isProcessing) return;
     window.state.isProcessing = true;
@@ -369,61 +342,44 @@ window.checkAnswer = function(userAns) {
         correctAnswerDisplay = q.정답;
     }
 
-    // 결과 기록
-    window.state.sessionResults.push({
-        id: q.ID,
-        isCorrect: isCorrect,
-        userAns: userAns
-    });
+    window.state.sessionResults.push({ id: q.ID, isCorrect, userAns });
 
-    // UI Feedback
     const layer = document.getElementById('feedback-layer');
     const status = document.getElementById('result-status');
-    
     status.innerText = isCorrect ? "● CLEARED (CORRECT)" : "● DEVIATION (INCORRECT)";
     status.style.background = isCorrect ? "rgba(0, 255, 65, 0.15)" : "rgba(255, 51, 51, 0.15)";
     status.style.color = isCorrect ? "var(--radar-green)" : "var(--danger-red)";
     
     document.getElementById('correct-ans-show').innerText = `IDENTIFIED AS: ${correctAnswerDisplay}`;
-    document.getElementById('explanation-box').innerText = q.해설 || "해설 데이터가 없습니다.";
+    document.getElementById('explanation-box').innerText = q.해설 || "분석 매뉴얼 없음.";
     
-    // 버튼 이벤트 바인딩
     document.getElementById('go-around-btn').onclick = () => {
         if (!window.state.excludedIds.includes(q.ID)) window.state.excludedIds.push(q.ID);
-        alert("ID " + q.ID + " : Go Around 접수됨.");
+        alert("GO AROUND 접수 (ID: " + q.ID + ")");
     };
     document.getElementById('deviation-btn').onclick = () => {
         if (!window.state.reportedIds.includes(q.ID)) window.state.reportedIds.push(q.ID);
-        alert("ID " + q.ID + " : Deviation 보고됨.");
+        alert("DEVIATION 보고 (ID: " + q.ID + ")");
     };
     document.getElementById('next-btn').onclick = () => {
         layer.style.display = 'none';
         window.nextQuestion();
     };
-
     layer.style.display = 'block';
 };
 
-window.nextQuestion = function() {
+window.nextQuestion = () => {
     window.state.currentIndex++;
-    if (window.state.currentIndex < window.state.questions.length) {
-        window.renderQuestion();
-    } else {
-        window.stopSession();
-    }
+    if (window.state.currentIndex < window.state.questions.length) window.renderQuestion();
+    else window.stopSession();
 };
 
-/** [CORE] Data Synchronization (POST) */
 window.stopSession = async function() {
-    if (window.state.sessionResults.length === 0) {
-        location.reload();
-        return;
-    }
+    if (window.state.sessionResults.length === 0) return location.reload();
     if (!confirm("훈련 데이터를 관제탑으로 전송하시겠습니까?")) return;
 
     window.showPage('loading-page');
     document.getElementById('loading-msg').innerText = "SYNCING WITH TOWER...";
-
     const cfg = CONFIG[window.state.difficulty];
     const payload = {
         results: window.state.sessionResults,
@@ -434,20 +390,16 @@ window.stopSession = async function() {
     };
 
     try {
-        const res = await fetch(cfg.URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error("Sync Failure");
-        alert("전송 완료. 기지로 복귀합니다.");
+        await fetch(cfg.URL, { method: 'POST', body: JSON.stringify(payload) });
+        alert("전송 완료.");
         location.reload();
     } catch (e) {
-        alert("전송 실패. 네트워크 상태를 확인하고 다시 시도하십시오.");
+        alert("전송 실패.");
         window.showPage('quiz-page');
     }
 };
 
-/** [STATS] Data Center Management */
+/** [DATA CENTER FIX] Header Matching Logic */
 window.loadStats = async function(subject) {
     window.showPage('loading-page');
     const cfg = CONFIG[window.state.difficulty];
@@ -457,44 +409,49 @@ window.loadStats = async function(subject) {
         const res = await fetch(`${cfg.URL}?gid=${gid}`);
         const raw = await res.json();
         
-        window.state.statsData = raw.filter(r => r.문제).map(r => {
-            const c = Number(r['누적 기출 횟수']) || 0;
-            const w = Number(r['누적 오답 횟수']) || 0;
+        // 시트의 실제 헤더인 '유형', '문제', '실제정답' 등을 매핑
+        window.state.statsData = raw.filter(r => r.문제 || r.유형).map(r => {
+            const count = Number(r['누적 기출 횟수']) || 0;
+            const wrong = Number(r['누적 오답 횟수']) || 0;
             return {
-                type: r['유형'] || '-',
-                problem: r['문제'] || '-',
-                answer: r['실제정답'] || r['정답'] || '-',
+                type: r['유형'] || 'N/A',
+                problem: r['문제'] || 'No Title',
+                answer: r['실제정답'] || r['정답'] || 'None',
                 exp: r['해설'] || '-',
-                count: c,
-                wrong: w,
-                rate: c > 0 ? (w / c) * 100 : 0
+                count: count,
+                wrong: wrong,
+                rate: count > 0 ? (wrong / count) * 100 : 0
             };
         });
         
         window.renderStats();
         window.showPage('stats-page');
     } catch (e) {
-        alert("통계 데이터 로드 실패.");
+        alert("데이터 로드 실패.");
         location.reload();
     }
 };
 
 window.renderStats = function() {
     const tbody = document.getElementById('stats-body');
+    if (window.state.statsData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding: 40px; color: #555;">NO DATA FOUND IN TOWER</td></tr>`;
+        return;
+    }
     tbody.innerHTML = window.state.statsData.map((d, i) => `
         <tr>
-            <td>${d.type}</td>
+            <td><span style="color: #888; font-size: 0.75rem;">${d.type}</span></td>
             <td style="text-align: left;">
-                <div style="font-weight: 600; margin-bottom: 5px;">${d.problem}</div>
-                <div style="color: var(--radar-green); font-size: 0.8rem;">ANS: ${d.answer}</div>
-                <div id="st-exp-${i}" style="display:none; font-size: 0.75rem; color: #888; margin-top: 8px; border-top: 1px solid #222; padding-top: 8px;">${d.exp}</div>
-                <span style="cursor:pointer; font-size:0.7rem; color: #444; text-decoration: underline;" onclick="const e=document.getElementById('st-exp-${i}'); e.style.display=e.style.display==='none'?'block':'none'">[VIEW MANUAL]</span>
+                <div style="font-weight: 600; margin-bottom: 4px;">${d.problem}</div>
+                <div style="color: var(--radar-green); font-size: 0.75rem; font-family: monospace;">ANS: ${d.answer}</div>
+                <div id="st-exp-${i}" style="display:none; font-size: 0.75rem; color: #888; margin-top: 8px; border-top: 1px solid #222; padding-top: 8px; line-height: 1.4;">${d.exp}</div>
+                <span style="cursor:pointer; font-size:0.65rem; color: #444; text-decoration: underline;" onclick="const e=document.getElementById('st-exp-${i}'); e.style.display=e.style.display==='none'?'block':'none'">[TOGGLE MANUAL]</span>
             </td>
             <td>${d.count}</td>
             <td style="color: var(--danger-red);">${d.wrong}</td>
             <td>
                 ${d.rate.toFixed(1)}%
-                <div style="width: 100%; background: #222; height: 4px; border-radius: 2px; margin-top: 5px;">
+                <div style="width: 100%; background: #222; height: 3px; border-radius: 2px; margin-top: 4px;">
                     <div style="width: ${d.rate}%; background: var(--danger-red); height: 100%;"></div>
                 </div>
             </td>
@@ -502,13 +459,12 @@ window.renderStats = function() {
     `).join('');
 };
 
-window.sortStats = function(key) {
-    this.asc = !this.asc;
-    window.state.statsData.sort((a, b) => this.asc ? (a[key] > b[key] ? 1 : -1) : (b[key] > a[key] ? 1 : -1));
+window.sortStats = (key) => {
+    window.state.sortAsc = !window.state.sortAsc;
+    window.state.statsData.sort((a, b) => window.state.sortAsc ? (a[key] > b[key] ? 1 : -1) : (b[key] > a[key] ? 1 : -1));
     window.renderStats();
 };
 
-/** CSS Spinner Animation */
 const style = document.createElement('style');
 style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
 document.head.appendChild(style);
