@@ -43,6 +43,14 @@
         .correct { color: var(--radar-green); font-weight: bold; }
         .incorrect { color: var(--danger-red); font-weight: bold; }
         .hidden { display: none !important; }
+
+        button:disabled {
+            border-color: #333 !important;
+            color: #555 !important;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
     </style>
 </head>
 <body>
