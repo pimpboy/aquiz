@@ -11,97 +11,149 @@
             --radar-dim: #004411;
             --danger-red: #ff3333;
             --text-white: #e0e0e0;
+            --primary-blue: #4f46e5;
         }
         body {
             background-color: var(--bg-color);
             color: var(--text-white);
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
             margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
         }
         .container { width: 100%; max-width: 500px; }
+        
+        /* 버튼 공통 스타일 */
         button {
             background: none; border: 1px solid var(--radar-green);
             color: var(--radar-green); padding: 15px; margin: 10px 0;
             width: 100%; font-size: 1.1rem; cursor: pointer;
-            border-radius: 5px;
+            border-radius: 12px; transition: 0.2s;
         }
-        button:disabled { border-color: #444; color: #444; cursor: not-allowed; }
-        input[type="text"] {
-            width: 100%; padding: 15px; box-sizing: border-box;
-            background: #1a1a1a; border: 1px solid var(--radar-green);
-            color: white; font-size: 1.2rem; margin-bottom: 10px;
-        }
-        .progress-container { width: 100%; background: var(--radar-dim); height: 10px; margin: 20px 0; position: relative; }
-        .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: 0.3s; }
-        .nm-display { text-align: center; font-size: 0.9rem; margin-bottom: 5px; color: var(--radar-green); }
-        #feedback-layer {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: #111; border-top: 2px solid var(--radar-green);
-            padding: 20px; display: none; max-height: 70vh; overflow-y: auto; z-index: 100;
-        }
-        .correct { color: var(--radar-green); font-weight: bold; }
-        .incorrect { color: var(--danger-red); font-weight: bold; }
-        .hidden { display: none !important; }
-
+        button:hover { background: var(--radar-dim); }
         button:disabled {
             border-color: #333 !important;
             color: #555 !important;
             cursor: not-allowed;
             opacity: 0.6;
         }
-        
+
+        /* 훈련 모드 카드 스타일 (image_068caf 반영) */
+        .mode-card {
+            background: #1a1a1a; border-radius: 20px;
+            padding: 20px; margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+        .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn-start { background: var(--primary-blue); color: white; border: none; flex: 1.5; }
+        .btn-data { background: #4b5563; color: white; border: none; flex: 1; }
+
+        /* 토글 스위치 (NORMAL / HELL) */
+        .toggle-container {
+            background: #eee; border-radius: 50px;
+            padding: 10px 30px; display: flex; align-items: center;
+            justify-content: center; gap: 20px; margin-bottom: 30px;
+            color: #333; font-weight: bold;
+        }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--danger-red); }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .text-hell { color: var(--danger-red); }
+
+        /* 퀴즈 진행 바 */
+        .progress-container { width: 100%; background: #222; height: 6px; border-radius: 3px; margin: 20px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: 0.3s; }
+        .pos-display { text-align: center; color: var(--radar-green); font-size: 0.9rem; margin-bottom: 5px; }
+
+        /* 피드백 레이어 */
+        #feedback-layer {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #111; border-top: 2px solid var(--radar-green);
+            padding: 20px; display: none; z-index: 1000;
+            max-height: 85vh; overflow-y: auto; border-radius: 25px 25px 0 0;
+        }
+        #result-status { text-align: center; padding: 15px; font-size: 1.4rem; font-weight: bold; border-radius: 10px; margin-bottom: 15px; }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="main-page">
-        <h2>ATC TRAINING MODE</h2>
-        <div style="margin: 20px 0;">
-            <button id="toggle-diff" onclick="toggleDifficulty()">DIFFICULTY: EZ</button>
+        <h1 style="text-align: center; margin-bottom: 5px;">항공 훈련 관제소</h1>
+        <p style="text-align: center; color: #888; margin-bottom: 30px;">포커 소좌, 훈련 모드를 선택하십시오.</p>
+
+        <div class="toggle-container">
+            <span>NORMAL</span>
+            <label class="switch">
+                <input type="checkbox" id="diff-toggle" onchange="toggleDifficulty()">
+                <span class="slider"></span>
+            </label>
+            <span class="text-hell">HELL</span>
         </div>
-        <div id="subject-btns">
-            <button class="nav-btn" onclick="prepTraining('LAW', 'MULTI')">✈️ LAW (Multiple)</button>
-            <button class="nav-btn" onclick="prepTraining('LAW', 'SUBJ')">✈️ LAW (Subjective)</button>
-            <button class="nav-btn" onclick="prepTraining('CTRL', 'MULTI')">📡 CONTROL (Multiple)</button>
-            <button class="nav-btn" onclick="prepTraining('CTRL', 'SUBJ')">📡 CONTROL (Subjective)</button>
+
+        <div id="subject-cards">
+            <div class="mode-card">
+                <div class="card-title">✈️ 항공법규 (Law)</div>
+                <div class="btn-group">
+                    <button class="btn-start" onclick="prepTraining('LAW', 'MULTI')">🚀 훈련 시작 (객)</button>
+                    <button class="btn-start" onclick="prepTraining('LAW', 'SUBJ')">🚀 훈련 시작 (주)</button>
+                </div>
+            </div>
+            <div class="mode-card">
+                <div class="card-title">📡 항공관제 (Control)</div>
+                <div class="btn-group">
+                    <button class="btn-start" onclick="prepTraining('CTRL', 'MULTI')">🚀 훈련 시작 (객)</button>
+                    <button class="btn-start" onclick="prepTraining('CTRL', 'SUBJ')">🚀 훈련 시작 (주)</button>
+                </div>
+            </div>
         </div>
+
         <div id="mode-selection" class="hidden">
-            <p style="text-align:center; color:orange;">Select Mission Profile:</p>
-            <button onclick="loadQuiz('OMAKASE')">🍱 100문항 오마카세</button>
-            <button onclick="loadQuiz('WRONG')">📝 100문항 오답노트</button>
-            <button onclick="location.reload()" style="border-color:#666; color:#666;">Back to Menu</button>
+            <p style="text-align:center; color:orange; margin-top:20px;">MISSION PROFILE</p>
+            <button onclick="loadQuiz('OMAKASE')">🍱 100문항 오마카세 (신규 위주)</button>
+            <button onclick="loadQuiz('WRONG')">📝 100문항 오답노트 (취약 위주)</button>
+            <button onclick="location.reload()" style="border-color:#666; color:#666; margin-top:20px;">Back to Base</button>
         </div>
     </div>
 
     <div id="loading-page" class="hidden">
-        <h3 id="loading-msg" style="text-align: center; margin-top: 50px; color: var(--radar-green);">Initializing...</h3>
+        <div style="text-align: center; margin-top: 100px;">
+            <h2 id="loading-msg" style="color: var(--radar-green);">Initializing Data Link...</h2>
+        </div>
     </div>
 
     <div id="quiz-page" class="hidden">
-        <div class="nm-display" id="pos-display">Current Position: 0nm / 100nm</div>
+        <div class="pos-display" id="pos-display">Position: 0nm / 100nm</div>
         <div class="progress-container"><div class="progress-bar" id="pb"></div></div>
-        <div id="question-box" style="font-size: 1.1rem; margin-bottom: 20px; min-height: 80px; line-height:1.4;"></div>
+        
+        <div id="question-box" style="font-size: 1.15rem; margin: 30px 0; line-height: 1.5; min-height: 100px;"></div>
         <div id="answer-area"></div>
-        <button onclick="stopSession()" style="border-color: #666; color: #666; margin-top: 40px; font-size:0.8rem;">ABORT MISSION</button>
+        
+        <button onclick="stopSession()" style="border-color: #444; color: #444; margin-top: 50px; font-size: 0.9rem;">ABORT MISSION (TERMINATE)</button>
     </div>
 </div>
 
 <div id="feedback-layer">
-    <div id="result-status" style="font-size: 1.4rem; margin-bottom:10px;"></div>
-    <div id="correct-ans-show" style="margin: 10px 0; color: #aaa; font-size:0.9rem;"></div>
-    <div id="explanation-box" style="margin: 15px 0; line-height: 1.5; white-space: pre-wrap; font-size:0.95rem; background:#222; padding:10px;"></div>
-    <div style="display: flex; gap: 10px;">
-        <button id="go-around-btn">✈️ Go Around</button>
-        <button id="deviation-btn" style="border-color: orange; color: orange;">⚠️ Possible Deviation</button>
+    <div id="result-status"></div>
+    <div style="background: #222; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+        <div id="correct-ans-show" style="color: var(--radar-green); font-weight: bold; margin-bottom: 10px;"></div>
+        <div id="explanation-box" style="font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; color: #ccc;"></div>
     </div>
-    <button onclick="nextQuestion()" style="background: var(--radar-green); color: black; font-weight:bold;">NEXT CONTACT</button>
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+        <button id="go-around-btn" style="flex: 1; font-size: 0.9rem;">✈️ Go Around</button>
+        <button id="deviation-btn" style="flex: 1; border-color: orange; color: orange; font-size: 0.9rem;">⚠️ Possible Deviation</button>
+    </div>
+    <button onclick="nextQuestion()" style="background: var(--radar-green); color: black; font-weight: bold; font-size: 1.2rem; border: none;">NEXT CONTACT</button>
 </div>
 
 <script>
 /**
- * [필독] CONFIG의 URL과 GID를 본인의 시트에 맞게 꼭 수정하세요!
+ * [CRITICAL] 본인의 GAS URL과 GID를 입력하세요.
  */
 const CONFIG = {
     EZ: {
@@ -116,14 +168,9 @@ const CONFIG = {
 
 let state = {
     difficulty: 'EZ',
-    subject: '',
-    type: '',
-    questions: [],
-    currentIndex: 0,
-    sessionResults: [],
-    reportedIds: [],
-    excludedIds: [],
-    dbCache: { EZ: {}, INFERNO: {} }
+    subject: '', type: '',
+    questions: [], currentIndex: 0,
+    sessionResults: [], reportedIds: [], excludedIds: []
 };
 
 function showPage(id) {
@@ -132,36 +179,26 @@ function showPage(id) {
 }
 
 function toggleDifficulty() {
-    state.difficulty = state.difficulty === 'EZ' ? 'INFERNO' : 'EZ';
-    document.getElementById('toggle-diff').innerText = `DIFFICULTY: ${state.difficulty}`;
-    document.getElementById('toggle-diff').style.color = state.difficulty === 'EZ' ? '#00ff41' : '#ff3333';
+    state.difficulty = document.getElementById('diff-toggle').checked ? 'INFERNO' : 'EZ';
 }
 
 function prepTraining(sub, type) {
     state.subject = sub;
     state.type = type;
-    document.getElementById('subject-btns').classList.add('hidden');
+    document.getElementById('subject-cards').classList.add('hidden');
     document.getElementById('mode-selection').classList.remove('hidden');
 }
 
 async function loadQuiz(mode) {
     showPage('loading-page');
-    const msgEl = document.getElementById('loading-msg');
-    const seq = ["Performing Checklist...", "Establishing Data Link...", "Radar contact. My control."];
-    
-    for(let m of seq) {
-        msgEl.innerText = m;
-        await new Promise(r => setTimeout(r, 500));
-    }
-
     const cfg = CONFIG[state.difficulty];
     const targetGid = cfg.GIDs[`${state.subject}_${state.type}`];
-    
+
     try {
         const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
         let data = await res.json();
 
-        // 알고리즘: 기출_Total(K열), 오답_Total(L열) 기준 정렬
+        // 오마카세/오답노트 정렬 알고리즘
         if (mode === 'OMAKASE') {
             data.sort((a, b) => (a['기출_Total'] || 0) - (b['기출_Total'] || 0) || (b['오답_Total'] || 0) - (a['오답_Total'] || 0));
         } else {
@@ -174,7 +211,7 @@ async function loadQuiz(mode) {
         renderQuestion();
         showPage('quiz-page');
     } catch (e) {
-        alert("Check GAS URL/GID and 'Anyone' access setting.");
+        alert("Radar Lost! GAS URL 또는 Anyone 권한을 확인하세요.");
         location.reload();
     }
 }
@@ -183,7 +220,7 @@ function renderQuestion() {
     const q = state.questions[state.currentIndex];
     document.getElementById('pos-display').innerText = `Position: ${state.currentIndex + 1}nm / 100nm`;
     document.getElementById('pb').style.width = `${state.currentIndex + 1}%`;
-    document.getElementById('question-box').innerText = `[${q.대분류 || 'UNCAT'}] ${q.문제}`;
+    document.getElementById('question-box').innerText = `[${q.대분류 || 'UNIT'}] ${q.문제}`;
     
     const area = document.getElementById('answer-area');
     area.innerHTML = '';
@@ -199,11 +236,13 @@ function renderQuestion() {
         const input = document.createElement('input');
         input.type = 'text';
         input.id = 'subj-input';
-        input.placeholder = "Response...";
+        input.placeholder = "입력 후 Enter...";
+        input.style = "width:100%; padding:15px; background:#1a1a1a; border:1px solid #00ff41; color:white; border-radius:12px; font-size:1.1rem; box-sizing:border-box;";
         input.onkeyup = (e) => e.key === 'Enter' && checkAnswer(input.value);
         area.appendChild(input);
         const b = document.createElement('button');
-        b.innerText = "SEND (ENTER)";
+        b.innerText = "SEND COMMAND";
+        b.style.marginTop = "15px";
         b.onclick = () => checkAnswer(input.value);
         area.appendChild(b);
         input.focus();
@@ -213,15 +252,12 @@ function renderQuestion() {
 function checkAnswer(userAns) {
     const q = state.questions[state.currentIndex];
     
-    // 1. [추가] 중복 클릭 방지: 모든 답안 버튼 및 입력창 비활성화
-    const buttons = document.querySelectorAll('#answer-area button');
-    buttons.forEach(btn => btn.disabled = true);
-    
-    const input = document.getElementById('subj-input');
-    if (input) input.disabled = true;
+    // 버튼 잠금 (중복 클릭 방지)
+    const btns = document.querySelectorAll('#answer-area button');
+    btns.forEach(b => b.disabled = true);
+    if(document.getElementById('subj-input')) document.getElementById('subj-input').disabled = true;
 
     let isCorrect = false;
-
     if (state.type === 'MULTI') {
         isCorrect = parseInt(userAns) === parseInt(q.정답번호);
     } else {
@@ -229,18 +265,33 @@ function checkAnswer(userAns) {
         isCorrect = clean(userAns) === clean(q.정답);
     }
 
-    // 결과 저장 (이때 userAns를 꼭 담아줘야 시트에 기록됩니다)
-    state.sessionResults.push({ 
-        id: q.ID, 
-        isCorrect: isCorrect, 
-        userAns: userAns 
-    });
+    state.sessionResults.push({ id: q.ID, isCorrect: isCorrect, userAns: userAns });
 
-    // ... (이하 피드백 레이어 노출 로직 동일) ...
-    const layer = document.getElementById('feedback-layer');
-    layer.style.display = 'block';
-}
+    // 피드백 레이어 노출
+    const statusEl = document.getElementById('result-status');
+    if (isCorrect) {
+        statusEl.innerText = "● CORRECT (CLEARED)";
+        statusEl.style.backgroundColor = "rgba(0, 255, 65, 0.2)";
+        statusEl.style.color = "#00ff41";
+    } else {
+        statusEl.innerText = "● INCORRECT (DEVIATION)";
+        statusEl.style.backgroundColor = "rgba(255, 51, 51, 0.2)";
+        statusEl.style.color = "#ff3333";
+    }
+
+    document.getElementById('correct-ans-show').innerText = "IDENTIFIED AS: " + 
+        (state.type === 'MULTI' ? q[`보기${q.정답번호}`] : q.정답);
+    document.getElementById('explanation-box').innerText = q.해설 || "NO ADDITIONAL MANUAL.";
     
+    document.getElementById('go-around-btn').className = state.difficulty === 'EZ' ? '' : 'hidden';
+    document.getElementById('deviation-btn').className = state.difficulty === 'INFERNO' ? '' : 'hidden';
+    
+    document.getElementById('go-around-btn').onclick = () => { state.excludedIds.push(q.ID); alert("Go-around Logged."); };
+    document.getElementById('deviation-btn').onclick = () => { state.reportedIds.push(q.ID); alert("Deviation Reported."); };
+
+    document.getElementById('feedback-layer').style.display = 'block';
+}
+
 function nextQuestion() {
     document.getElementById('feedback-layer').style.display = 'none';
     state.currentIndex++;
@@ -252,44 +303,31 @@ async function stopSession() {
     if(!confirm("Sync with Tower?")) return;
     showPage('loading-page');
     document.getElementById('loading-msg').innerText = "Transmitting Data...";
-
-    const cfg = CONFIG[state.difficulty];
     
-    // 핵심: GAS가 이해할 수 있는 이름(Key)으로 데이터를 정확히 포장합니다.
+    const cfg = CONFIG[state.difficulty];
     const detailedResults = state.sessionResults.map(res => {
-        // 현재 문제의 상세 정보를 원본 DB에서 찾습니다.
         const q = state.questions.find(item => item.ID === res.id);
         return {
-            id: res.id,
-            isCorrect: res.isCorrect,
-            type: state.type,           // "MULTI" 또는 "SUBJ"
-            problem: q.문제 || "",       // 시트의 '문제' 열 내용
-            userResponse: res.userAns || "", // 사용자가 입력한 값
-            correctAnswer: state.type === 'MULTI' ? q[`보기${q.정답번호}`] : q.정답 // 실제 정답
+            id: res.id, isCorrect: res.isCorrect,
+            type: state.type, problem: q.문제 || "", userResponse: res.userAns || "",
+            correctAnswer: state.type === 'MULTI' ? q[`보기${q.정답번호}`] : q.정답
         };
     });
 
-    const payload = {
-        results: detailedResults,
-        reportedIds: state.reportedIds,
-        excludedIds: state.excludedIds,
-        masterGid: cfg.GIDs[`${state.subject}_${state.type}`],
-        statsGid: cfg.GIDs[`${state.subject}_STATS`]
-    };
-
     try {
-        // 'no-cors'를 제거하고 제대로 된 fetch를 수행합니다.
         await fetch(cfg.URL, {
             method: 'POST',
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                results: detailedResults,
+                reportedIds: state.reportedIds,
+                excludedIds: state.excludedIds,
+                masterGid: cfg.GIDs[`${state.subject}_${state.type}`],
+                statsGid: cfg.GIDs[`${state.subject}_STATS`]
+            })
         });
-        alert("Sync Complete.");
-    } catch (e) {
-        console.error("Transmission Error:", e);
-        alert("Sync Failed. Check Console.");
-    }
+    } catch (e) { console.error(e); }
     location.reload();
 }
 </script>
 </body>
-</html>
+</html>ㅍㅍㅎㅎ
