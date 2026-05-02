@@ -43,7 +43,7 @@
         /* Stats Table */
         .stats-wrap { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #111; min-width: 550px; }
-        th { background: #222; padding: 12px; cursor: pointer; border-bottom: 2px solid #333; color: var(--radar-green); position: sticky; top: 0; }
+        th { background: #222; padding: 12px; cursor: pointer; border-bottom: 2px solid #333; color: var(--radar-green); position: sticky; top: 0; z-index: 10; }
         td { padding: 15px 12px; border-bottom: 1px solid #222; text-align: center; vertical-align: middle; }
         .rate-bg { width: 100%; background: #333; height: 6px; border-radius: 3px; margin-top: 8px; }
         .rate-bar { height: 100%; background: var(--danger-red); transition: width 0.5s ease-out; }
@@ -144,7 +144,7 @@
 </div>
 
 <script>
-/** [세팅] 실제 GAS URL을 여기에 입력하세요 */
+/** [시스템 설정] 타워(GAS) 연결 URL 설정 */
 const CONFIG = {
     EZ: {
         URL: "https://script.google.com/macros/s/AKfycbxQdRw8bAcYSfZWNV6r808lVpwED88FaZj6bviR1pMZ2DimYDKHYu13jeT7oXaT04ErGw/exec",
@@ -154,11 +154,6 @@ const CONFIG = {
         URL: "https://script.google.com/macros/s/AKfycbzjGLlSq7-xpO0dZxCWExg06paUtwsP1kcPBXTCXhDzm8wkU0CJCyCADB0gJKsU76z7RA/exec",
         GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1805786990, CTRL_MULTI: 2049752243, CTRL_SUBJ: 570358631, LAW_STATS: 668283973, CTRL_STATS: 1546545747 }
     }
-};
-
-let state = { 
-    difficulty: 'EZ', subject: '', type: '', questions: [], currentIndex: 0, 
-    sessionResults: [], reportedIds: [], excludedIds: [], statsData: [] 
 };
 
 function showPage(id) {
@@ -182,17 +177,22 @@ async function loadQuiz(mode) {
     const targetGid = cfg.GIDs[`${state.subject}_${state.type}`];
     try {
         const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
+        if (!res.ok) throw new Error("Network response was not ok");
         let data = await res.json();
         
-        if (mode === 'OMAKASE') data.sort((a,b) => (a['누적 기출 횟수']||0)-(b['누적 기출 횟수']||0));
-        else data.sort((a,b) => (b['누적 오답 횟수']||0)-(a['누적 오답 횟수']||0));
+        if (mode === 'OMAKASE') data.sort((a,b) => (Number(a['누적 기출 횟수'])||0)-(Number(b['누적 기출 횟수'])||0));
+        else data.sort((a,b) => (Number(b['누적 오답 횟수'])||0)-(Number(a['누적 오답 횟수'])||0));
         
         state.questions = data.slice(0, 100);
         state.currentIndex = 0;
         state.sessionResults = [];
+        state.isProcessing = false;
         renderQuestion();
         showPage('quiz-page');
-    } catch(e) { alert("연결 실패! URL 설정을 확인하세요."); location.reload(); }
+    } catch(e) { 
+        alert("타워 통신 실패! URL 및 네트워크를 확인하십시오."); 
+        location.reload(); 
+    }
 }
 
 function renderQuestion() {
@@ -223,11 +223,17 @@ function renderQuestion() {
         b.innerText = "SEND COMMAND"; b.style = "background:var(--primary-blue); color:white;";
         b.onclick = () => checkAnswer(input.value);
         area.appendChild(b);
-        setTimeout(() => input.focus(), 150);
+        // 안전한 포커스 배정
+        requestAnimationFrame(() => {
+            setTimeout(() => { if(document.getElementById('subj-input')) document.getElementById('subj-input').focus(); }, 150);
+        });
     }
 }
 
 function checkAnswer(userAns) {
+    if (state.isProcessing) return; // [보안] 이중 제출 방지
+    state.isProcessing = true;
+
     const q = state.questions[state.currentIndex];
     const btns = document.querySelectorAll('#answer-area button');
     btns.forEach(b => b.disabled = true);
@@ -239,7 +245,8 @@ function checkAnswer(userAns) {
     if (state.type === 'MULTI') {
         isCorrect = parseInt(userAns) === parseInt(q.정답번호);
     } else {
-        const clean = (s) => s.toString().replace(/\s+/g, '').toLowerCase();
+        // [보안] null/undefined 안전 처리
+        const clean = (s) => String(s || '').replace(/\s+/g, '').toLowerCase();
         isCorrect = clean(userAns) === clean(q.정답);
     }
 
@@ -250,27 +257,34 @@ function checkAnswer(userAns) {
     status.style.background = isCorrect ? "rgba(0,255,65,0.2)" : "rgba(255,51,51,0.2)";
     status.style.color = isCorrect ? "var(--radar-green)" : "var(--danger-red)";
     
-    document.getElementById('correct-ans-show').innerText = "IDENTIFIED AS: " + realAnsText;
+    document.getElementById('correct-ans-show').innerText = "IDENTIFIED AS: " + (realAnsText || "데이터 없음");
     document.getElementById('explanation-box').innerText = q.해설 || "NO ADDITIONAL MANUAL.";
     
-    document.getElementById('go-around-btn').onclick = () => { state.excludedIds.push(q.ID); alert("Go Around Logged."); };
-    document.getElementById('deviation-btn').onclick = () => { state.reportedIds.push(q.ID); alert("Deviation Reported."); };
+    // [보안] 중복 등록 방지 로직 적용
+    document.getElementById('go-around-btn').onclick = () => { 
+        if(!state.excludedIds.includes(q.ID)) { state.excludedIds.push(q.ID); alert("Go Around Logged."); } 
+    };
+    document.getElementById('deviation-btn').onclick = () => { 
+        if(!state.reportedIds.includes(q.ID)) { state.reportedIds.push(q.ID); alert("Deviation Reported."); } 
+    };
+    
     document.getElementById('next-btn').onclick = () => nextQuestion();
-
     document.getElementById('feedback-layer').style.display = 'block';
 }
 
 function nextQuestion() {
     document.getElementById('feedback-layer').style.display = 'none';
+    state.isProcessing = false; // 플래그 해제
     state.currentIndex++;
     if (state.currentIndex < state.questions.length) renderQuestion();
     else stopSession();
 }
 
 async function stopSession() {
-    if(!confirm("Sync with Tower?")) return;
+    if(!confirm("진행 상황을 타워에 동기화(Sync) 하시겠습니까?")) return;
+    
     showPage('loading-page');
-    document.getElementById('loading-msg').innerText = "TRANSMITTING...";
+    document.getElementById('loading-msg').innerText = "TRANSMITTING DATA...";
     
     const cfg = CONFIG[state.difficulty];
     const detailedResults = state.sessionResults.map(res => {
@@ -283,8 +297,10 @@ async function stopSession() {
         };
     }).filter(r => r !== null);
 
+    if(detailedResults.length === 0) { location.reload(); return; }
+
     try {
-        await fetch(cfg.URL, {
+        const response = await fetch(cfg.URL, {
             method: 'POST',
             body: JSON.stringify({
                 results: detailedResults,
@@ -294,27 +310,35 @@ async function stopSession() {
                 statsGid: cfg.GIDs[`${state.subject}_STATS`]
             })
         });
-    } catch(e) { console.error(e); }
-    location.reload();
+        
+        if (!response.ok) throw new Error("서버 응답 오류");
+        
+        location.reload(); 
+    } catch(e) { 
+        console.error(e);
+        alert("데이터 동기화에 실패했습니다. 네트워크 상태를 확인한 후 다시 시도해 주십시오.");
+        // 실패 시 화면을 다시 퀴즈 페이지로 돌려 재시도 기회 제공
+        document.getElementById('loading-msg').innerText = "TRANSMISSION FAILED";
+        setTimeout(() => showPage('quiz-page'), 2000);
+    }
 }
 
-/** [수정 핵심] 데이터 센터 매핑 로직 강화 */
+// Data Center Stats Load
 async function loadStats(subject) {
     showPage('loading-page');
     const cfg = CONFIG[state.difficulty];
     try {
         const res = await fetch(`${cfg.URL}?gid=${cfg.GIDs[subject+'_STATS']}`);
+        if (!res.ok) throw new Error("네트워크 오류");
         const data = await res.json();
         
         state.statsData = data.map(row => {
             const c = Number(row['누적 기출 횟수'])||0; 
             const w = Number(row['누적 오답 횟수'])||0;
-            
-            // 시트 컬럼명과 매칭 (실제정답, 해설 키 확인)
             return {
                 type: row['유형'] || 'MULTI',
                 problem: row['문제'] || '데이터 없음',
-                answer: row['실제정답'] || row['정답'] || '-', // '실제정답' 또는 '정답' 컬럼 사용
+                answer: row['실제정답'] || row['정답'] || '-', 
                 exp: row['해설'] || '상세 해설이 없습니다.',
                 count: c, 
                 wrong: w, 
@@ -324,8 +348,7 @@ async function loadStats(subject) {
         renderStats();
         showPage('stats-page');
     } catch(e) { 
-        console.error(e);
-        alert("데이터 로드 실패. 시트의 컬럼명을 확인하십시오.");
+        alert("데이터 센터 링크 실패. 연결 상태를 확인하십시오.");
         location.reload(); 
     }
 }
