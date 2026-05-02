@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ATC Training Center</title>
     <style>
-        /* [디자인] ATC 테마 - 다크모드 및 모바일 최적화 */
         :root {
             --bg-color: #0a0a0a;
             --radar-green: #00ff41;
@@ -27,22 +26,19 @@
             width: 100%; font-size: 1.1rem; cursor: pointer;
             border-radius: 5px;
         }
-        button:disabled { border-color: #444; color: #444; }
+        button:disabled { border-color: #444; color: #444; cursor: not-allowed; }
         input[type="text"] {
             width: 100%; padding: 15px; box-sizing: border-box;
             background: #1a1a1a; border: 1px solid var(--radar-green);
             color: white; font-size: 1.2rem; margin-bottom: 10px;
         }
-        /* 프로그레스 바 */
         .progress-container { width: 100%; background: var(--radar-dim); height: 10px; margin: 20px 0; position: relative; }
         .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: 0.3s; }
         .nm-display { text-align: center; font-size: 0.9rem; margin-bottom: 5px; color: var(--radar-green); }
-        
-        /* 피드백 레이어 */
         #feedback-layer {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: #111; border-top: 2px solid var(--radar-green);
-            padding: 20px; display: none; max-height: 70vh; overflow-y: auto;
+            padding: 20px; display: none; max-height: 70vh; overflow-y: auto; z-index: 100;
         }
         .correct { color: var(--radar-green); font-weight: bold; }
         .incorrect { color: var(--danger-red); font-weight: bold; }
@@ -55,171 +51,59 @@
     <div id="main-page">
         <h2>ATC TRAINING MODE</h2>
         <div style="margin: 20px 0;">
-            <label>Difficulty:</label>
-            <button id="toggle-diff" onclick="toggleDifficulty()">CURRENT: EZ MODE</button>
+            <button id="toggle-diff" onclick="toggleDifficulty()">DIFFICULTY: EZ</button>
         </div>
         <div id="subject-btns">
-            <button onclick="startTraining('LAW', 'MULTI')">LAW (Multiple Choice)</button>
-            <button onclick="startTraining('LAW', 'SUBJ')">LAW (Subjective)</button>
-            <button onclick="startTraining('CTRL', 'MULTI')">CONTROL (Multiple Choice)</button>
-            <button onclick="startTraining('CTRL', 'SUBJ')">CONTROL (Subjective)</button>
+            <button class="nav-btn" onclick="prepTraining('LAW', 'MULTI')">✈️ LAW (Multiple)</button>
+            <button class="nav-btn" onclick="prepTraining('LAW', 'SUBJ')">✈️ LAW (Subjective)</button>
+            <button class="nav-btn" onclick="prepTraining('CTRL', 'MULTI')">📡 CONTROL (Multiple)</button>
+            <button class="nav-btn" onclick="prepTraining('CTRL', 'SUBJ')">📡 CONTROL (Subjective)</button>
         </div>
-        <hr>
         <div id="mode-selection" class="hidden">
-            <p>Select Mission Profile:</p>
-            <button onclick="loadQuiz('OMAKASE')">100 문항 오마카세</button>
-            <button onclick="loadQuiz('WRONG')">100 문항 오답노트</button>
+            <p style="text-align:center; color:orange;">Select Mission Profile:</p>
+            <button onclick="loadQuiz('OMAKASE')">🍱 100문항 오마카세</button>
+            <button onclick="loadQuiz('WRONG')">📝 100문항 오답노트</button>
+            <button onclick="location.reload()" style="border-color:#666; color:#666;">Back to Menu</button>
         </div>
     </div>
 
     <div id="loading-page" class="hidden">
-        <h3 id="loading-msg" style="text-align: center; margin-top: 50px;">Initializing...</h3>
+        <h3 id="loading-msg" style="text-align: center; margin-top: 50px; color: var(--radar-green);">Initializing...</h3>
     </div>
 
     <div id="quiz-page" class="hidden">
         <div class="nm-display" id="pos-display">Current Position: 0nm / 100nm</div>
         <div class="progress-container"><div class="progress-bar" id="pb"></div></div>
-        
-        <div id="question-box" style="font-size: 1.2rem; margin-bottom: 20px;"></div>
+        <div id="question-box" style="font-size: 1.1rem; margin-bottom: 20px; min-height: 80px; line-height:1.4;"></div>
         <div id="answer-area"></div>
-        
-        <button onclick="stopSession()" style="border-color: #666; color: #666; margin-top: 40px;">ABORT MISSION (STOP)</button>
+        <button onclick="stopSession()" style="border-color: #666; color: #666; margin-top: 40px; font-size:0.8rem;">ABORT MISSION</button>
     </div>
 </div>
 
 <div id="feedback-layer">
-    <div id="result-status"></div>
-    <div id="correct-ans-show" style="margin: 10px 0; color: #aaa;"></div>
-    <div id="explanation-box" style="margin: 15px 0; line-height: 1.5; white-space: pre-wrap;"></div>
-    
+    <div id="result-status" style="font-size: 1.4rem; margin-bottom:10px;"></div>
+    <div id="correct-ans-show" style="margin: 10px 0; color: #aaa; font-size:0.9rem;"></div>
+    <div id="explanation-box" style="margin: 15px 0; line-height: 1.5; white-space: pre-wrap; font-size:0.95rem; background:#222; padding:10px;"></div>
     <div style="display: flex; gap: 10px;">
-        <button id="go-around-btn" style="font-size: 0.8rem;">✈️ Go Around</button>
-        <button id="deviation-btn" style="font-size: 0.8rem; border-color: orange; color: orange;">⚠️ Possible Deviation</button>
+        <button id="go-around-btn">✈️ Go Around</button>
+        <button id="deviation-btn" style="border-color: orange; color: orange;">⚠️ Possible Deviation</button>
     </div>
-    <button onclick="nextQuestion()" style="background: var(--radar-green); color: black;">NEXT CONTACT</button>
+    <button onclick="nextQuestion()" style="background: var(--radar-green); color: black; font-weight:bold;">NEXT CONTACT</button>
 </div>
 
 <script>
-/** * [수정 포인트] 본인의 GAS URL과 GID를 입력하세요.
+/**
+ * [필독] CONFIG의 URL과 GID를 본인의 시트에 맞게 꼭 수정하세요!
  */
-
-    let state = {
-    difficulty: 'EZ',
-    isReady: false,
-    db: { EZ: null, INFERNO: null } // 데이터를 미리 담아둘 저장소
-};
-
-// 2. 페이지 로드 시 즉시 실행 (사전 로딩)
-window.onload = async () => {
-    await prefetchData();
-};
-
-async function prefetchData() {
-    const msgEl = document.getElementById('loading-msg');
-    showPage('loading-page'); // 로딩 화면 먼저 보여줌
-
-    const steps = [
-        "Performing Checklist, Standby 1...",
-        "Establishing Data Link with Database...",
-        "Radar contact. My control."
-    ];
-
-    try {
-        // 메시지 시퀀스 (기분 내기용)
-        for(let msg of steps) {
-            msgEl.innerText = msg;
-            await new Promise(r => setTimeout(r, 600));
-        }
-
-        // 실제 데이터 가져오기 (EZ, INFERNO 동시 요청 가능하나 안정성을 위해 순차 진행)
-        // 여기서는 현재 선택된 난이도부터 우선 로드
-        await refreshCurrentDB();
-        
-        state.isReady = true;
-        showPage('main-page'); // 준비 완료 시 메인 화면으로
-    } catch (e) {
-        msgEl.innerText = "Data Link Failure. Check Console.";
-        console.error(e);
-    }
-}
-
-async function refreshCurrentDB() {
-    const cfg = CONFIG[state.difficulty];
-    // 모든 탭의 데이터를 병렬로 가져옴
-    const types = ['LAW_MULTI', 'LAW_SUBJ', 'CTRL_MULTI', 'CTRL_SUBJ'];
-    const promises = types.map(type => 
-        fetch(`${cfg.URL}?gid=${cfg.GIDs[type]}`).then(res => res.json())
-    );
-    
-    const results = await Promise.all(promises);
-    state.db[state.difficulty] = {
-        LAW_MULTI: results[0],
-        LAW_SUBJ: results[1],
-        CTRL_MULTI: results[2],
-        CTRL_SUBJ: results[3]
-    };
-}
-
-// 3. 난이도 토글 시 다시 로드
-async function toggleDifficulty() {
-    state.isReady = false;
-    state.difficulty = state.difficulty === 'EZ' ? 'INFERNO' : 'EZ';
-    document.getElementById('toggle-diff').innerText = `CURRENT: ${state.difficulty} MODE`;
-    
-    // 해당 난이도 데이터가 없으면 새로 로드
-    if (!state.db[state.difficulty]) {
-        await prefetchData();
-    }
-}
-
-// 4. 훈련 시작 버튼 (이제 데이터가 있으므로 즉시 실행)
-function startTraining(sub, type) {
-    if (!state.isReady) return;
-    state.subject = sub;
-    state.type = type;
-    
-    // 바로 추출 로직으로 진입
-    const fullData = state.db[state.difficulty][`${sub}_${type}`];
-    // ... 이후 추출 알고리즘 및 렌더링 로직 ...
-}
 const CONFIG = {
-    // 1. EZ 모드 설정
     EZ: {
-        URL: "https://script.google.com/macros/s/AKfycbxQdRw8bAcYSfZWNV6r808lVpwED88FaZj6bviR1pMZ2DimYDKHYu13jeT7oXaT04ErGw/exec",
-        GIDs: {
-            LAW_MULTI: 0,        // EZ 시트의 법규 객관식 gid
-            LAW_SUBJ: 1036407965,       // EZ 시트의 법규 주관식 gid
-            CTRL_MULTI: 438358690,     // EZ 시트의 관제 객관식 gid
-            CTRL_SUBJ: 1403157384,      // EZ 시트의 관제 주관식 gid
-            LAW_STATS: 1846282036,      // EZ 시트의 법규 통계 gid
-            CTRL_STATS: 1880986641      // EZ 시트의 관제 통계 gid
-        }
+        URL: "여기에_EZ_모드_GAS_URL",
+        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1, CTRL_MULTI: 2, CTRL_SUBJ: 3, LAW_STATS: 4, CTRL_STATS: 5 }
     },
-    // 2. INFERNO 모드 설정
     INFERNO: {
-        URL: "https://script.google.com/macros/s/AKfycbzjGLlSq7-xpO0dZxCWExg06paUtwsP1kcPBXTCXhDzm8wkU0CJCyCADB0gJKsU76z7RA/exec",
-        GIDs: {
-            LAW_MULTI: 0,        // INFERNO 시트의 법규 객관식 gid
-            LAW_SUBJ: 1805786990,       // INFERNO 시트의 법규 주관식 gid
-            CTRL_MULTI: 2049752243,     // INFERNO 시트의 관제 객관식 gid
-            CTRL_SUBJ: 570358631,      // INFERNO 시트의 관제 주관식 gid
-            LAW_STATS: 668283973,      // INFERNO 시트의 법규 통계 gid
-            CTRL_STATS: 1546545747      // INFERNO 시트의 관제 통계 gid
-        }
+        URL: "여기에_INFERNO_모드_GAS_URL",
+        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1, CTRL_MULTI: 2, CTRL_SUBJ: 3, LAW_STATS: 4, CTRL_STATS: 5 }
     }
-};
-
-// 위 구조에 맞춰서 loadQuiz 함수 내부의 변수 할당 부분도 아래처럼 한 줄 바뀝니다.
-async function loadQuiz(mode) {
-    // ... 중략 ...
-    
-    // 현재 난이도에 맞는 설정 뭉치를 가져옵니다.
-    const currentCfg = CONFIG[state.difficulty]; 
-    const targetGid = currentCfg.GIDs[`${state.subject}_${state.type}`];
-    const url = currentCfg.URL;
-
-    // ... 이후 fetch(url) 로직 동일 ...
-}
 };
 
 let state = {
@@ -230,75 +114,68 @@ let state = {
     currentIndex: 0,
     sessionResults: [],
     reportedIds: [],
-    excludedIds: []
+    excludedIds: [],
+    dbCache: { EZ: {}, INFERNO: {} }
 };
 
-// 1. 난이도 토글
-function toggleDifficulty() {
-    state.difficulty = state.difficulty === 'EZ' ? 'INFERNO' : 'EZ';
-    document.getElementById('toggle-diff').innerText = `CURRENT: ${state.difficulty} MODE`;
+function showPage(id) {
+    ['main-page', 'loading-page', 'quiz-page'].forEach(p => document.getElementById(p).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
 }
 
-// 2. 훈련 시작 (과목 선택 후 로딩)
-async function startTraining(sub, type) {
+function toggleDifficulty() {
+    state.difficulty = state.difficulty === 'EZ' ? 'INFERNO' : 'EZ';
+    document.getElementById('toggle-diff').innerText = `DIFFICULTY: ${state.difficulty}`;
+    document.getElementById('toggle-diff').style.color = state.difficulty === 'EZ' ? '#00ff41' : '#ff3333';
+}
+
+function prepTraining(sub, type) {
     state.subject = sub;
     state.type = type;
     document.getElementById('subject-btns').classList.add('hidden');
     document.getElementById('mode-selection').classList.remove('hidden');
 }
 
-// 3. 데이터 로드 및 알고리즘 추출
 async function loadQuiz(mode) {
     showPage('loading-page');
     const msgEl = document.getElementById('loading-msg');
-    const loadingSteps = [
-        "Performing Checklist, Standby 1...",
-        "Establishing Data Link with Database...",
-        "Calculating Omakase/Incorrect Algorithm...",
-        "Radar contact. My control."
-    ];
-
-    for(let msg of loadingSteps) {
-        msgEl.innerText = msg;
-        await new Promise(r => setTimeout(r, 800));
+    const seq = ["Performing Checklist...", "Establishing Data Link...", "Radar contact. My control."];
+    
+    for(let m of seq) {
+        msgEl.innerText = m;
+        await new Promise(r => setTimeout(r, 500));
     }
 
-    const targetGid = CONFIG.GIDs[`${state.subject}_${state.type}`];
-    const url = state.difficulty === 'EZ' ? CONFIG.EZ_URL : CONFIG.INFERNO_URL;
-
+    const cfg = CONFIG[state.difficulty];
+    const targetGid = cfg.GIDs[`${state.subject}_${state.type}`];
+    
     try {
-        const response = await fetch(`${url}?gid=${targetGid}`);
-        const fullData = await response.json();
-        
-        // 정렬 로직 (기출 횟수 K열, 오답 횟수 L열 기준 - Master 탭에 추가한 가정)
+        const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
+        let data = await res.json();
+
+        // 알고리즘: 기출_Total(K열), 오답_Total(L열) 기준 정렬
         if (mode === 'OMAKASE') {
-            // 기출 적은 순 -> 오답 많은 순
-            state.questions = fullData.sort((a, b) => (a['기출_Total'] || 0) - (b['기출_Total'] || 0) || (b['오답_Total'] || 0) - (a['오답_Total'] || 0));
+            data.sort((a, b) => (a['기출_Total'] || 0) - (b['기출_Total'] || 0) || (b['오답_Total'] || 0) - (a['오답_Total'] || 0));
         } else {
-            // 오답률(오답/기출) 높은 순 -> 기출 많은 순
-            state.questions = fullData.sort((a, b) => {
-                let rateA = (a['오답_Total'] || 0) / (a['기출_Total'] || 1);
-                let rateB = (b['오답_Total'] || 0) / (b['기출_Total'] || 1);
-                return rateB - rateA || (b['기출_Total'] || 0) - (a['기출_Total'] || 0);
-            });
+            data.sort((a, b) => ((b['오답_Total'] || 0) / (b['기출_Total'] || 1)) - ((a['오답_Total'] || 0) / (a['기출_Total'] || 1)) || (b['기출_Total'] || 0) - (a['기출_Total'] || 0));
         }
-        
-        state.questions = state.questions.slice(0, 100);
+
+        state.questions = data.slice(0, 100);
         state.currentIndex = 0;
+        state.sessionResults = [];
         renderQuestion();
         showPage('quiz-page');
     } catch (e) {
-        alert("Data Link Failed. Check GAS URL/GID.");
+        alert("Check GAS URL/GID and 'Anyone' access setting.");
         location.reload();
     }
 }
 
-// 4. 문제 렌더링
 function renderQuestion() {
     const q = state.questions[state.currentIndex];
-    document.getElementById('pos-display').innerText = `Current Position: ${state.currentIndex + 1}nm / 100nm`;
+    document.getElementById('pos-display').innerText = `Position: ${state.currentIndex + 1}nm / 100nm`;
     document.getElementById('pb').style.width = `${state.currentIndex + 1}%`;
-    document.getElementById('question-box').innerText = `[${q.대분류}] ${q.문제}`;
+    document.getElementById('question-box').innerText = `[${q.대분류 || 'UNCAT'}] ${q.문제}`;
     
     const area = document.getElementById('answer-area');
     area.innerHTML = '';
@@ -314,17 +191,17 @@ function renderQuestion() {
         const input = document.createElement('input');
         input.type = 'text';
         input.id = 'subj-input';
-        input.placeholder = "Enter response...";
-        input.onkeyup = (e) => { if(e.key === 'Enter') checkAnswer(input.value) };
+        input.placeholder = "Response...";
+        input.onkeyup = (e) => e.key === 'Enter' && checkAnswer(input.value);
         area.appendChild(input);
-        const submitBtn = document.createElement('button');
-        submitBtn.innerText = "CHECK (ENTER)";
-        submitBtn.onclick = () => checkAnswer(input.value);
-        area.appendChild(submitBtn);
+        const b = document.createElement('button');
+        b.innerText = "SEND (ENTER)";
+        b.onclick = () => checkAnswer(input.value);
+        area.appendChild(b);
+        input.focus();
     }
 }
 
-// 5. 정답 체크
 function checkAnswer(userAns) {
     const q = state.questions[state.currentIndex];
     let isCorrect = false;
@@ -332,80 +209,53 @@ function checkAnswer(userAns) {
     if (state.type === 'MULTI') {
         isCorrect = parseInt(userAns) === parseInt(q.정답번호);
     } else {
-        const clean = (s) => s.toString().replace(/\s+/g, '').split(',').sort().join(',');
+        const clean = (s) => s.toString().replace(/\s+/g, '').toLowerCase().split(',').sort().join(',');
         isCorrect = clean(userAns) === clean(q.정답);
     }
 
-    // 결과 저장
-    state.sessionResults.push({ id: q.ID, isCorrect: isCorrect, userAns: userAns });
+    state.sessionResults.push({ id: q.ID, isCorrect: isCorrect });
 
-    // 피드백 레이어 노출
-    const layer = document.getElementById('feedback-layer');
     const status = document.getElementById('result-status');
     status.innerHTML = isCorrect ? '<span class="correct">● CORRECT</span>' : '<span class="incorrect">● INCORRECT</span>';
-    document.getElementById('correct-ans-show').innerText = `Correct Answer: ${state.type === 'MULTI' ? q[`보기${q.정답번호}`] : q.정답}`;
-    document.getElementById('explanation-box').innerText = q.해설 || "No additional explanation provided.";
+    document.getElementById('correct-ans-show').innerText = `Correct: ${state.type === 'MULTI' ? q[`보기${q.정답번호}`] : q.정답}`;
+    document.getElementById('explanation-box').innerText = q.해설 || "No manual available.";
     
-    // 버튼 설정 (EZ/HELL)
     document.getElementById('go-around-btn').className = state.difficulty === 'EZ' ? '' : 'hidden';
     document.getElementById('deviation-btn').className = state.difficulty === 'INFERNO' ? '' : 'hidden';
     
-    // 버튼 이벤트 바인딩 (한 번만 클릭되게)
-    document.getElementById('go-around-btn').onclick = () => {
-        state.excludedIds.push(q.ID);
-        alert("Go-around executed. Record will be erased.");
-    };
-    document.getElementById('deviation-btn').onclick = () => {
-        state.reportedIds.push(q.ID);
-        alert("Deviation reported. Master sheet will be highlighted.");
-    };
+    document.getElementById('go-around-btn').onclick = () => { state.excludedIds.push(q.ID); alert("Go-around logged."); };
+    document.getElementById('deviation-btn').onclick = () => { state.reportedIds.push(q.ID); alert("Deviation reported."); };
 
-    layer.style.display = 'block';
+    document.getElementById('feedback-layer').style.display = 'block';
 }
 
 function nextQuestion() {
     document.getElementById('feedback-layer').style.display = 'none';
     state.currentIndex++;
-    if (state.currentIndex < state.questions.length) {
-        renderQuestion();
-    } else {
-        stopSession();
-    }
+    if (state.currentIndex < state.questions.length) renderQuestion();
+    else stopSession();
 }
 
-// 6. 데이터 전송 (Bulk Update)
 async function stopSession() {
-    if(!confirm("Terminate session and sync data?")) return;
-    
+    if(!confirm("Sync with Tower?")) return;
     showPage('loading-page');
-    document.getElementById('loading-msg').innerText = "Transmitting Data to Tower...";
-
-    const url = state.difficulty === 'EZ' ? CONFIG.EZ_URL : CONFIG.INFERNO_URL;
-    const payload = {
-        results: state.sessionResults,
-        reportedIds: state.reportedIds,
-        excludedIds: state.excludedIds,
-        masterGid: CONFIG.GIDs[`${state.subject}_${state.type}`],
-        statsGid: CONFIG.GIDs[`${state.subject}_STATS`]
-    };
-
+    document.getElementById('loading-msg').innerText = "Transmitting...";
+    
+    const cfg = CONFIG[state.difficulty];
     try {
-        await fetch(url, {
+        await fetch(cfg.URL, {
             method: 'POST',
-            body: JSON.stringify(payload)
+            mode: 'no-cors', // 단순 전송용
+            body: JSON.stringify({
+                results: state.sessionResults,
+                reportedIds: state.reportedIds,
+                excludedIds: state.excludedIds,
+                masterGid: cfg.GIDs[`${state.subject}_${state.type}`],
+                statsGid: cfg.GIDs[`${state.subject}_STATS`]
+            })
         });
-        alert("Sync Complete. Safe Landing.");
-    } catch (e) {
-        alert("Transmission Failed. Data may not be saved.");
-    }
+    } catch (e) {}
     location.reload();
-}
-
-function showPage(id) {
-    ['main-page', 'loading-page', 'quiz-page'].forEach(p => {
-        document.getElementById(p).classList.add('hidden');
-    });
-    document.getElementById(id).classList.remove('hidden');
 }
 </script>
 </body>
