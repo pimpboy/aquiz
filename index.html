@@ -6,133 +6,138 @@
     <title>ATC Modern Console</title>
     <style>
         :root {
-            --bg-color: #f5f5f7; --card-bg: #ffffff;
+            --bg-color: #f5f5f7; --card-bg: rgba(255, 255, 255, 0.8);
             --text-main: #1d1d1f; --text-sub: #86868b;
             --accent: #007aff; --radar-green: #34c759; --danger: #ff3b30; --border: rgba(0,0,0,0.1);
         }
         [data-theme="dark"] {
-            --bg-color: #000000; --card-bg: #1c1c1e;
+            --bg-color: #000000; --card-bg: rgba(28, 28, 30, 0.9);
             --text-main: #ffffff; --text-sub: #a1a1a6;
             --accent: #5e5ce6; --radar-green: #30d158; --danger: #ff453a; --border: #3a3a3c;
         }
+
         body {
             background-color: var(--bg-color); color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif;
-            margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh;
-            transition: background 0.3s ease;
+            margin: 0; display: flex; justify-content: center; min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 50%, #1c1c1e 0%, #000000 100%);
         }
-        .container { width: 90%; max-width: 480px; padding: 40px 0; }
-        h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.05rem; margin: 0 0 8px 0; text-align: center; }
-        .subtitle { color: var(--text-sub); text-align: center; margin-bottom: 40px; font-size: 1rem; }
+
+        .container { width: 90%; max-width: 480px; padding: 40px 0; z-index: 10; }
+
+        /* Glassmorphism UI */
         .glass-card {
-            background: var(--card-bg); border-radius: 28px; padding: 24px; margin-bottom: 20px;
-            border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 24px; margin-bottom: 20px;
+            border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
+
+        h1 { font-size: 2.2rem; font-weight: 800; text-align: center; letter-spacing: -1px; margin-bottom: 5px; }
+        .subtitle { color: var(--accent); text-align: center; font-weight: 600; font-size: 0.9rem; margin-bottom: 40px; text-transform: uppercase; }
+
         button {
-            border-radius: 18px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 600; border: none; padding: 16px; font-size: 1rem;
+            border-radius: 16px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 700; border: none; padding: 18px; font-size: 1rem;
             display: flex; align-items: center; justify-content: center; width: 100%;
         }
-        button:active { transform: scale(0.97); }
+        button:active { transform: scale(0.96); }
         .btn-primary { background: var(--accent); color: white; }
-        .btn-secondary { background: var(--border); color: var(--text-main); font-size: 0.85rem; padding: 8px 16px; width: auto; }
-        .btn-subject { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); margin-top: 12px; }
-        .btn-subject:hover { border-color: var(--accent); color: var(--accent); }
-        .pb-wrap { height: 8px; background: var(--border); border-radius: 100px; margin: 24px 0; overflow: hidden; }
-        .pb-fill { height: 100%; background: var(--accent); transition: 0.4s ease; width: 0%; }
-        #theme-toggle {
-            position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px;
-            border-radius: 28px; background: var(--accent); color: white;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 2000; font-size: 1.4rem;
-        }
-        .hidden { display: none !important; }
-        .radar-pulse {
-            width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--accent);
-            animation: pulse 1.2s infinite; margin: 0 auto 24px;
-        }
-        @keyframes pulse { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
-        /* 피드백 레이어 스타일 추가 */
+        .btn-secondary { background: var(--border); color: var(--text-main); font-size: 0.8rem; width: auto; padding: 8px 16px; }
+        
+        .opt-btn { background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); text-align: left; justify-content: flex-start; margin-bottom: 12px; }
+        .opt-btn:hover { border-color: var(--accent); background: rgba(94, 92, 230, 0.1); }
+
+        .pb-wrap { height: 6px; background: var(--border); border-radius: 100px; margin: 20px 0; overflow: hidden; }
+        .pb-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #af52de); transition: 0.5s ease; width: 0%; }
+
         #feedback-layer {
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 480px; background: var(--card-bg);
-            border-top: 2px solid var(--accent); border-radius: 32px 32px 0 0;
-            padding: 30px; box-sizing: border-box; display: none; z-index: 1500;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+            width: 100%; max-width: 480px; background: var(--card-bg); backdrop-filter: blur(30px);
+            border-radius: 30px 30px 0 0; padding: 30px; display: none; z-index: 1000;
+            border-top: 1px solid var(--accent); box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
         }
+
+        .hidden { display: none !important; }
+        #theme-toggle { position: fixed; bottom: 25px; right: 25px; width: 50px; height: 50px; border-radius: 25px; background: var(--accent); color: white; z-index: 2000; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="main-page">
-        <h1>ATC Center</h1>
-        <p class="subtitle">Designed for poker. Clear for takeoff.</p>
-        <div id="subject-cards"> <div class="glass-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <span style="font-size:1.2rem; font-weight:700;">✈️ 항공법규</span>
-                    <button class="btn-secondary" onclick="window.loadStats('LAW')">Stats</button>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                    <button class="btn-primary" onclick="window.prepMission('LAW', 'MULTI')">객관식</button>
-                    <button class="btn-primary" onclick="window.prepMission('LAW', 'SUBJ')">주관식</button>
-                </div>
+        <h1>ATC CENTER</h1>
+        <p class="subtitle">California Design Engine v3.0</p>
+        
+        <div class="glass-card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <span style="font-weight:800; font-size:1.1rem;">✈️ 항공법규 (LAW)</span>
+                <button class="btn-secondary" onclick="window.loadStats('LAW')">DATA</button>
             </div>
-            <div class="glass-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <span style="font-size:1.2rem; font-weight:700;">📡 항공관제</span>
-                    <button class="btn-secondary" onclick="window.loadStats('CTRL')">Stats</button>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                    <button class="btn-primary" onclick="window.prepMission('CTRL', 'MULTI')">객관식</button>
-                    <button class="btn-primary" onclick="window.prepMission('CTRL', 'SUBJ')">주관식</button>
-                </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn-primary" onclick="window.prepMission('LAW', 'MULTI')">객관식</button>
+                <button class="btn-primary" onclick="window.prepMission('LAW', 'SUBJ')">주관식</button>
             </div>
+        </div>
+
+        <div class="glass-card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <span style="font-weight:800; font-size:1.1rem;">📡 항공관제 (CTRL)</span>
+                <button class="btn-secondary" onclick="window.loadStats('CTRL')">DATA</button>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn-primary" onclick="window.prepMission('CTRL', 'MULTI')">객관식</button>
+                <button class="btn-primary" onclick="window.prepMission('CTRL', 'SUBJ')">주관식</button>
+            </div>
+        </div>
+
+        <div style="text-align:center;">
+            <button id="diff-toggle" onclick="window.toggleDifficulty()" style="background:none; color:var(--text-sub); font-size:0.8rem; font-weight:400;">MODE: NORMAL (EZ)</button>
         </div>
     </div>
 
     <div id="mode-selection" class="hidden">
         <div class="glass-card" style="text-align:center;">
-            <p style="font-weight:800; color:var(--accent); margin-top:0;">CHOOSE MISSION</p>
-            <button class="btn-subject" onclick="window.loadQuiz('OMAKASE')" style="margin-bottom:12px;">🍱 오마카세 100</button>
-            <button class="btn-subject" onclick="window.loadQuiz('WRONG')">📝 오답노트 100</button>
-            <button onclick="location.reload()" style="background:none; color:var(--text-sub); margin-top:20px; font-size:0.9rem;">← Back to Base</button>
+            <h3 style="margin-top:0;">CHOOSE MISSION</h3>
+            <button class="opt-btn" onclick="window.loadQuiz('OMAKASE')">🍱 오마카세 100 (최저 기출순)</button>
+            <button class="opt-btn" onclick="window.loadQuiz('WRONG')">📝 오답노트 100 (최다 오답순)</button>
+            <button onclick="location.reload()" style="background:none; color:var(--text-sub); margin-top:15px;">← RETURN TO BASE</button>
         </div>
     </div>
 
     <div id="quiz-page" class="hidden">
-        <div style="text-align:center; font-size:0.85rem; font-weight:800; color:var(--accent);" id="pos-display"></div>
+        <div id="pos-display" style="text-align:center; font-size:0.75rem; color:var(--accent); font-weight:800;"></div>
         <div class="pb-wrap"><div class="pb-fill" id="pb"></div></div>
-        <div id="question-box" class="glass-card" style="font-size:1.3rem; font-weight:700; line-height:1.4;"></div>
+        <div id="question-box" class="glass-card" style="font-size:1.2rem; font-weight:700; line-height:1.5;"></div>
         <div id="answer-area"></div>
     </div>
 
     <div id="stats-page" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-            <h2 style="margin:0; font-size:1.8rem;">Data Center</h2>
-            <button class="btn-secondary" onclick="location.reload()">Exit</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0;">DATA CENTER</h2>
+            <button class="btn-secondary" onclick="location.reload()">EXIT</button>
         </div>
         <div id="stats-body"></div>
     </div>
 
     <div id="loading-page" class="hidden">
-        <div style="text-align: center; margin-top: 30vh;">
-            <div class="radar-pulse"></div>
-            <h2 id="loading-msg" style="font-weight: 800; letter-spacing: 0.15rem; color: var(--accent);">IDENTIFYING...</h2>
+        <div style="text-align:center; margin-top:35vh;">
+            <div style="font-size:2rem; animation: pulse 1s infinite;">📡</div>
+            <h2 id="loading-msg" style="color:var(--accent); letter-spacing:2px;">IDENTIFYING...</h2>
         </div>
     </div>
 </div>
 
 <div id="feedback-layer">
-    <div id="result-status" style="text-align:center; padding:12px; font-weight:800; border-radius:12px; margin-bottom:16px;"></div>
-    <div class="glass-card" style="margin-bottom:16px; padding:16px;">
+    <div id="result-status" style="text-align:center; font-weight:900; font-size:1.2rem; margin-bottom:15px; padding:10px; border-radius:12px;"></div>
+    <div class="glass-card" style="padding:15px; margin-bottom:15px; background:rgba(255,255,255,0.03);">
         <div id="correct-ans-show" style="color:var(--radar-green); font-weight:800; margin-bottom:8px;"></div>
-        <div id="explanation-box" style="font-size:0.95rem; line-height:1.6; color:var(--text-sub); white-space:pre-wrap;"></div>
+        <div id="explanation-box" style="font-size:0.9rem; color:var(--text-sub); line-height:1.4;"></div>
     </div>
-    <div style="display:flex; gap:12px; margin-bottom:12px;">
-        <button id="go-around-btn" style="flex:1; background:var(--border); font-size:0.8rem;">Go Around</button>
-        <button id="deviation-btn" style="flex:1; background:var(--border); color:var(--danger); font-size:0.8rem;">Deviation</button>
+    <div id="action-btns" style="display:flex; gap:10px; margin-bottom:10px;">
+        <button id="go-around-btn" style="background:var(--border); font-size:0.8rem;">GO AROUND</button>
+        <button id="deviation-btn" style="background:rgba(255,59,48,0.1); color:var(--danger); font-size:0.8rem;" class="hidden">DEVIATION</button>
     </div>
-    <button id="next-btn" class="btn-primary" style="height:60px;">NEXT CONTACT</button>
+    <button id="next-btn" class="btn-primary" onclick="window.nextQuestion()">NEXT CONTACT</button>
 </div>
 
 <button id="theme-toggle" onclick="window.toggleTheme()">🌓</button>
@@ -140,8 +145,7 @@
 <script>
 window.state = {
     difficulty: 'EZ', subject: '', type: '', questions: [], currentIndex: 0,
-    sessionResults: [], reportedIds: [], excludedIds: [], statsData: [],
-    isProcessing: false
+    sessionResults: [], reportedIds: [], excludedIds: [], isProcessing: false
 };
 
 const CONFIG = {
@@ -154,102 +158,134 @@ const CONFIG = {
         GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1805786990, CTRL_MULTI: 2049752243, CTRL_SUBJ: 570358631, LAW_STATS: 668283973, CTRL_STATS: 1546545747 }
     }
 };
+window.toggleDifficulty = function() {
+    window.state.difficulty = window.state.difficulty === 'EZ' ? 'INFERNO' : 'EZ';
+    document.getElementById('diff-toggle').innerText = `MODE: ${window.state.difficulty === 'EZ' ? 'NORMAL (EZ)' : 'INFERNO (HELL)'}`;
+    document.getElementById('diff-toggle').style.color = window.state.difficulty === 'EZ' ? 'var(--text-sub)' : 'var(--danger)';
+};
 
-// ... 이하 window 함수들은 소좌님의 로직과 동일 (필터링 유지) ...
-window.showLoading = async function() {
-    window.showPage('loading-page');
-    const msg = document.getElementById('loading-msg');
-    const steps = ["RADAR CONTACTING...", "IDENTIFIED.", "MY CONTROL."];
-    for (let s of steps) { msg.innerText = s; await new Promise(r => setTimeout(r, 600)); }
-};
-window.toggleTheme = function() {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-theme');
-    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
-};
-window.showPage = function(id) {
-    ['main-page', 'stats-page', 'loading-page', 'quiz-page', 'mode-selection'].forEach(p => document.getElementById(p)?.classList.add('hidden'));
+window.showPage = (id) => {
+    ['main-page', 'stats-page', 'loading-page', 'quiz-page', 'mode-selection'].forEach(p => document.getElementById(p).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
 };
-window.prepMission = function(sub, type) {
-    window.state.subject = sub; window.state.type = type;
-    document.getElementById('main-page').classList.add('hidden');
-    document.getElementById('mode-selection').classList.remove('hidden');
-};
+
+window.prepMission = (sub, type) => { window.state.subject = sub; window.state.type = type; window.showPage('mode-selection'); };
+
 window.loadQuiz = async function(mode) {
-    await window.showLoading();
+    window.showPage('loading-page');
     const cfg = CONFIG[window.state.difficulty];
     const targetGid = cfg.GIDs[`${window.state.subject}_${window.state.type}`];
     try {
         const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
         let data = await res.json();
+        
+        // 셔플 로직 적용
+        data = data.sort(() => Math.random() - 0.5);
         if (mode === 'OMAKASE') data.sort((a,b) => (Number(a['누적 기출 횟수'])||0)-(Number(b['누적 기출 횟수'])||0));
         else data.sort((a,b) => (Number(b['누적 오답 횟수'])||0)-(Number(a['누적 오답 횟수'])||0));
+        
         window.state.questions = data.slice(0, 100);
         window.state.currentIndex = 0;
         window.renderQuestion();
         window.showPage('quiz-page');
     } catch(e) { alert("Link Error"); location.reload(); }
 };
+
 window.renderQuestion = function() {
     const q = window.state.questions[window.state.currentIndex];
-    document.getElementById('pos-display').innerText = `STEP ${window.state.currentIndex + 1} OF 100`;
-    document.getElementById('pb').style.width = `${window.state.currentIndex + 1}%`;
+    document.getElementById('pos-display').innerText = `STEP ${window.state.currentIndex + 1} / ${window.state.questions.length}`;
+    document.getElementById('pb').style.width = `${((window.state.currentIndex + 1)/window.state.questions.length)*100}%`;
     document.getElementById('question-box').innerText = q.문제;
     const area = document.getElementById('answer-area');
     area.innerHTML = '';
+
     if (window.state.type === 'MULTI') {
-        for(let i=1; i<=4; i++) {
+        // 보기 셔플
+        let options = [1,2,3,4].map(i => ({ val: i, text: q['보기'+i] })).sort(() => Math.random() - 0.5);
+        options.forEach(opt => {
             const btn = document.createElement('button');
-            btn.className = "glass-card"; btn.style = "margin-bottom:12px; text-align:left; color:var(--text-main);";
-            btn.innerText = q['보기'+i];
-            btn.onclick = () => window.checkAnswer(i);
+            btn.className = "opt-btn"; btn.innerText = opt.text;
+            btn.onclick = () => window.checkAnswer(opt.val);
             area.appendChild(btn);
-        }
+        });
     } else {
         const input = document.createElement('input');
-        input.id = "subj-input"; input.placeholder = "Enter Command...";
-        input.style = "width:100%; padding:20px; background:var(--card-bg); border:1px solid var(--accent); color:var(--text-main); border-radius:20px; font-size:1.1rem; box-sizing:border-box; margin-bottom:16px;";
+        input.id = "subj-input"; input.placeholder = "COMMAND...";
+        input.style = "width:100%; padding:20px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text-main); border-radius:16px; font-size:1.1rem; margin-bottom:15px; outline:none;";
         input.onkeyup = (e) => e.key === 'Enter' && window.checkAnswer(input.value);
         area.appendChild(input);
         const b = document.createElement('button'); b.className = "btn-primary"; b.innerText = "SEND";
         b.onclick = () => window.checkAnswer(input.value);
         area.appendChild(b);
-        setTimeout(() => document.getElementById('subj-input')?.focus(), 300);
+        setTimeout(() => document.getElementById('subj-input').focus(), 200);
     }
 };
+
 window.checkAnswer = function(userAns) {
     if (window.state.isProcessing) return;
     window.state.isProcessing = true;
     const q = window.state.questions[window.state.currentIndex];
-    const realAnsText = (window.state.type === 'MULTI') ? q['보기'+q.정답번호] : q.정답;
-    let isCorrect = (window.state.type === 'MULTI') ? parseInt(userAns) === parseInt(q.정답번호) : String(userAns||'').replace(/\s+/g,'').toLowerCase() === String(q.정답||'').replace(/\s+/g,'').toLowerCase();
+    const isCorrect = window.state.type === 'MULTI' ? parseInt(userAns) === parseInt(q.정답번호) : String(userAns||'').replace(/\s+/g,'') === String(q.정답||'').replace(/\s+/g,'');
     
-    window.state.sessionResults.push({ id: q.ID, isCorrect, userAns });
     const status = document.getElementById('result-status');
     status.innerText = isCorrect ? "CONTACT ESTABLISHED" : "DEVIATION DETECTED";
     status.style.color = isCorrect ? "var(--radar-green)" : "var(--danger)";
     status.style.background = isCorrect ? "rgba(48, 209, 88, 0.1)" : "rgba(255, 69, 58, 0.1)";
-    document.getElementById('correct-ans-show').innerText = "IDENTIFIED: " + realAnsText;
+    
+    document.getElementById('correct-ans-show').innerText = "IDENTIFIED: " + (window.state.type === 'MULTI' ? q['보기'+q.정답번호] : q.정답);
     document.getElementById('explanation-box').innerText = q.해설 || "No Manual.";
+    
+    // 난이도에 따른 Deviation 버튼 제어
+    if (window.state.difficulty === 'INFERNO') document.getElementById('deviation-btn').classList.remove('hidden');
+    else document.getElementById('deviation-btn').classList.add('hidden');
+
+    window.state.sessionResults.push({ id: q.ID, isCorrect, userAns });
     document.getElementById('feedback-layer').style.display = 'block';
 };
+
+window.nextQuestion = function() {
+    document.getElementById('feedback-layer').style.display = 'none';
+    window.state.isProcessing = false;
+    window.state.currentIndex++;
+    if (window.state.currentIndex < window.state.questions.length) window.renderQuestion();
+    else window.stopSession();
+};
+
+window.stopSession = async function() {
+    if(!confirm("Sync with Tower?")) return;
+    window.showPage('loading-page');
+    const cfg = CONFIG[window.state.difficulty];
+    const results = window.state.sessionResults.map(res => {
+        const q = window.state.questions.find(item => item.ID === res.id);
+        return { id: res.id, isCorrect: res.isCorrect, type: window.state.type, problem: q.문제, userResponse: res.userAns, correctAnswer: (window.state.type==='MULTI'?q['보기'+q.정답번호]:q.정답) };
+    });
+    try {
+        await fetch(cfg.URL, { method: 'POST', body: JSON.stringify({ results, masterGid: cfg.GIDs[`${window.state.subject}_${window.state.type}`], statsGid: cfg.GIDs[`${window.state.subject}_STATS`] }) });
+        location.reload();
+    } catch(e) { alert("Sync Error"); window.showPage('quiz-page'); }
+};
+
 window.loadStats = async function(subject) {
-    await window.showLoading();
+    window.showPage('loading-page');
     const cfg = CONFIG[window.state.difficulty];
     try {
         const res = await fetch(`${cfg.URL}?gid=${cfg.GIDs[subject+'_STATS']}`);
         const data = await res.json();
-        window.state.statsData = data.filter(row => (Number(row['누적 오답 횟수']) || 0) >= 1);
-        document.getElementById('stats-body').innerHTML = window.state.statsData.map((d, i) => `
-            <div class="glass-card">
+        const filtered = data.filter(row => (Number(row['누적 오답 횟수']) || 0) >= 1);
+        document.getElementById('stats-body').innerHTML = filtered.map(d => `
+            <div class="glass-card" style="padding:18px;">
                 <div style="font-weight:700; margin-bottom:8px;">${d.문제}</div>
-                <div style="color:var(--radar-green); font-size:0.9rem; margin-bottom:8px;">정답: ${d.실제정답 || d.정답 || 'N/A'}</div>
-                <div style="font-size:0.8rem; color:var(--text-sub);">오답률: ${((Number(d['누적 오답 횟수'])/Number(d['누적 기출 횟수']))*100).toFixed(0)}%</div>
+                <div style="color:var(--radar-green); font-size:0.85rem; margin-bottom:5px;">정답: ${d.실제정답 || d.정답 || 'N/A'}</div>
+                <div style="font-size:0.75rem; color:var(--text-sub);">오답률: ${((Number(d['누적 오답 횟수'])/Number(d['누적 기출 횟수']))*100).toFixed(0)}% (${d['누적 오답 횟수']}/${d['누적 기출 횟수']})</div>
             </div>
-        `).join('') || "<p style='text-align:center;'>Clean Sheet!</p>";
+        `).join('') || "<p style='text-align:center;'>Clear Skies! (No errors)</p>";
         window.showPage('stats-page');
-    } catch(e) { alert("Data Error"); location.reload(); }
+    } catch(e) { alert("Load Error"); location.reload(); }
+};
+
+window.toggleTheme = function() {
+    const html = document.documentElement;
+    html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
 };
 </script>
 </body>
