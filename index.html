@@ -263,14 +263,36 @@ window.loadStats = async function(subject) {
     try {
         const res = await fetch(`${cfg.URL}?gid=${cfg.GIDs[subject+'_STATS']}`);
         const data = await res.json();
-        window.state.statsData = data.map(row => {
-            const c = Number(row['누적 기출 횟수'])||0;
-            const w = Number(row['누적 오답 횟수'])||0;
-            return { type: row['유형']||'-', problem: row['문제']||'-', answer: row['실제정답']||row['정답']||'-', exp: row['해설']||'-', count: c, wrong: w, rate: c>0?(w/c)*100:0 };
-        });
+        
+        // [수정] 누적 오답 횟수가 1 이상인 데이터만 필터링하여 매핑
+        window.state.statsData = data
+            .filter(row => (Number(row['누적 오답 횟수']) || 0) >= 1) 
+            .map(row => {
+                const c = Number(row['누적 기출 횟수']) || 0;
+                const w = Number(row['누적 오답 횟수']) || 0;
+                return { 
+                    type: row['유형'] || '-', 
+                    problem: row['문제'] || '-', 
+                    answer: row['실제정답'] || row['정답'] || '-', // 정답 링크 복구
+                    exp: row['해설'] || '-', 
+                    count: c, 
+                    wrong: w, 
+                    rate: c > 0 ? (w / c) * 100 : 0 
+                };
+            });
+
+        if (window.state.statsData.length === 0) {
+            alert("현재 기록된 오답 데이터가 없습니다. 클린 시트입니다, 소좌님!");
+            location.reload();
+            return;
+        }
+
         window.renderStats();
         window.showPage('stats-page');
-    } catch(e) { alert("데이터 로드 실패."); location.reload(); }
+    } catch(e) { 
+        alert("데이터 센터 링크 실패."); 
+        location.reload(); 
+    }
 };
 
 window.renderStats = function() {
