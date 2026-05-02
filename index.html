@@ -239,33 +239,43 @@ function nextQuestion() {
 async function stopSession() {
     if(!confirm("Sync with Tower?")) return;
     showPage('loading-page');
-    
+    document.getElementById('loading-msg').innerText = "Transmitting Data...";
+
     const cfg = CONFIG[state.difficulty];
     
-    // 결과 데이터에 문제 텍스트 등을 포함시킴
+    // 핵심: GAS가 이해할 수 있는 이름(Key)으로 데이터를 정확히 포장합니다.
     const detailedResults = state.sessionResults.map(res => {
+        // 현재 문제의 상세 정보를 원본 DB에서 찾습니다.
         const q = state.questions.find(item => item.ID === res.id);
         return {
             id: res.id,
             isCorrect: res.isCorrect,
-            type: state.type, // MULTI 또는 SUBJ
-            questionText: q.문제,
-            userAns: res.userAns || "N/A"
+            type: state.type,           // "MULTI" 또는 "SUBJ"
+            problem: q.문제 || "",       // 시트의 '문제' 열 내용
+            userResponse: res.userAns || "", // 사용자가 입력한 값
+            correctAnswer: state.type === 'MULTI' ? q[`보기${q.정답번호}`] : q.정답 // 실제 정답
         };
     });
 
+    const payload = {
+        results: detailedResults,
+        reportedIds: state.reportedIds,
+        excludedIds: state.excludedIds,
+        masterGid: cfg.GIDs[`${state.subject}_${state.type}`],
+        statsGid: cfg.GIDs[`${state.subject}_STATS`]
+    };
+
     try {
+        // 'no-cors'를 제거하고 제대로 된 fetch를 수행합니다.
         await fetch(cfg.URL, {
             method: 'POST',
-            body: JSON.stringify({
-                results: detailedResults, // 상세 정보 포함
-                reportedIds: state.reportedIds,
-                excludedIds: state.excludedIds,
-                masterGid: cfg.GIDs[`${state.subject}_${state.type}`],
-                statsGid: cfg.GIDs[`${state.subject}_STATS`]
-            })
+            body: JSON.stringify(payload)
         });
-    } catch (e) { console.error(e); }
+        alert("Sync Complete.");
+    } catch (e) {
+        console.error("Transmission Error:", e);
+        alert("Sync Failed. Check Console.");
+    }
     location.reload();
 }
 </script>
