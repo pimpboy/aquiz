@@ -3,157 +3,330 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>항공 훈련 센터 : 통합 관제소</title>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;900&display=swap" rel="stylesheet">
+    <title>ATC Training Center</title>
     <style>
-        :root { --bg: #f4f7fa; --card: #ffffff; --text: #2d3436; --primary: #4361ee; --transition: 0.4s; }
-        body.hell-mode { --bg: #0f0f0f; --card: #1a1a1a; --text: #eee; --primary: #d93025; }
-        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; transition: var(--transition); }
-        .container { text-align: center; padding: 40px; background: var(--card); border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); width: 90%; max-width: 550px; transition: var(--transition); }
-        h1 { font-weight: 900; font-size: 2.2rem; margin-bottom: 5px; }
-        .mode-switch-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 35px; padding: 15px; background: rgba(128, 128, 128, 0.1); border-radius: 20px; }
-        .switch { position: relative; display: inline-block; width: 70px; height: 34px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #d93025; }
-        input:checked + .slider:before { transform: translateX(36px); }
-        .subject-group { margin-bottom: 25px; padding: 20px; border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 20px; text-align: left; }
-        .subject-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 15px; display: block; }
-        .btn-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px; }
-        .btn { padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; color: white; background: var(--primary); transition: var(--transition); }
-        .btn-stats { background: #636e72; font-size: 0.85rem; }
-        .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn:disabled { background: #555 !important; opacity: 0.5; cursor: wait; }
-        #loader-msg { margin-top: 15px; font-size: 0.85rem; font-weight: 600; color: var(--primary); min-height: 1.2em; }
-        body.hell-mode .container { border: 2px solid var(--primary); animation: shake 0.4s infinite; }
-        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(1px,1px); } 75% { transform: translate(-1px,1px); } }
+        /* [디자인] ATC 테마 - 다크모드 및 모바일 최적화 */
+        :root {
+            --bg-color: #0a0a0a;
+            --radar-green: #00ff41;
+            --radar-dim: #004411;
+            --danger-red: #ff3333;
+            --text-white: #e0e0e0;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-white);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .container { width: 100%; max-width: 500px; }
+        button {
+            background: none; border: 1px solid var(--radar-green);
+            color: var(--radar-green); padding: 15px; margin: 10px 0;
+            width: 100%; font-size: 1.1rem; cursor: pointer;
+            border-radius: 5px;
+        }
+        button:disabled { border-color: #444; color: #444; }
+        input[type="text"] {
+            width: 100%; padding: 15px; box-sizing: border-box;
+            background: #1a1a1a; border: 1px solid var(--radar-green);
+            color: white; font-size: 1.2rem; margin-bottom: 10px;
+        }
+        /* 프로그레스 바 */
+        .progress-container { width: 100%; background: var(--radar-dim); height: 10px; margin: 20px 0; position: relative; }
+        .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: 0.3s; }
+        .nm-display { text-align: center; font-size: 0.9rem; margin-bottom: 5px; color: var(--radar-green); }
+        
+        /* 피드백 레이어 */
+        #feedback-layer {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #111; border-top: 2px solid var(--radar-green);
+            padding: 20px; display: none; max-height: 70vh; overflow-y: auto;
+        }
+        .correct { color: var(--radar-green); font-weight: bold; }
+        .incorrect { color: var(--danger-red); font-weight: bold; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 id="main-title">항공 훈련 관제소</h1>
-    <p style="color: #95a5a6; font-size: 0.9rem; margin-bottom: 25px;">포커 소좌, 훈련 모드를 선택하십시오.</p>
-
-    <div class="mode-switch-container">
-        <span>NORMAL</span>
-        <label class="switch">
-            <input type="checkbox" id="mode-toggle">
-            <span class="slider"></span>
-        </label>
-        <span style="color:#d93025; font-weight:bold;">HELL</span>
-    </div>
-
-    <div class="subject-group">
-        <span class="subject-title">✈️ 항공법규 (Law)</span>
-        <div class="btn-row">
-            <button class="btn" onclick="prepareTraining('law')">🚀 훈련 시작</button>
-            <button class="btn btn-stats" onclick="openDataCenter('law')">📊 데이터 센터</button>
+    <div id="main-page">
+        <h2>ATC TRAINING MODE</h2>
+        <div style="margin: 20px 0;">
+            <label>Difficulty:</label>
+            <button id="toggle-diff" onclick="toggleDifficulty()">CURRENT: EZ MODE</button>
+        </div>
+        <div id="subject-btns">
+            <button onclick="startTraining('LAW', 'MULTI')">LAW (Multiple Choice)</button>
+            <button onclick="startTraining('LAW', 'SUBJ')">LAW (Subjective)</button>
+            <button onclick="startTraining('CTRL', 'MULTI')">CONTROL (Multiple Choice)</button>
+            <button onclick="startTraining('CTRL', 'SUBJ')">CONTROL (Subjective)</button>
+        </div>
+        <hr>
+        <div id="mode-selection" class="hidden">
+            <p>Select Mission Profile:</p>
+            <button onclick="loadQuiz('OMAKASE')">100 문항 오마카세</button>
+            <button onclick="loadQuiz('WRONG')">100 문항 오답노트</button>
         </div>
     </div>
 
-    <div class="subject-group">
-        <span class="subject-title">📡 항공관제 (Control)</span>
-        <div class="btn-row">
-            <button class="btn" onclick="prepareTraining('control')">🚀 훈련 시작</button>
-            <button class="btn btn-stats" onclick="openDataCenter('control')">📊 데이터 센터</button>
-        </div>
+    <div id="loading-page" class="hidden">
+        <h3 id="loading-msg" style="text-align: center; margin-top: 50px;">Initializing...</h3>
     </div>
 
-    <div id="loader-msg"></div>
+    <div id="quiz-page" class="hidden">
+        <div class="nm-display" id="pos-display">Current Position: 0nm / 100nm</div>
+        <div class="progress-container"><div class="progress-bar" id="pb"></div></div>
+        
+        <div id="question-box" style="font-size: 1.2rem; margin-bottom: 20px;"></div>
+        <div id="answer-area"></div>
+        
+        <button onclick="stopSession()" style="border-color: #666; color: #666; margin-top: 40px;">ABORT MISSION (STOP)</button>
+    </div>
+</div>
+
+<div id="feedback-layer">
+    <div id="result-status"></div>
+    <div id="correct-ans-show" style="margin: 10px 0; color: #aaa;"></div>
+    <div id="explanation-box" style="margin: 15px 0; line-height: 1.5; white-space: pre-wrap;"></div>
+    
+    <div style="display: flex; gap: 10px;">
+        <button id="go-around-btn" style="font-size: 0.8rem;">✈️ Go Around</button>
+        <button id="deviation-btn" style="font-size: 0.8rem; border-color: orange; color: orange;">⚠️ Possible Deviation</button>
+    </div>
+    <button onclick="nextQuestion()" style="background: var(--radar-green); color: black;">NEXT CONTACT</button>
 </div>
 
 <script>
-    /**
-     * ------------------------------------------------------------------
-     * ⚠️ [포커 소좌 전용 통합 주소 설정창]
-     * ------------------------------------------------------------------
-     */
-    const CONFIG = {
-        normal: {
-            law: {
-                obj: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSt4rnBHn09jQMQkDvTY-shEQKw_hSVERS4YhR7__ZetWeFtgSNF_dCgmeEVVvvihz2E-DoLsSXQQeH/pub?gid=0&single=true&output=csv",
-                sub: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSt4rnBHn09jQMQkDvTY-shEQKw_hSVERS4YhR7__ZetWeFtgSNF_dCgmeEVVvvihz2E-DoLsSXQQeH/pub?gid=1036407965&single=true&output=csv",
-                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSt4rnBHn09jQMQkDvTY-shEQKw_hSVERS4YhR7__ZetWeFtgSNF_dCgmeEVVvvihz2E-DoLsSXQQeH/pub?gid=1846282036&single=true&output=csv",
-                gas: "https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec"
-            },
-            control: {
-                obj: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSt4rnBHn09jQMQkDvTY-shEQKw_hSVERS4YhR7__ZetWeFtgSNF_dCgmeEVVvvihz2E-DoLsSXQQeH/pub?gid=438358690&single=true&output=csv",
-                sub: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSt4rnBHn09jQMQkDvTY-shEQKw_hSVERS4YhR7__ZetWeFtgSNF_dCgmeEVVvvihz2E-DoLsSXQQeH/pub?gid=1403157384&single=true&output=csv",
-                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSt4rnBHn09jQMQkDvTY-shEQKw_hSVERS4YhR7__ZetWeFtgSNF_dCgmeEVVvvihz2E-DoLsSXQQeH/pub?gid=1880986641&single=true&output=csv",
-                gas: "https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec"
-            }
-        },
-        hell: {
-            law: {
-                obj: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=0&single=true&output=csv",
-                sub: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=606421897&single=true&output=csv",
-                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=1366188626&single=true&output=csv",
-                gas: "https://script.google.com/macros/s/AKfycbyhGW6_7Zl5P2Z-hDOvd4r_4Iw0FXF0-ygQduMJJAAqkqvEhHRxskPMn4st2LFshxUc/exec"
-            },
-            control: {
-                obj: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=371932808&single=true&output=csv",
-                sub: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=157857311&single=true&output=csv",
-                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=720487079&single=true&output=csv",
-                gas: "https://script.google.com/macros/s/AKfycbyhGW6_7Zl5P2Z-hDOvd4r_4Iw0FXF0-ygQduMJJAAqkqvEhHRxskPMn4st2LFshxUc/exec"
-            }
+/** * [수정 포인트] 본인의 GAS URL과 GID를 입력하세요.
+ */
+const CONFIG = {
+    // 1. EZ 모드 설정
+    EZ: {
+        URL: "https://script.google.com/macros/s/AKfycbxQdRw8bAcYSfZWNV6r808lVpwED88FaZj6bviR1pMZ2DimYDKHYu13jeT7oXaT04ErGw/exec",
+        GIDs: {
+            LAW_MULTI: 0,        // EZ 시트의 법규 객관식 gid
+            LAW_SUBJ: 1036407965,       // EZ 시트의 법규 주관식 gid
+            CTRL_MULTI: 438358690,     // EZ 시트의 관제 객관식 gid
+            CTRL_SUBJ: 1403157384,      // EZ 시트의 관제 주관식 gid
+            LAW_STATS: 1846282036,      // EZ 시트의 법규 통계 gid
+            CTRL_STATS: 1880986641      // EZ 시트의 관제 통계 gid
         }
+    },
+    // 2. INFERNO 모드 설정
+    INFERNO: {
+        URL: "https://script.google.com/macros/s/AKfycbzjGLlSq7-xpO0dZxCWExg06paUtwsP1kcPBXTCXhDzm8wkU0CJCyCADB0gJKsU76z7RA/exec",
+        GIDs: {
+            LAW_MULTI: 0,        // INFERNO 시트의 법규 객관식 gid
+            LAW_SUBJ: 1805786990,       // INFERNO 시트의 법규 주관식 gid
+            CTRL_MULTI: 2049752243,     // INFERNO 시트의 관제 객관식 gid
+            CTRL_SUBJ: 570358631,      // INFERNO 시트의 관제 주관식 gid
+            LAW_STATS: 668283973,      // INFERNO 시트의 법규 통계 gid
+            CTRL_STATS: 1546545747      // INFERNO 시트의 관제 통계 gid
+        }
+    }
+};
+
+// 위 구조에 맞춰서 loadQuiz 함수 내부의 변수 할당 부분도 아래처럼 한 줄 바뀝니다.
+async function loadQuiz(mode) {
+    // ... 중략 ...
+    
+    // 현재 난이도에 맞는 설정 뭉치를 가져옵니다.
+    const currentCfg = CONFIG[state.difficulty]; 
+    const targetGid = currentCfg.GIDs[`${state.subject}_${state.type}`];
+    const url = currentCfg.URL;
+
+    // ... 이후 fetch(url) 로직 동일 ...
+}
+};
+
+let state = {
+    difficulty: 'EZ',
+    subject: '',
+    type: '',
+    questions: [],
+    currentIndex: 0,
+    sessionResults: [],
+    reportedIds: [],
+    excludedIds: []
+};
+
+// 1. 난이도 토글
+function toggleDifficulty() {
+    state.difficulty = state.difficulty === 'EZ' ? 'INFERNO' : 'EZ';
+    document.getElementById('toggle-diff').innerText = `CURRENT: ${state.difficulty} MODE`;
+}
+
+// 2. 훈련 시작 (과목 선택 후 로딩)
+async function startTraining(sub, type) {
+    state.subject = sub;
+    state.type = type;
+    document.getElementById('subject-btns').classList.add('hidden');
+    document.getElementById('mode-selection').classList.remove('hidden');
+}
+
+// 3. 데이터 로드 및 알고리즘 추출
+async function loadQuiz(mode) {
+    showPage('loading-page');
+    const msgEl = document.getElementById('loading-msg');
+    const loadingSteps = [
+        "Performing Checklist, Standby 1...",
+        "Establishing Data Link with Database...",
+        "Calculating Omakase/Incorrect Algorithm...",
+        "Radar contact. My control."
+    ];
+
+    for(let msg of loadingSteps) {
+        msgEl.innerText = msg;
+        await new Promise(r => setTimeout(r, 800));
+    }
+
+    const targetGid = CONFIG.GIDs[`${state.subject}_${state.type}`];
+    const url = state.difficulty === 'EZ' ? CONFIG.EZ_URL : CONFIG.INFERNO_URL;
+
+    try {
+        const response = await fetch(`${url}?gid=${targetGid}`);
+        const fullData = await response.json();
+        
+        // 정렬 로직 (기출 횟수 K열, 오답 횟수 L열 기준 - Master 탭에 추가한 가정)
+        if (mode === 'OMAKASE') {
+            // 기출 적은 순 -> 오답 많은 순
+            state.questions = fullData.sort((a, b) => (a['기출_Total'] || 0) - (b['기출_Total'] || 0) || (b['오답_Total'] || 0) - (a['오답_Total'] || 0));
+        } else {
+            // 오답률(오답/기출) 높은 순 -> 기출 많은 순
+            state.questions = fullData.sort((a, b) => {
+                let rateA = (a['오답_Total'] || 0) / (a['기출_Total'] || 1);
+                let rateB = (b['오답_Total'] || 0) / (b['기출_Total'] || 1);
+                return rateB - rateA || (b['기출_Total'] || 0) - (a['기출_Total'] || 0);
+            });
+        }
+        
+        state.questions = state.questions.slice(0, 100);
+        state.currentIndex = 0;
+        renderQuestion();
+        showPage('quiz-page');
+    } catch (e) {
+        alert("Data Link Failed. Check GAS URL/GID.");
+        location.reload();
+    }
+}
+
+// 4. 문제 렌더링
+function renderQuestion() {
+    const q = state.questions[state.currentIndex];
+    document.getElementById('pos-display').innerText = `Current Position: ${state.currentIndex + 1}nm / 100nm`;
+    document.getElementById('pb').style.width = `${state.currentIndex + 1}%`;
+    document.getElementById('question-box').innerText = `[${q.대분류}] ${q.문제}`;
+    
+    const area = document.getElementById('answer-area');
+    area.innerHTML = '';
+
+    if (state.type === 'MULTI') {
+        for(let i=1; i<=4; i++) {
+            const btn = document.createElement('button');
+            btn.innerText = q[`보기${i}`];
+            btn.onclick = () => checkAnswer(i);
+            area.appendChild(btn);
+        }
+    } else {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'subj-input';
+        input.placeholder = "Enter response...";
+        input.onkeyup = (e) => { if(e.key === 'Enter') checkAnswer(input.value) };
+        area.appendChild(input);
+        const submitBtn = document.createElement('button');
+        submitBtn.innerText = "CHECK (ENTER)";
+        submitBtn.onclick = () => checkAnswer(input.value);
+        area.appendChild(submitBtn);
+    }
+}
+
+// 5. 정답 체크
+function checkAnswer(userAns) {
+    const q = state.questions[state.currentIndex];
+    let isCorrect = false;
+
+    if (state.type === 'MULTI') {
+        isCorrect = parseInt(userAns) === parseInt(q.정답번호);
+    } else {
+        const clean = (s) => s.toString().replace(/\s+/g, '').split(',').sort().join(',');
+        isCorrect = clean(userAns) === clean(q.정답);
+    }
+
+    // 결과 저장
+    state.sessionResults.push({ id: q.ID, isCorrect: isCorrect, userAns: userAns });
+
+    // 피드백 레이어 노출
+    const layer = document.getElementById('feedback-layer');
+    const status = document.getElementById('result-status');
+    status.innerHTML = isCorrect ? '<span class="correct">● CORRECT</span>' : '<span class="incorrect">● INCORRECT</span>';
+    document.getElementById('correct-ans-show').innerText = `Correct Answer: ${state.type === 'MULTI' ? q[`보기${q.정답번호}`] : q.정답}`;
+    document.getElementById('explanation-box').innerText = q.해설 || "No additional explanation provided.";
+    
+    // 버튼 설정 (EZ/HELL)
+    document.getElementById('go-around-btn').className = state.difficulty === 'EZ' ? '' : 'hidden';
+    document.getElementById('deviation-btn').className = state.difficulty === 'INFERNO' ? '' : 'hidden';
+    
+    // 버튼 이벤트 바인딩 (한 번만 클릭되게)
+    document.getElementById('go-around-btn').onclick = () => {
+        state.excludedIds.push(q.ID);
+        alert("Go-around executed. Record will be erased.");
+    };
+    document.getElementById('deviation-btn').onclick = () => {
+        state.reportedIds.push(q.ID);
+        alert("Deviation reported. Master sheet will be highlighted.");
     };
 
-    let currentMode = 'normal';
-    const toggle = document.getElementById('mode-toggle');
-    const loaderMsg = document.getElementById('loader-msg');
+    layer.style.display = 'block';
+}
 
-    toggle.addEventListener('change', () => {
-        currentMode = toggle.checked ? 'hell' : 'normal';
-        document.body.classList.toggle('hell-mode', toggle.checked);
-        document.getElementById('main-title').innerText = toggle.checked ? "🔥 불지옥 커리큘럼" : "항공 훈련 관제소";
+function nextQuestion() {
+    document.getElementById('feedback-layer').style.display = 'none';
+    state.currentIndex++;
+    if (state.currentIndex < state.questions.length) {
+        renderQuestion();
+    } else {
+        stopSession();
+    }
+}
+
+// 6. 데이터 전송 (Bulk Update)
+async function stopSession() {
+    if(!confirm("Terminate session and sync data?")) return;
+    
+    showPage('loading-page');
+    document.getElementById('loading-msg').innerText = "Transmitting Data to Tower...";
+
+    const url = state.difficulty === 'EZ' ? CONFIG.EZ_URL : CONFIG.INFERNO_URL;
+    const payload = {
+        results: state.sessionResults,
+        reportedIds: state.reportedIds,
+        excludedIds: state.excludedIds,
+        masterGid: CONFIG.GIDs[`${state.subject}_${state.type}`],
+        statsGid: CONFIG.GIDs[`${state.subject}_STATS`]
+    };
+
+    try {
+        await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        alert("Sync Complete. Safe Landing.");
+    } catch (e) {
+        alert("Transmission Failed. Data may not be saved.");
+    }
+    location.reload();
+}
+
+function showPage(id) {
+    ['main-page', 'loading-page', 'quiz-page'].forEach(p => {
+        document.getElementById(p).classList.add('hidden');
     });
-
-    async function prepareTraining(subject) {
-        const btns = document.querySelectorAll('.btn');
-        btns.forEach(b => b.disabled = true);
-        loaderMsg.innerText = `[${currentMode.toUpperCase()}] Checklist(객/주/통) 수행 중...`;
-
-        try {
-            const target = CONFIG[currentMode][subject];
-            
-            const [resObj, resSub, resStats] = await Promise.all([
-                fetch(target.obj),
-                fetch(target.sub),
-                fetch(target.stats)
-            ]);
-
-            if (!resObj.ok || !resSub.ok || !resStats.ok) throw new Error("로드 실패");
-
-            const dataObj = await resObj.text();
-            const dataSub = await resSub.text();
-            const dataStats = await resStats.text();
-
-            sessionStorage.setItem('quiz_obj', dataObj);
-            sessionStorage.setItem('quiz_sub', dataSub);
-            sessionStorage.setItem('quiz_stats', dataStats);
-            sessionStorage.setItem('quiz_config', JSON.stringify({
-                mode: currentMode,
-                subject: subject,
-                gasUrl: target.gas
-            }));
-
-            loaderMsg.innerText = "✅ 데이터 동기화 완료! Cleared for takeoff";
-            setTimeout(() => { location.href = 'quiz.html'; }, 800);
-
-        } catch (e) {
-            loaderMsg.innerText = "❌ 로드 실패! 주소 설정을 확인하십시오.";
-            btns.forEach(b => b.disabled = false);
-        }
-    }
-
-    function openDataCenter(subject) {
-        const target = CONFIG[currentMode][subject];
-        window.open(target.gas, '_blank');
-    }
+    document.getElementById(id).classList.remove('hidden');
+}
 </script>
-
 </body>
 </html>
