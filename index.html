@@ -13,31 +13,28 @@
             --text-white: #e0e0e0;
             --primary-blue: #4f46e5;
             --card-bg: #1a1a1a;
-            --border-color: #333;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             background-color: var(--bg-color); color: var(--text-white);
-            font-family: 'Pretendard', -apple-system, sans-serif; margin: 0; padding: 20px;
+            font-family: 'Pretendard', sans-serif; margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
             overflow-x: hidden;
         }
-        .container { width: 100%; max-width: 600px; animation: fadeIn 0.5s ease; }
+        .container { width: 100%; max-width: 600px; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Mode Card Styling */
-        .mode-card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h1 { font-size: 1.8rem; letter-spacing: -0.5px; }
+        .mode-card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        h1 { font-size: 1.7rem; letter-spacing: -0.5px; }
         
-        /* Button Styling */
-        button { border-radius: 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-weight: bold; border: 1px solid transparent; padding: 15px; width: 100%; font-size: 1rem; }
-        button:active { transform: scale(0.98); opacity: 0.8; }
-        button:disabled { border-color: #333 !important; color: #555 !important; cursor: not-allowed; filter: grayscale(1); }
+        button { border-radius: 12px; cursor: pointer; transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-weight: bold; border: 1px solid transparent; padding: 15px; width: 100%; font-size: 1rem; }
+        button:active { transform: scale(0.98); opacity: 0.9; }
+        button:disabled { border-color: #333 !important; color: #555 !important; cursor: not-allowed; opacity: 0.6; filter: grayscale(1); }
+        
         .btn-start { background: var(--primary-blue); color: white; }
         .btn-stats { background: #4b5563; color: white; font-size: 0.8rem; width: auto; padding: 8px 16px; border-radius: 8px; }
         
-        /* Toggle Switch */
-        .toggle-container { background: #f0f0f0; border-radius: 50px; padding: 8px 24px; display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 30px; color: #111; font-weight: 800; }
+        .toggle-container { background: #eee; border-radius: 50px; padding: 8px 24px; display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 30px; color: #111; font-weight: 800; }
         .switch { position: relative; display: inline-block; width: 54px; height: 28px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
@@ -45,33 +42,31 @@
         input:checked + .slider { background-color: var(--danger-red); }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* Progress Bar */
         .progress-container { width: 100%; background: #222; height: 6px; border-radius: 10px; margin: 20px 0; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: width 0.4s ease; box-shadow: 0 0 10px var(--radar-green); }
+        .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: 0.4s ease; box-shadow: 0 0 10px var(--radar-green); }
 
-        /* Stats Table */
-        .stats-wrap { width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 15px; border: 1px solid var(--border-color); background: #111; }
+        .stats-wrap { width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid #333; background: #111; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 580px; table-layout: fixed; }
-        th { background: #1a1a1a; padding: 14px; cursor: pointer; border-bottom: 2px solid var(--border-color); color: var(--radar-green); position: sticky; top: 0; z-index: 10; text-align: center; }
+        th { background: #1a1a1a; padding: 14px; cursor: pointer; border-bottom: 2px solid #333; color: var(--radar-green); position: sticky; top: 0; z-index: 10; }
         th:hover { background: #222; }
-        td { padding: 14px; border-bottom: 1px solid #1a1a1a; text-align: center; word-break: break-all; vertical-align: middle; }
-        .rate-bg { width: 100%; background: #222; height: 5px; border-radius: 10px; margin-top: 8px; overflow: hidden; }
+        td { padding: 14px; border-bottom: 1px solid #1a1a1a; text-align: center; word-break: break-all; }
+        
+        .rate-bg { width: 100%; background: #222; height: 5px; border-radius: 10px; margin-top: 8px; }
         .rate-bar { height: 100%; background: var(--danger-red); border-radius: 10px; }
         
-        /* Content Layers */
         .exp-content { display: none; background: #1a1a1a; padding: 15px; margin-top: 10px; border-radius: 10px; color: #aaa; text-align: left; line-height: 1.6; border-left: 4px solid var(--radar-green); font-size: 0.9rem; }
+        
         #feedback-layer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 600px; background: #0f0f0f; border-top: 3px solid var(--radar-green); padding: 25px; display: none; z-index: 2000; max-height: 85vh; overflow-y: auto; border-radius: 30px 30px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); }
         .hidden { display: none !important; }
         
-        /* Input Field */
-        #subj-input { width: 100%; padding: 18px; background: #111; border: 2px solid #333; color: white; border-radius: 15px; font-size: 1.1rem; transition: border-color 0.3s; margin-bottom: 15px; outline: none; }
+        #subj-input { width: 100%; padding: 18px; background: #111; border: 2px solid #333; color: white; border-radius: 15px; font-size: 1.1rem; outline: none; transition: 0.3s; margin-bottom: 15px; }
         #subj-input:focus { border-color: var(--radar-green); box-shadow: 0 0 10px rgba(0,255,65,0.2); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- MAIN PAGE -->
+    <!-- Main Home Page -->
     <div id="main-page">
         <h1 style="text-align: center; margin-bottom: 8px; color: var(--radar-green);">ATC TRAINING CENTER</h1>
         <p style="text-align: center; color: #777; font-size: 0.95rem; margin-bottom: 30px;">포커 소좌, 작전 지역을 선택하십시오.</p>
@@ -86,7 +81,6 @@
         </div>
 
         <div id="subject-cards">
-            <!-- LAW SECTION -->
             <div class="mode-card">
                  <div style="font-weight: 800; display: flex; justify-content: space-between; align-items: center; margin-bottom:18px;">
                      <span style="font-size: 1.1rem;">✈️ 항공법규 (Law)</span>
@@ -97,7 +91,6 @@
                      <button class="btn-start" onclick="window.prepMission('LAW', 'SUBJ')">훈련 시작 (주)</button>
                  </div>
             </div>
-            <!-- CONTROL SECTION -->
             <div class="mode-card">
                  <div style="font-weight: 800; display: flex; justify-content: space-between; align-items: center; margin-bottom:18px;">
                      <span style="font-size: 1.1rem;">📡 항공관제 (Control)</span>
@@ -110,7 +103,6 @@
             </div>
         </div>
 
-        <!-- MODE SELECTION -->
         <div id="mode-selection" class="hidden">
             <div style="text-align:center; margin-bottom:25px;">
                 <p style="color:orange; font-weight:900; letter-spacing:1px; margin-bottom:5px;">MISSION PROFILE</p>
@@ -122,12 +114,13 @@
         </div>
     </div>
 
-    <!-- STATS PAGE -->
+    <!-- Data Center Page -->
     <div id="stats-page" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 style="margin:0; color:var(--radar-green); letter-spacing:1px;">DATA CENTER</h2>
             <button onclick="location.reload()" style="padding:10px 20px; background:#333; color:white; border-radius:8px; width:auto; font-size:0.8rem;">EXIT</button>
         </div>
+        <p style="font-size:0.8rem; color:#777; margin-bottom:15px;">* 최근 훈련 이력이 있는 문항만 분석 데이터로 노출됩니다.</p>
         <div class="stats-wrap">
             <table>
                 <colgroup>
@@ -151,11 +144,11 @@
         </div>
     </div>
 
-    <!-- QUIZ PAGE -->
+    <!-- Quiz Session Page -->
     <div id="quiz-page" class="hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; color: var(--radar-green); font-size: 0.85rem; font-weight: bold;">
             <span id="pos-display">Position: 0 / 100</span>
-            <span id="difficulty-badge" style="color: #666;">MODE: NORMAL</span>
+            <span id="diff-status">MODE: NORMAL</span>
         </div>
         <div class="progress-container"><div class="progress-bar" id="pb"></div></div>
         <div id="question-box" style="margin:35px 0; font-size:1.2rem; line-height:1.7; min-height:100px; font-weight:500;"></div>
@@ -163,7 +156,7 @@
         <button onclick="window.stopSession()" style="border:1px solid #333; color:#555; margin-top:50px; background: none; font-size:0.85rem;">ABORT MISSION (TERMINAL SYNC)</button>
     </div>
 
-    <!-- LOADING PAGE -->
+    <!-- Loading State -->
     <div id="loading-page" class="hidden">
         <div style="text-align: center; margin-top: 180px;">
             <div style="display:inline-block; width:40px; height:40px; border:4px solid var(--radar-dim); border-top-color:var(--radar-green); border-radius:50%; animation: spin 1s linear infinite; margin-bottom:20px;"></div>
@@ -172,9 +165,9 @@
     </div>
 </div>
 
-<!-- FEEDBACK LAYER -->
+<!-- Global Feedback Overlay -->
 <div id="feedback-layer">
-    <div id="result-status" style="text-align:center; padding:18px; font-weight:900; border-radius:15px; margin-bottom:20px; font-size:1.2rem; letter-spacing:1px;"></div>
+    <div id="result-status" style="text-align:center; padding:18px; font-weight:900; border-radius:15px; margin-bottom:20px; font-size:1.2rem;"></div>
     <div style="background:#1a1a1a; padding:20px; border-radius:18px; margin-bottom:20px; border:1px solid #333;">
         <div id="correct-ans-show" style="color:var(--radar-green); font-weight:800; margin-bottom:12px; font-size:1.1rem; border-bottom:1px solid #333; padding-bottom:10px;"></div>
         <div id="explanation-box" style="font-size:1rem; line-height:1.6; color:#ccc; white-space:pre-wrap;"></div>
@@ -183,13 +176,13 @@
         <button id="go-around-btn" style="flex:1; border:2px solid var(--radar-green); color:var(--radar-green); background:none; font-size:0.9rem;">✈️ Go Around</button>
         <button id="deviation-btn" style="flex:1; border:2px solid orange; color:orange; background:none; font-size:0.9rem;">⚠️ Deviation</button>
     </div>
-    <button id="next-btn" style="background:var(--radar-green); color:black; font-size:1.3rem; border:none; margin-top:10px; font-weight:900; box-shadow: 0 5px 15px rgba(0,255,65,0.3);">NEXT CONTACT</button>
+    <button id="next-btn" style="background:var(--radar-green); color:black; font-size:1.3rem; border:none; margin-top:10px; font-weight:900;">NEXT CONTACT</button>
 </div>
 
 <style> @keyframes spin { to { transform: rotate(360deg); } } </style>
 
 <script>
-/** [ENGINE v1.1.1] Bug Fixes: Type Sync, Stats Mapping, Answer Display */
+/** [ENGINE v1.1.4] Final Integrity Package */
 window.state = {
     difficulty: 'EZ', subject: '', type: '', questions: [], currentIndex: 0,
     sessionResults: [], reportedIds: [], excludedIds: [], statsData: [],
@@ -206,7 +199,6 @@ const CONFIG = {
         GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1805786990, CTRL_MULTI: 2049752243, CTRL_SUBJ: 570358631, LAW_STATS: 668283973, CTRL_STATS: 1546545747 }
     }
 };
-
 window.showPage = function(id) {
     ['main-page', 'stats-page', 'loading-page', 'quiz-page'].forEach(p => {
         const el = document.getElementById(p);
@@ -217,16 +209,16 @@ window.showPage = function(id) {
 
 window.setDifficulty = function(isHell) {
     window.state.difficulty = isHell ? 'INFERNO' : 'EZ';
-    document.getElementById('difficulty-badge').innerText = isHell ? 'MODE: INFERNO' : 'MODE: NORMAL';
-    document.getElementById('difficulty-badge').style.color = isHell ? 'var(--danger-red)' : '#666';
+    document.getElementById('diff-status').innerText = isHell ? 'MODE: INFERNO' : 'MODE: NORMAL';
+    document.getElementById('diff-status').style.color = isHell ? 'var(--danger-red)' : 'var(--radar-green)';
 };
 
 window.prepMission = function(sub, type) {
     window.state.subject = sub;
     window.state.type = type;
-    const subText = sub === 'LAW' ? '항공법규' : '항공관제';
-    const typeText = type === 'MULTI' ? '객관식' : '주관식';
-    document.getElementById('mission-title').innerText = `${subText} [${typeText}]`;
+    const subLabel = sub === 'LAW' ? '항공법규' : '항공관제';
+    const typeLabel = type === 'MULTI' ? '객관식' : '주관식';
+    document.getElementById('mission-title').innerText = `${subLabel} [${typeLabel}] PROFILE`;
     document.getElementById('subject-cards').classList.add('hidden');
     document.getElementById('mode-selection').classList.remove('hidden');
 };
@@ -238,10 +230,7 @@ window.loadQuiz = async function(mode) {
     
     try {
         const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
-        if (!res.ok) throw new Error("Link Failure");
-        let data = await res.json();
-        
-        // 8열 스키마 동기화 및 숫자 데이터 무결성 처리
+        const data = await res.json();
         const getNum = (v) => Number(String(v || '0').replace(/[^0-9.-]+/g, "")) || 0;
         
         if (mode === 'OMAKASE') {
@@ -258,7 +247,7 @@ window.loadQuiz = async function(mode) {
         window.state.isProcessing = false;
 
         if (window.state.questions.length === 0) {
-            alert("No Flight Data in this sector.");
+            alert("No Flight Data available.");
             location.reload();
             return;
         }
@@ -266,7 +255,7 @@ window.loadQuiz = async function(mode) {
         window.renderQuestion();
         window.showPage('quiz-page');
     } catch(e) { 
-        alert("Radar Offline. Check connection."); 
+        alert("Tower Link Failure."); 
         location.reload(); 
     }
 };
@@ -276,7 +265,7 @@ window.renderQuestion = function() {
     const total = window.state.questions.length;
     document.getElementById('pos-display').innerText = `Position: ${window.state.currentIndex + 1} / ${total}`;
     document.getElementById('pb').style.width = `${((window.state.currentIndex + 1) / total) * 100}%`;
-    document.getElementById('question-box').innerText = `[${q.대분류 || 'ATC'}] ${q.문제}`;
+    document.getElementById('question-box').innerText = `[${q.대분류 || q.Category || 'ATC'}] ${q.문제 || q.Problem}`;
     
     const area = document.getElementById('answer-area');
     area.innerHTML = '';
@@ -284,8 +273,9 @@ window.renderQuestion = function() {
     if (window.state.type === 'MULTI') {
         for(let i=1; i<=4; i++) {
             const btn = document.createElement('button');
-            btn.style = "margin-bottom:12px; border:1px solid #333; text-align:left; background:#111; color:#eee; padding-left:20px; font-weight:normal;";
-            btn.innerText = `${i}. ${q['보기'+i]}`;
+            const choice = q['보기'+i] || q[`Choice${i}`];
+            btn.style = "margin-bottom:12px; border:1px solid #333; text-align:left; background:#111; color:#eee; padding-left:20px;";
+            btn.innerText = `${i}. ${choice}`;
             btn.onclick = () => window.checkAnswer(i);
             area.appendChild(btn);
         }
@@ -293,7 +283,7 @@ window.renderQuestion = function() {
         const input = document.createElement('input');
         input.id = "subj-input";
         input.type = "text";
-        input.placeholder = "명령어를 입력하십시오...";
+        input.placeholder = "Enter Command...";
         input.onkeyup = (e) => e.key === 'Enter' && window.checkAnswer(input.value);
         area.appendChild(input);
         
@@ -311,25 +301,25 @@ window.checkAnswer = function(userAns) {
     window.state.isProcessing = true;
     
     const q = window.state.questions[window.state.currentIndex];
-    const realAnsText = (window.state.type === 'MULTI') ? q['보기'+q.정답번호] : q.정답;
+    const correctIdx = q.정답번호 || q.AnswerIndex;
+    const realAnsText = (window.state.type === 'MULTI') ? (q['보기'+correctIdx] || q[`Choice${correctIdx}`]) : (q.정답 || q.Answer);
     
     let isCorrect = false;
     if (window.state.type === 'MULTI') {
-        isCorrect = parseInt(userAns) === parseInt(q.정답번호);
+        isCorrect = parseInt(userAns) === parseInt(correctIdx);
     } else {
         const clean = (s) => String(s || '').replace(/\s+/g, '').toLowerCase();
-        isCorrect = clean(userAns) === clean(q.정답);
+        isCorrect = clean(userAns) === clean(realAnsText);
     }
 
-    // 수정 포인트 1: '유형(type)' 필드를 결과 객체에 포함하여 DB 전송 시 누락 방지
     window.state.sessionResults.push({ 
-        id: q.ID, 
+        id: q.ID || q.id, 
         isCorrect: isCorrect, 
         userAns: userAns,
-        type: window.state.type, // 유형 기입 결함 해결
-        problem: q.문제,
-        category: q.대분류 || 'ATC',
-        explanation: q.해설 || 'No manual.'
+        type: window.state.type,
+        problem: q.문제 || q.Problem,
+        category: q.대분류 || q.Category || 'ATC',
+        explanation: q.해설 || q.Explanation || 'No manual.'
     });
 
     const status = document.getElementById('result-status');
@@ -339,15 +329,17 @@ window.checkAnswer = function(userAns) {
     status.style.border = `1px solid ${isCorrect ? 'var(--radar-green)' : 'var(--danger-red)'}`;
     
     document.getElementById('correct-ans-show').innerText = "IDENTIFIED AS: " + (realAnsText || "N/A");
-    document.getElementById('explanation-box').innerText = q.해설 || "작전 지침이 등록되지 않은 문항입니다.";
+    document.getElementById('explanation-box').innerText = q.해설 || q.Explanation || "작전 지침이 등록되지 않았습니다.";
     
     document.getElementById('go-around-btn').onclick = () => {
-        if(!window.state.excludedIds.includes(q.ID)) window.state.excludedIds.push(q.ID);
-        alert("Excluded from sync.");
+        const qId = q.ID || q.id;
+        if(!window.state.excludedIds.includes(qId)) window.state.excludedIds.push(qId);
+        alert("Marked as Go Around.");
     };
     document.getElementById('deviation-btn').onclick = () => {
-        if(!window.state.reportedIds.includes(q.ID)) window.state.reportedIds.push(q.ID);
-        alert("Reported to Tower.");
+        const qId = q.ID || q.id;
+        if(!window.state.reportedIds.includes(qId)) window.state.reportedIds.push(qId);
+        alert("Deviation Reported.");
     };
     
     document.getElementById('next-btn').onclick = () => window.nextQuestion();
@@ -371,20 +363,22 @@ window.stopSession = async function() {
     document.getElementById('loading-msg').innerText = "UPLOADING TO TOWER...";
     
     const cfg = CONFIG[window.state.difficulty];
-    const payload = { 
-        results: window.state.sessionResults, 
-        reportedIds: window.state.reportedIds, 
-        excludedIds: window.state.excludedIds, 
-        masterGid: cfg.GIDs[`${window.state.subject}_${window.state.type}`], 
-        statsGid: cfg.GIDs[`${window.state.subject}_STATS`] 
-    };
-    
     try {
-        await fetch(cfg.URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+        await fetch(cfg.URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify({ 
+                results: window.state.sessionResults, 
+                reportedIds: window.state.reportedIds, 
+                excludedIds: window.state.excludedIds, 
+                masterGid: cfg.GIDs[`${window.state.subject}_${window.state.type}`], 
+                statsGid: cfg.GIDs[`${window.state.subject}_STATS`] 
+            }) 
+        });
         alert("Mission Complete. Log Synced.");
         location.reload();
     } catch(e) { 
-        alert("Sync Error. Local data maintained."); 
+        alert("Sync Failure."); 
         window.showPage('quiz-page'); 
     }
 };
@@ -396,24 +390,26 @@ window.loadStats = async function(subject) {
         const res = await fetch(`${cfg.URL}?gid=${cfg.GIDs[subject+'_STATS']}`);
         const data = await res.json();
         
-        // 수정 포인트 2: 데이터 센터 기출/오답 횟수 및 정답 필드 매핑 결함 해결
-        window.state.statsData = data.map(row => {
-            const getNum = (v) => Number(String(v || '0').replace(/[^0-9.-]+/g, "")) || 0;
-            const c = getNum(row['누적 기출']);
-            const w = getNum(row['누적 오답']);
-            const rawRate = row['오답률'] || "0%";
-            const parsedRate = parseFloat(String(rawRate).replace('%','')) || 0;
-            
-            return { 
-                type: row['유형'] || '-', 
-                problem: row['문제'] || '-', 
-                answer: row['실제정답'] || row['정답'] || '-', // 정답 표시 결함 보정
-                count: c, 
-                wrong: w, 
-                rate: parsedRate,
-                exp: row['해설'] || 'No manual entry.'
-            };
-        });
+        const getNum = (v) => Number(String(v || '0').replace(/[^0-9.-]+/g, "")) || 0;
+
+        window.state.statsData = data
+            .filter(row => getNum(row['누적 기출']) > 0) // [FINAL INTEGRITY] 기출 1회 이상 필터링
+            .map(row => {
+                const c = getNum(row['누적 기출']);
+                const w = getNum(row['누적 오답']);
+                const rawRate = row['오답률'] || "0%";
+                const parsedRate = parseFloat(rawRate.replace('%','')) || 0;
+                
+                return { 
+                    type: row['유형'] || '-', 
+                    problem: row['문제'] || '-', 
+                    answer: row['실제정답'] || row['정답'] || '-',
+                    count: c, 
+                    wrong: w, 
+                    rate: parsedRate,
+                    exp: row['해설'] || '-'
+                };
+            });
         
         window.renderStats();
         window.showPage('stats-page');
@@ -425,14 +421,17 @@ window.loadStats = async function(subject) {
 
 window.renderStats = function() {
     const tbody = document.getElementById('stats-body');
-    // 수정 포인트 3: 정답(d.answer)이 HTML 상에서 정확히 노출되도록 보장
+    if(window.state.statsData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="padding:40px; color:#555;">기록된 훈련 데이터가 없습니다.</td></tr>`;
+        return;
+    }
     tbody.innerHTML = window.state.statsData.map((d, i) => `
         <tr>
-            <td><span style="color:#888;">${d.type}</span></td>
+            <td><span style="color:#777;">${d.type}</span></td>
             <td style="text-align:left;">
                 <b style="color:#eee;">${d.problem}</b><br>
                 <div style="margin-top:5px;">
-                    <span style="cursor:pointer;text-decoration:underline;font-size:0.7rem;color:var(--radar-green);opacity:0.7;" 
+                    <span style="cursor:pointer;text-decoration:underline;font-size:0.75rem;color:var(--radar-green);opacity:0.7;" 
                           onclick="const e=document.getElementById('st-exp-${i}'); e.style.display=e.style.display==='block'?'none':'block'">[VIEW MANUAL]</span>
                 </div>
                 <div id="st-exp-${i}" class="exp-content"><b>정답:</b> ${d.answer}<br><br>${d.exp}</div>
@@ -456,6 +455,7 @@ window.sortStats = function(key) {
         if (typeof v1 === 'string') return this.asc ? v1.localeCompare(v2) : v2.localeCompare(v1);
         return this.asc ? v1 - v2 : v2 - v1;
     });
+    this.currentSortKey = key;
     window.renderStats();
 };
 </script>
