@@ -12,70 +12,48 @@
             --danger-red: #ff3333;
             --text-white: #e0e0e0;
             --primary-blue: #4f46e5;
+            --card-bg: #1a1a1a;
         }
         body {
             background-color: var(--bg-color);
             color: var(--text-white);
-            font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+            font-family: 'Pretendard', sans-serif;
             margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
         }
-        .container { width: 100%; max-width: 500px; }
+        .container { width: 100%; max-width: 600px; }
         
-        /* 버튼 공통 스타일 */
-        button {
-            background: none; border: 1px solid var(--radar-green);
-            color: var(--radar-green); padding: 15px; margin: 10px 0;
-            width: 100%; font-size: 1.1rem; cursor: pointer;
-            border-radius: 12px; transition: 0.2s;
-        }
-        button:hover { background: var(--radar-dim); }
-        button:disabled {
-            border-color: #333 !important;
-            color: #555 !important;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        /* 훈련 모드 카드 스타일 (image_068caf 반영) */
+        /* 메인 메뉴 디자인 */
         .mode-card {
-            background: #1a1a1a; border-radius: 20px;
-            padding: 20px; margin-bottom: 20px;
-            border: 1px solid #333;
+            background: var(--card-bg); border-radius: 20px;
+            padding: 20px; margin-bottom: 20px; border: 1px solid #333;
         }
-        .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .btn-group { display: flex; gap: 10px; }
-        .btn-start { background: var(--primary-blue); color: white; border: none; flex: 1.5; }
-        .btn-data { background: #4b5563; color: white; border: none; flex: 1; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight: bold; border: none; padding: 15px; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-start { background: var(--primary-blue); color: white; flex: 2; }
+        .btn-stats { background: #4b5563; color: white; flex: 1; font-size: 0.85rem; }
 
-        /* 토글 스위치 (NORMAL / HELL) */
-        .toggle-container {
-            background: #eee; border-radius: 50px;
-            padding: 10px 30px; display: flex; align-items: center;
-            justify-content: center; gap: 20px; margin-bottom: 30px;
-            color: #333; font-weight: bold;
-        }
+        /* 토글 스위치 */
+        .toggle-container { background: #eee; border-radius: 50px; padding: 10px 30px; display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; color: #333; font-weight: bold; }
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--danger-red); }
         input:checked + .slider:before { transform: translateX(26px); }
-        .text-hell { color: var(--danger-red); }
 
-        /* 퀴즈 진행 바 */
-        .progress-container { width: 100%; background: #222; height: 6px; border-radius: 3px; margin: 20px 0; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: 0.3s; }
-        .pos-display { text-align: center; color: var(--radar-green); font-size: 0.9rem; margin-bottom: 5px; }
-
-        /* 피드백 레이어 */
-        #feedback-layer {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: #111; border-top: 2px solid var(--radar-green);
-            padding: 20px; display: none; z-index: 1000;
-            max-height: 85vh; overflow-y: auto; border-radius: 25px 25px 0 0;
-        }
-        #result-status { text-align: center; padding: 15px; font-size: 1.4rem; font-weight: bold; border-radius: 10px; margin-bottom: 15px; }
+        /* 통계 테이블 */
+        .stats-wrap { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: #111; min-width: 500px; }
+        th { background: #222; padding: 12px; cursor: pointer; border-bottom: 2px solid #333; color: var(--radar-green); position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #222; text-align: center; vertical-align: middle; }
+        .text-left { text-align: left; }
+        
+        .rate-bg { width: 100%; background: #333; height: 6px; border-radius: 3px; margin-top: 5px; }
+        .rate-bar { height: 100%; background: var(--danger-red); }
+        .exp-content { display: none; background: #222; padding: 10px; margin-top: 8px; border-radius: 8px; color: #bbb; line-height: 1.4; }
+        .exp-btn { color: var(--radar-green); cursor: pointer; font-size: 0.75rem; text-decoration: underline; }
 
         .hidden { display: none !important; }
     </style>
@@ -84,76 +62,76 @@
 
 <div class="container">
     <div id="main-page">
-        <h1 style="text-align: center; margin-bottom: 5px;">항공 훈련 관제소</h1>
-        <p style="text-align: center; color: #888; margin-bottom: 30px;">포커 소좌, 훈련 모드를 선택하십시오.</p>
+        <h1 style="text-align: center; margin-bottom: 10px;">항 공 훈련 관제소</h1>
+        <p style="text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 25px;">포커 소좌, 훈련 모드를 선택하십시오.</p>
 
         <div class="toggle-container">
-            <span>EZ</span>
+            <span>NORMAL</span>
             <label class="switch">
-                <input type="checkbox" id="diff-toggle" onchange="toggleDifficulty()">
+                <input type="checkbox" id="diff-toggle" onchange="state.difficulty = this.checked ? 'INFERNO' : 'EZ'">
                 <span class="slider"></span>
             </label>
-            <span class="text-hell">Inferno</span>
+            <span style="color:var(--danger-red)">HELL</span>
         </div>
 
-        <div id="subject-cards">
-            <div class="mode-card">
-                <div class="card-title">✈️ 항공법규 (Law)</div>
-                <div class="btn-group">
-                    <button class="btn-start" onclick="prepTraining('LAW', 'MULTI')">🚀 훈련 시작 (객관식)</button>
-                    <button class="btn-start" onclick="prepTraining('LAW', 'SUBJ')">🚀 훈련 시작 (주관식)</button>
-                </div>
+        <div class="mode-card">
+            <div style="font-weight: bold;">✈️ 항공법규 (Law)</div>
+            <div class="btn-group">
+                <button class="btn-start" onclick="prepTraining('LAW')">🚀 훈련 시작</button>
+                <button class="btn-stats" onclick="loadStats('LAW')">📊 데이터 센터</button>
             </div>
-            <div class="mode-card">
-                <div class="card-title">📡 항공관제 (Control)</div>
-                <div class="btn-group">
-                    <button class="btn-start" onclick="prepTraining('CTRL', 'MULTI')">🚀 훈련 시작 (객관식)</button>
-                    <button class="btn-start" onclick="prepTraining('CTRL', 'SUBJ')">🚀 훈련 시작 (주관)</button>
-                </div>
+        </div>
+
+        <div class="mode-card">
+            <div style="font-weight: bold;">📡 항공관제 (Control)</div>
+            <div class="btn-group">
+                <button class="btn-start" onclick="prepTraining('CTRL')">🚀 훈련 시작</button>
+                <button class="btn-stats" onclick="loadStats('CTRL')">📊 데이터 센터</button>
             </div>
         </div>
 
         <div id="mode-selection" class="hidden">
-            <p style="text-align:center; color:orange; margin-top:20px;">MISSION PROFILE</p>
-            <button onclick="loadQuiz('OMAKASE')">🍱 100문항 오마카세 (신규 위주)</button>
-            <button onclick="loadQuiz('WRONG')">📝 100문항 오답노트 (취약 위주)</button>
-            <button onclick="location.reload()" style="border-color:#666; color:#666; margin-top:20px;">Back to Base</button>
+            <p style="text-align:center; color:orange; margin: 20px 0 10px;">MISSION PROFILE</p>
+            <button class="btn-start" onclick="loadQuiz('OMAKASE')" style="background:#444; margin-bottom:10px;">🍱 100문항 오마카세</button>
+            <button class="btn-start" onclick="loadQuiz('WRONG')" style="background:#444;">📝 100문항 오답노트</button>
+            <button onclick="location.reload()" style="background:none; border:1px solid #444; color:#666; margin-top:10px; width:100%;">BACK TO BASE</button>
+        </div>
+    </div>
+
+    <div id="stats-page" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 id="stats-title" style="margin:0; color:var(--radar-green);">DATA CENTER</h2>
+            <button onclick="location.reload()" style="padding:8px 15px; background:#333; color:white; border-radius:8px;">EXIT</button>
+        </div>
+        <div class="stats-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortStats('type')">유형</th>
+                        <th onclick="sortStats('problem')">문제 분석</th>
+                        <th onclick="sortStats('count')">기출</th>
+                        <th onclick="sortStats('wrong')">오답</th>
+                        <th onclick="sortStats('rate')">오답률</th>
+                    </tr>
+                </thead>
+                <tbody id="stats-body"></tbody>
+            </table>
         </div>
     </div>
 
     <div id="loading-page" class="hidden">
-        <div style="text-align: center; margin-top: 100px;">
-            <h2 id="loading-msg" style="color: var(--radar-green);">Initializing Data Link...</h2>
+        <div style="text-align: center; margin-top: 150px;">
+            <h2 id="loading-msg" style="color: var(--radar-green);">LINKING...</h2>
         </div>
     </div>
 
     <div id="quiz-page" class="hidden">
-        <div class="pos-display" id="pos-display">Position: 0nm / 100nm</div>
-        <div class="progress-container"><div class="progress-bar" id="pb"></div></div>
-        
-        <div id="question-box" style="font-size: 1.15rem; margin: 30px 0; line-height: 1.5; min-height: 100px;"></div>
-        <div id="answer-area"></div>
-        
-        <button onclick="stopSession()" style="border-color: #444; color: #444; margin-top: 50px; font-size: 0.9rem;">ABORT MISSION (TERMINATE)</button>
-    </div>
-</div>
-
-<div id="feedback-layer">
-    <div id="result-status"></div>
-    <div style="background: #222; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-        <div id="correct-ans-show" style="color: var(--radar-green); font-weight: bold; margin-bottom: 10px;"></div>
-        <div id="explanation-box" style="font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; color: #ccc;"></div>
-    </div>
-    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-        <button id="go-around-btn" style="flex: 1; font-size: 0.9rem;">✈️ Go Around</button>
-        <button id="deviation-btn" style="flex: 1; border-color: orange; color: orange; font-size: 0.9rem;">⚠️ Possible Deviation</button>
-    </div>
-    <button onclick="nextQuestion()" style="background: var(--radar-green); color: black; font-weight: bold; font-size: 1.2rem; border: none;">NEXT CONTACT</button>
+        </div>
 </div>
 
 <script>
 /**
- * [CRITICAL] 본인의 GAS URL과 GID를 입력하세요.
+ * [CONFIG] 
  */
 const CONFIG = {
     EZ: {
@@ -166,168 +144,88 @@ const CONFIG = {
     }
 };
 
-let state = {
-    difficulty: 'EZ',
-    subject: '', type: '',
-    questions: [], currentIndex: 0,
-    sessionResults: [], reportedIds: [], excludedIds: []
-};
+let state = { difficulty: 'EZ', subject: '', type: '', questions: [], currentIndex: 0, sessionResults: [], statsData: [] };
 
 function showPage(id) {
-    ['main-page', 'loading-page', 'quiz-page'].forEach(p => document.getElementById(p).classList.add('hidden'));
+    ['main-page', 'stats-page', 'loading-page', 'quiz-page'].forEach(p => document.getElementById(p)?.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
 }
 
-function toggleDifficulty() {
-    state.difficulty = document.getElementById('diff-toggle').checked ? 'INFERNO' : 'EZ';
-}
-
-function prepTraining(sub, type) {
-    state.subject = sub;
-    state.type = type;
-    document.getElementById('subject-cards').classList.add('hidden');
-    document.getElementById('mode-selection').classList.remove('hidden');
-}
-
-async function loadQuiz(mode) {
+// --- 통계 로직 ---
+async function loadStats(subject) {
     showPage('loading-page');
+    document.getElementById('loading-msg').innerText = "FETCHING RADAR DATA...";
     const cfg = CONFIG[state.difficulty];
-    const targetGid = cfg.GIDs[`${state.subject}_${state.type}`];
+    const gid = cfg.GIDs[`${subject}_STATS`];
 
     try {
-        const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
-        let data = await res.json();
+        const res = await fetch(`${cfg.URL}?gid=${gid}`);
+        const data = await res.json();
 
-        // 오마카세/오답노트 정렬 알고리즘
-        if (mode === 'OMAKASE') {
-            data.sort((a, b) => (a['기출_Total'] || 0) - (b['기출_Total'] || 0) || (b['오답_Total'] || 0) - (a['오답_Total'] || 0));
-        } else {
-            data.sort((a, b) => ((b['오답_Total'] || 0) / (b['기출_Total'] || 1)) - ((a['오답_Total'] || 0) / (a['기출_Total'] || 1)) || (b['기출_Total'] || 0) - (a['기출_Total'] || 0));
-        }
+        // 시트 헤더 명칭에 맞춰 정확히 매핑
+        state.statsData = data.map(row => {
+            const c = Number(row['누적 기출 횟수']) || 0;
+            const w = Number(row['누적 오답 횟수']) || 0;
+            return {
+                type: row['유형'] || '-',
+                problem: row['문제'] || '-',
+                answer: row['실제 정답'] || row['실제정답'] || '-', // 헤더 오타 대비
+                exp: row['해설'] || 'Manual 미등록',
+                count: c,
+                wrong: w,
+                rate: c > 0 ? (w / c) * 100 : 0
+            };
+        });
 
-        state.questions = data.slice(0, 100);
-        state.currentIndex = 0;
-        state.sessionResults = [];
-        renderQuestion();
-        showPage('quiz-page');
+        renderStats();
+        showPage('stats-page');
     } catch (e) {
-        alert("Radar Lost! GAS URL 또는 Anyone 권한을 확인하세요.");
+        alert("데이터 링크 실패. 시트의 공유 권한(Anyone)을 확인하세요.");
         location.reload();
     }
 }
 
-function renderQuestion() {
-    const q = state.questions[state.currentIndex];
-    document.getElementById('pos-display').innerText = `Position: ${state.currentIndex + 1}nm / 100nm`;
-    document.getElementById('pb').style.width = `${state.currentIndex + 1}%`;
-    document.getElementById('question-box').innerText = `[${q.대분류 || 'UNIT'}] ${q.문제}`;
-    
-    const area = document.getElementById('answer-area');
-    area.innerHTML = '';
-
-    if (state.type === 'MULTI') {
-        for(let i=1; i<=4; i++) {
-            const btn = document.createElement('button');
-            btn.innerText = q[`보기${i}`];
-            btn.onclick = () => checkAnswer(i);
-            area.appendChild(btn);
-        }
-    } else {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = 'subj-input';
-        input.placeholder = "입력 후 Enter...";
-        input.style = "width:100%; padding:15px; background:#1a1a1a; border:1px solid #00ff41; color:white; border-radius:12px; font-size:1.1rem; box-sizing:border-box;";
-        input.onkeyup = (e) => e.key === 'Enter' && checkAnswer(input.value);
-        area.appendChild(input);
-        const b = document.createElement('button');
-        b.innerText = "SEND COMMAND";
-        b.style.marginTop = "15px";
-        b.onclick = () => checkAnswer(input.value);
-        area.appendChild(b);
-        input.focus();
-    }
+function renderStats() {
+    const tbody = document.getElementById('stats-body');
+    tbody.innerHTML = state.statsData.map((d, i) => `
+        <tr>
+            <td>${d.type}</td>
+            <td class="text-left">
+                <div style="font-weight:bold; margin-bottom:5px;">${d.problem}</div>
+                <div style="color:var(--radar-green); font-size:0.75rem;">정답: ${d.answer}</div>
+                <span class="exp-btn" onclick="const el=document.getElementById('exp-${i}'); el.style.display=el.style.display==='block'?'none':'block'">[MANUAL VIEW]</span>
+                <div id="exp-${i}" class="exp-content">${d.exp}</div>
+            </td>
+            <td>${d.count}</td>
+            <td>${d.wrong}</td>
+            <td>
+                ${d.rate.toFixed(0)}%
+                <div class="rate-bg"><div class="rate-bar" style="width:${d.rate}%"></div></div>
+            </td>
+        </tr>
+    `).join('');
 }
 
-function checkAnswer(userAns) {
-    const q = state.questions[state.currentIndex];
-    
-    // 버튼 잠금 (중복 클릭 방지)
-    const btns = document.querySelectorAll('#answer-area button');
-    btns.forEach(b => b.disabled = true);
-    if(document.getElementById('subj-input')) document.getElementById('subj-input').disabled = true;
-
-    let isCorrect = false;
-    if (state.type === 'MULTI') {
-        isCorrect = parseInt(userAns) === parseInt(q.정답번호);
-    } else {
-        const clean = (s) => s.toString().replace(/\s+/g, '').toLowerCase().split(',').sort().join(',');
-        isCorrect = clean(userAns) === clean(q.정답);
-    }
-
-    state.sessionResults.push({ id: q.ID, isCorrect: isCorrect, userAns: userAns });
-
-    // 피드백 레이어 노출
-    const statusEl = document.getElementById('result-status');
-    if (isCorrect) {
-        statusEl.innerText = "● CORRECT (CLEARED)";
-        statusEl.style.backgroundColor = "rgba(0, 255, 65, 0.2)";
-        statusEl.style.color = "#00ff41";
-    } else {
-        statusEl.innerText = "● INCORRECT (DEVIATION)";
-        statusEl.style.backgroundColor = "rgba(255, 51, 51, 0.2)";
-        statusEl.style.color = "#ff3333";
-    }
-
-    document.getElementById('correct-ans-show').innerText = "IDENTIFIED AS: " + 
-        (state.type === 'MULTI' ? q[`보기${q.정답번호}`] : q.정답);
-    document.getElementById('explanation-box').innerText = q.해설 || "NO ADDITIONAL MANUAL.";
-    
-    document.getElementById('go-around-btn').className = state.difficulty === 'EZ' ? '' : 'hidden';
-    document.getElementById('deviation-btn').className = state.difficulty === 'INFERNO' ? '' : 'hidden';
-    
-    document.getElementById('go-around-btn').onclick = () => { state.excludedIds.push(q.ID); alert("Go-around Logged."); };
-    document.getElementById('deviation-btn').onclick = () => { state.reportedIds.push(q.ID); alert("Deviation Reported."); };
-
-    document.getElementById('feedback-layer').style.display = 'block';
-}
-
-function nextQuestion() {
-    document.getElementById('feedback-layer').style.display = 'none';
-    state.currentIndex++;
-    if (state.currentIndex < state.questions.length) renderQuestion();
-    else stopSession();
-}
-
-async function stopSession() {
-    if(!confirm("Sync with Tower?")) return;
-    showPage('loading-page');
-    document.getElementById('loading-msg').innerText = "Transmitting Data...";
-    
-    const cfg = CONFIG[state.difficulty];
-    const detailedResults = state.sessionResults.map(res => {
-        const q = state.questions.find(item => item.ID === res.id);
-        return {
-            id: res.id, isCorrect: res.isCorrect,
-            type: state.type, problem: q.문제 || "", userResponse: res.userAns || "",
-            correctAnswer: state.type === 'MULTI' ? q[`보기${q.정답번호}`] : q.정답
-        };
+function sortStats(key) {
+    this.sortOrder = !this.sortOrder;
+    state.statsData.sort((a, b) => {
+        let valA = a[key], valB = b[key];
+        if (this.sortOrder) return valA > valB ? 1 : -1;
+        else return valA < valB ? 1 : -1;
     });
-
-    try {
-        await fetch(cfg.URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                results: detailedResults,
-                reportedIds: state.reportedIds,
-                excludedIds: state.excludedIds,
-                masterGid: cfg.GIDs[`${state.subject}_${state.type}`],
-                statsGid: cfg.GIDs[`${state.subject}_STATS`]
-            })
-        });
-    } catch (e) { console.error(e); }
-    location.reload();
+    renderStats();
 }
+
+// --- 퀴즈 로직 진입 ---
+function prepTraining(sub) {
+    state.subject = sub;
+    // 유형 선택(객/주)을 묻는 대신 바로 프로파일 선택으로 이동하거나 
+    // 기존의 유형 선택 버튼을 다시 보여주는 로직으로 연결
+    document.getElementById('subject-cards').classList.add('hidden');
+    document.getElementById('mode-selection').classList.remove('hidden');
+}
+
+// (기존 loadQuiz, renderQuestion 등 퀴즈 로직 코드들 아래에 배치...)
 </script>
 </body>
 </html>
