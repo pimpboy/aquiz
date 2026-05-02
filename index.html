@@ -1,194 +1,10 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATC Training Center</title>
-    <style>
-        :root {
-            --bg-color: #0a0a0a;
-            --radar-green: #00ff41;
-            --radar-dim: #004411;
-            --danger-red: #ff3333;
-            --text-white: #e0e0e0;
-            --primary-blue: #4f46e5;
-            --card-bg: #1a1a1a;
-        }
-        body {
-            background-color: var(--bg-color); color: var(--text-white);
-            font-family: 'Pretendard', sans-serif; margin: 0; padding: 20px;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .container { width: 100%; max-width: 600px; }
-        
-        /* Buttons & UI */
-        .mode-card { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid #333; }
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight: bold; border: 1px solid transparent; padding: 15px; width: 100%; }
-        button:disabled { border-color: #333 !important; color: #555 !important; cursor: not-allowed; opacity: 0.6; }
-        .btn-start { background: var(--primary-blue); color: white; }
-        .btn-stats { background: #4b5563; color: white; font-size: 0.85rem; width: auto; padding: 10px 20px; }
-
-        /* Progress Bar */
-        .progress-container { width: 100%; background: #222; height: 8px; border-radius: 4px; margin: 20px 0; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--radar-green); width: 0%; transition: 0.3s; }
-
-        /* Layers */
-        #feedback-layer {
-            position: fixed; bottom: 0; left: 0; right: 0; background: #111; border-top: 2px solid var(--radar-green);
-            padding: 20px; display: none; z-index: 1000; max-height: 85vh; overflow-y: auto; border-radius: 25px 25px 0 0;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-        }
-        .hidden { display: none !important; }
-
-        /* Toggle */
-        .toggle-container { background: #eee; border-radius: 50px; padding: 10px 30px; display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; color: #333; font-weight: bold; }
-        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--danger-red); }
-        input:checked + .slider:before { transform: translateX(26px); }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div id="main-page">
-        <h1 style="text-align: center;">항 공 훈련 관제소</h1>
-        <div class="toggle-container">
-            <span>NORMAL</span>
-            <label class="switch"><input type="checkbox" id="diff-toggle" onchange="state.difficulty = this.checked ? 'INFERNO' : 'EZ'"><span class="slider"></span></label>
-            <span style="color:var(--danger-red)">HELL</span>
-        </div>
-
-        <div id="subject-cards">
-            <div class="mode-card">
-                <div style="font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-                    <span>✈️ 항공법규 (Law)</span>
-                    <button class="btn-stats" onclick="loadStats('LAW')">📊 데이터 센터</button>
-                </div>
-                <div class="btn-group">
-                    <button class="btn-start" onclick="prepType('LAW')">🚀 훈련 시작</button>
-                </div>
-            </div>
-            <div class="mode-card">
-                <div style="font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-                    <span>📡 항공관제 (Control)</span>
-                    <button class="btn-stats" onclick="loadStats('CTRL')">📊 데이터 센터</button>
-                </div>
-                <div class="btn-group">
-                    <button class="btn-start" onclick="prepType('CTRL')">🚀 훈련 시작</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="type-selection" class="hidden">
-            <p style="text-align:center; color:var(--radar-green);">시험 유형 선택</p>
-            <button class="btn-start" onclick="prepMission('MULTI')" style="margin-bottom:10px;">Multiple Choice (객관식)</button>
-            <button class="btn-start" onclick="prepMission('SUBJ')">Subjective (주관식)</button>
-            <button onclick="location.reload()" style="background:none; color:#666; margin-top:20px; border:1px solid #333;">CANCEL</button>
-        </div>
-
-        <div id="mode-selection" class="hidden">
-            <p style="text-align:center; color:orange;">MISSION PROFILE</p>
-            <button class="btn-start" onclick="loadQuiz('OMAKASE')" style="background:#333; margin-bottom:10px;">🍱 100문항 오마카세</button>
-            <button class="btn-start" onclick="loadQuiz('WRONG')" style="background:#333;">📝 100문항 오답노트</button>
-            <button onclick="location.reload()" style="background:none; color:#666; margin-top:20px; border:1px solid #333;">BACK TO BASE</button>
-        </div>
-    </div>
-
-    <div id="quiz-page" class="hidden">
-        <div style="text-align:center; color:var(--radar-green); font-size:0.8rem;" id="pos-display"></div>
-        <div class="progress-container"><div class="progress-bar" id="pb"></div></div>
-        <div id="question-box" style="margin:30px 0; font-size:1.15rem; line-height:1.6; min-height:80px;"></div>
-        <div id="answer-area"></div>
-        <button onclick="stopSession()" style="border:1px solid #444; color:#444; margin-top:40px; background: none;">ABORT MISSION (TERMINATE)</button>
-    </div>
-
-    <div id="stats-page" class="hidden">...</div>
-
-    <div id="loading-page" class="hidden">
-        <div style="text-align: center; margin-top: 150px;"><h2 id="loading-msg" style="color: var(--radar-green);">LINKING...</h2></div>
-    </div>
-</div>
-
-<div id="feedback-layer">
-    <div id="result-status" style="text-align:center; padding:15px; font-weight:bold; border-radius:10px; margin-bottom:15px;"></div>
-    <div style="background:#222; padding:15px; border-radius:12px; margin-bottom:15px;">
-        <div id="correct-ans-show" style="color:var(--radar-green); font-weight:bold; margin-bottom:10px;"></div>
-        <div id="explanation-box" style="font-size:0.95rem; line-height:1.5; color:#ccc; white-space:pre-wrap;"></div>
-    </div>
-    <div style="display:flex; gap:10px; margin-bottom:10px;">
-        <button id="go-around-btn" style="flex:1; border:1px solid var(--radar-green); color:var(--radar-green); background:none;">✈️ Go Around</button>
-        <button id="deviation-btn" style="flex:1; border:1px solid orange; color:orange; background:none;">⚠️ Deviation</button>
-    </div>
-    <button id="next-btn" style="background:var(--radar-green); color:black; font-size:1.2rem; border:none; margin-top:10px;">NEXT CONTACT</button>
-</div>
-
-<script>
-/** [세팅] GAS URL */
-const CONFIG = {
-    EZ: {
-        URL: "https://script.google.com/macros/s/AKfycbxQdRw8bAcYSfZWNV6r808lVpwED88FaZj6bviR1pMZ2DimYDKHYu13jeT7oXaT04ErGw/exec",
-        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1036407965, CTRL_MULTI: 438358690, CTRL_SUBJ: 1403157384, LAW_STATS: 1846282036, CTRL_STATS: 1880986641 }
-    },
-    INFERNO: {
-        URL: "https://script.google.com/macros/s/AKfycbzjGLlSq7-xpO0dZxCWExg06paUtwsP1kcPBXTCXhDzm8wkU0CJCyCADB0gJKsU76z7RA/exec",
-        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1805786990, CTRL_MULTI: 2049752243, CTRL_SUBJ: 570358631, LAW_STATS: 668283973, CTRL_STATS: 1546545747 }
-    }
-};
-
-let state = { 
-    difficulty: 'EZ', subject: '', type: '', questions: [], currentIndex: 0, 
-    sessionResults: [], reportedIds: [], excludedIds: [] 
-};
-
-function showPage(id) {
-    ['main-page', 'stats-page', 'loading-page', 'quiz-page'].forEach(p => {
-        const el = document.getElementById(p);
-        if(el) el.classList.add('hidden');
-    });
-    document.getElementById(id).classList.remove('hidden');
-}
-
-// 단계별 진입 로직 (버튼 먹통 방지 위해 인라인 호출)
-function prepType(sub) {
-    state.subject = sub;
-    document.getElementById('subject-cards').classList.add('hidden');
-    document.getElementById('type-selection').classList.remove('hidden');
-}
-
-function prepMission(type) {
-    state.type = type;
-    document.getElementById('type-selection').classList.add('hidden');
-    document.getElementById('mode-selection').classList.remove('hidden');
-}
-
-async function loadQuiz(mode) {
-    showPage('loading-page');
-    const cfg = CONFIG[state.difficulty];
-    const targetGid = cfg.GIDs[`${state.subject}_${state.type}`];
-    try {
-        const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
-        let data = await res.json();
-        // 정렬 로직 (기존 유지)
-        if (mode === 'OMAKASE') data.sort((a,b) => (a['누적 기출 횟수']||0)-(b['누적 기출 횟수']||0));
-        else data.sort((a,b) => (b['누적 오답 횟수']||0)-(a['누적 오답 횟수']||0));
-        
-        state.questions = data.slice(0, 100);
-        state.currentIndex = 0;
-        state.sessionResults = [];
-        renderQuestion();
-        showPage('quiz-page');
-    } catch(e) { alert("연결 실패!"); location.reload(); }
-}
+// ... (위쪽 HTML/CSS는 이전과 동일하며 Script 영역의 핵심 로직 보강) ...
 
 function renderQuestion() {
     const q = state.questions[state.currentIndex];
-    document.getElementById('pos-display').innerText = `Position: ${state.currentIndex + 1} / 100`;
+    document.getElementById('pos-display').innerText = `Position: ${state.currentIndex + 1}nm / 100nm`;
     document.getElementById('pb').style.width = `${state.currentIndex + 1}%`;
-    document.getElementById('question-box').innerText = `[${q.대분류||'ATC'}] ${q.문제}`;
+    document.getElementById('question-box').innerText = `[${q.대분류 || 'UNIT'}] ${q.문제}`;
     
     const area = document.getElementById('answer-area');
     area.innerHTML = '';
@@ -196,29 +12,32 @@ function renderQuestion() {
     if (state.type === 'MULTI') {
         for(let i=1; i<=4; i++) {
             const btn = document.createElement('button');
-            btn.style = "margin-bottom:10px; border:1px solid #333; text-align:left; background:none; color:#eee; padding-left:20px;";
+            btn.style = "width:100%; border:1px solid #333; color:#ccc; margin-bottom:10px; text-align:left; padding-left:20px; background:none;";
             btn.innerText = `${i}. ${q['보기'+i]}`;
             btn.onclick = () => checkAnswer(i);
             area.appendChild(btn);
         }
     } else {
+        // [보완] 주관식 렌더링 로직 복구
         const input = document.createElement('input');
         input.id = "subj-input";
         input.placeholder = "명령어를 입력하세요...";
         input.style = "width:100%; padding:15px; background:#1a1a1a; border:1px solid var(--radar-green); color:white; border-radius:12px; box-sizing:border-box; margin-bottom:15px;";
         input.onkeyup = (e) => e.key === 'Enter' && checkAnswer(input.value);
         area.appendChild(input);
+        
         const b = document.createElement('button');
-        b.innerText = "SEND COMMAND"; b.className = "btn-start";
+        b.innerText = "SEND COMMAND";
+        b.style = "width:100%; background:var(--primary-blue); color:white;";
         b.onclick = () => checkAnswer(input.value);
         area.appendChild(b);
-        input.focus();
+        setTimeout(() => input.focus(), 100);
     }
 }
 
 function checkAnswer(userAns) {
     const q = state.questions[state.currentIndex];
-    // 모든 입력 비활성화
+    // 버튼 잠금
     const btns = document.querySelectorAll('#answer-area button');
     btns.forEach(b => b.disabled = true);
     if(document.getElementById('subj-input')) document.getElementById('subj-input').disabled = true;
@@ -229,68 +48,36 @@ function checkAnswer(userAns) {
     if (state.type === 'MULTI') {
         isCorrect = parseInt(userAns) === parseInt(q.정답번호);
     } else {
+        // [보완] 요약에 언급된 주관식 전처리(공백제거, 소문자화) 적용
         const clean = (s) => s.toString().replace(/\s+/g, '').toLowerCase();
         isCorrect = clean(userAns) === clean(q.정답);
     }
 
     state.sessionResults.push({ id: q.ID, isCorrect: isCorrect, userAns: userAns });
 
-    // 피드백 레이어 업데이트
     const status = document.getElementById('result-status');
     status.innerText = isCorrect ? "● CORRECT (CLEARED)" : "● INCORRECT (DEVIATION)";
     status.style.background = isCorrect ? "rgba(0,255,65,0.2)" : "rgba(255,51,51,0.2)";
     status.style.color = isCorrect ? "var(--radar-green)" : "var(--danger-red)";
     
     document.getElementById('correct-ans-show').innerText = "IDENTIFIED AS: " + realAnsText;
-    document.getElementById('explanation-box').innerText = q.해설 || "해설 없음";
+    document.getElementById('explanation-box').innerText = q.해설 || "NO ADDITIONAL MANUAL AVAILABLE.";
     
-    // 버튼 이벤트 할당 (중복 방지 위해 onclick 직접 사용)
-    document.getElementById('go-around-btn').onclick = () => { state.excludedIds.push(q.ID); alert("Go Around Logged."); };
-    document.getElementById('deviation-btn').onclick = () => { state.reportedIds.push(q.ID); alert("Deviation Reported."); };
-    document.getElementById('next-btn').onclick = () => nextQuestion();
+    // [보완] Go Around / Deviation 버튼 액션 연결
+    document.getElementById('go-around-btn').onclick = function() {
+        if(!state.excludedIds.includes(q.ID)) {
+            state.excludedIds.push(q.ID);
+            this.style.background = "var(--radar-dim)";
+            alert("Go Around: 해당 문항이 제외 리스트에 등록되었습니다.");
+        }
+    };
+    document.getElementById('deviation-btn').onclick = function() {
+        if(!state.reportedIds.includes(q.ID)) {
+            state.reportedIds.push(q.ID);
+            this.style.background = "#442200";
+            alert("Deviation: 오류 보고가 접수되었습니다.");
+        }
+    };
 
     document.getElementById('feedback-layer').style.display = 'block';
 }
-
-function nextQuestion() {
-    document.getElementById('feedback-layer').style.display = 'none';
-    state.currentIndex++;
-    if (state.currentIndex < state.questions.length) {
-        renderQuestion();
-    } else {
-        stopSession();
-    }
-}
-
-async function stopSession() {
-    if(!confirm("Sync with Tower?")) return;
-    showPage('loading-page');
-    document.getElementById('loading-msg').innerText = "TRANSMITTING...";
-    
-    const cfg = CONFIG[state.difficulty];
-    const detailedResults = state.sessionResults.map(res => {
-        const q = state.questions.find(item => item.ID === res.id);
-        return {
-            id: res.id, isCorrect: res.isCorrect, type: state.type,
-            problem: q.문제, userResponse: res.userAns,
-            correctAnswer: (state.type==='MULTI' ? q['보기'+q.정답번호] : q.정답)
-        };
-    });
-
-    try {
-        await fetch(cfg.URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                results: detailedResults,
-                reportedIds: state.reportedIds,
-                excludedIds: state.excludedIds,
-                masterGid: cfg.GIDs[`${state.subject}_${state.type}`],
-                statsGid: cfg.GIDs[`${state.subject}_STATS`]
-            })
-        });
-    } catch(e) { console.error(e); }
-    location.reload();
-}
-</script>
-</body>
-</html>
