@@ -102,6 +102,86 @@
 <script>
 /** * [수정 포인트] 본인의 GAS URL과 GID를 입력하세요.
  */
+
+    let state = {
+    difficulty: 'EZ',
+    isReady: false,
+    db: { EZ: null, INFERNO: null } // 데이터를 미리 담아둘 저장소
+};
+
+// 2. 페이지 로드 시 즉시 실행 (사전 로딩)
+window.onload = async () => {
+    await prefetchData();
+};
+
+async function prefetchData() {
+    const msgEl = document.getElementById('loading-msg');
+    showPage('loading-page'); // 로딩 화면 먼저 보여줌
+
+    const steps = [
+        "Performing Checklist, Standby 1...",
+        "Establishing Data Link with Database...",
+        "Radar contact. My control."
+    ];
+
+    try {
+        // 메시지 시퀀스 (기분 내기용)
+        for(let msg of steps) {
+            msgEl.innerText = msg;
+            await new Promise(r => setTimeout(r, 600));
+        }
+
+        // 실제 데이터 가져오기 (EZ, INFERNO 동시 요청 가능하나 안정성을 위해 순차 진행)
+        // 여기서는 현재 선택된 난이도부터 우선 로드
+        await refreshCurrentDB();
+        
+        state.isReady = true;
+        showPage('main-page'); // 준비 완료 시 메인 화면으로
+    } catch (e) {
+        msgEl.innerText = "Data Link Failure. Check Console.";
+        console.error(e);
+    }
+}
+
+async function refreshCurrentDB() {
+    const cfg = CONFIG[state.difficulty];
+    // 모든 탭의 데이터를 병렬로 가져옴
+    const types = ['LAW_MULTI', 'LAW_SUBJ', 'CTRL_MULTI', 'CTRL_SUBJ'];
+    const promises = types.map(type => 
+        fetch(`${cfg.URL}?gid=${cfg.GIDs[type]}`).then(res => res.json())
+    );
+    
+    const results = await Promise.all(promises);
+    state.db[state.difficulty] = {
+        LAW_MULTI: results[0],
+        LAW_SUBJ: results[1],
+        CTRL_MULTI: results[2],
+        CTRL_SUBJ: results[3]
+    };
+}
+
+// 3. 난이도 토글 시 다시 로드
+async function toggleDifficulty() {
+    state.isReady = false;
+    state.difficulty = state.difficulty === 'EZ' ? 'INFERNO' : 'EZ';
+    document.getElementById('toggle-diff').innerText = `CURRENT: ${state.difficulty} MODE`;
+    
+    // 해당 난이도 데이터가 없으면 새로 로드
+    if (!state.db[state.difficulty]) {
+        await prefetchData();
+    }
+}
+
+// 4. 훈련 시작 버튼 (이제 데이터가 있으므로 즉시 실행)
+function startTraining(sub, type) {
+    if (!state.isReady) return;
+    state.subject = sub;
+    state.type = type;
+    
+    // 바로 추출 로직으로 진입
+    const fullData = state.db[state.difficulty][`${sub}_${type}`];
+    // ... 이후 추출 알고리즘 및 렌더링 로직 ...
+}
 const CONFIG = {
     // 1. EZ 모드 설정
     EZ: {
