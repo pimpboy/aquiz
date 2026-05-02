@@ -106,42 +106,87 @@
         }).sort(() => Math.random() - 0.5); // 셔플
     }
 
-    function showQuestion() {
-        const q = questions[currentIdx];
-        document.getElementById('q-text').innerText = q.id;
-        document.getElementById('score-board').innerText = `Q. ${currentIdx + 1}/${questions.length}`;
-        
-        const optBox = document.getElementById('q-options');
-        optBox.innerHTML = "";
-        q.options.forEach((opt, i) => {
-            if(opt && opt.trim() !== "") {
-                const btn = document.createElement('button');
-                btn.className = "opt-btn";
-                btn.innerText = `${i+1}. ${opt}`;
-                btn.onclick = () => checkAnswer(opt, q.ans);
-                optBox.appendChild(btn);
-            }
-        });
-        document.getElementById('result-msg').innerText = "";
-    }
+   function parseCSV(csv) {
+    const lines = csv.split('\n').filter(line => line.trim() !== "");
+    
+    questions = lines.slice(1).map(line => {
+        // 큰따옴표 안의 콤마를 무시하는 정규식 파싱
+        const cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+        const cleanCols = cols.map(c => c.replace(/^"|"$/g, "").trim());
 
-    function checkAnswer(selected, correct) {
-        const isCorrect = selected.includes(correct);
-        const msg = document.getElementById('result-msg');
-        
-        msg.innerText = isCorrect ? "✅ 정답입니다! 다음 문제로..." : `❌ 오답! 정답은 [${correct}] 입니다.`;
-        msg.style.color = isCorrect ? "var(--success)" : "var(--danger)";
+        // 알려주신 순서에 따른 인덱스 배정 (0부터 시작)
+        return {
+            mainCat: cleanCols[1], // 대분류
+            subCat: cleanCols[2],  // 중분류
+            id: cleanCols[3],      // 문제 내용
+            options: [
+                cleanCols[4],      // 보기1
+                cleanCols[5],      // 보기2
+                cleanCols[6],      // 보기3
+                cleanCols[7]       // 보기4
+            ],
+            ansIdx: cleanCols[8],  // 정답 번호 (예: "1" 또는 "1.0")
+            desc: cleanCols[9]     // 해설
+        };
+    }).filter(q => q.id && q.id !== "undefined"); // 유효한 문제만 선별
 
-        // GAS로 기록 전송 (비동기)
-        sendRecord(isCorrect, selected);
+    questions.sort(() => Math.random() - 0.5); 
+}
 
-        setTimeout(() => {
+function showQuestion() {
+    const q = questions[currentIdx];
+    if (!q) return;
+
+    // 문제 상단에 분류 표시
+    document.getElementById('q-text').innerHTML = `
+        <div style="font-size:0.8em; color:var(--primary); opacity:0.8; margin-bottom:10px;">
+            ${q.mainCat} > ${q.subCat}
+        </div>
+        ${q.id}
+    `;
+    
+    const optBox = document.getElementById('q-options');
+    optBox.innerHTML = "";
+    
+    q.options.forEach((opt, i) => {
+        if(opt) {
+            const btn = document.createElement('button');
+            btn.className = "opt-btn";
+            btn.innerText = `${i+1}. ${opt}`;
+            // 클릭 시 선택한 번호(i+1)를 전달
+            btn.onclick = () => checkAnswer((i + 1).toString(), q);
+            optBox.appendChild(btn);
+        }
+    });
+}
+
+function checkAnswer(selectedIdx, q) {
+    // 정답 번호에서 소수점 제거 (1.0 -> 1)
+    const correctIdx = Math.floor(parseFloat(q.ansIdx)).toString();
+    const isCorrect = (selectedIdx === correctIdx);
+    
+    const msg = document.getElementById('result-msg');
+    msg.innerHTML = isCorrect 
+        ? "✅ 정답입니다!" 
+        : `❌ 오답! 정답: ${correctIdx}번<br><small style="font-weight:400; font-size:0.8em;">${q.desc || ''}</small>`;
+    
+    msg.style.color = isCorrect ? "var(--success)" : "var(--danger)";
+
+    // GAS 전송 데이터 구성
+    const resultText = isCorrect ? "PASS" : `FAIL(선택:${selectedIdx}/정답:${correctIdx})`;
+    sendRecord(isCorrect, resultText, q.options[parseInt(correctIdx)-1]);
+
+    setTimeout(() => {
+        if (currentIdx < questions.length - 1) {
             currentIdx++;
-            if(currentIdx < questions.length) showQuestion();
-            else alert("훈련 종료! 고생하셨읍니다.");
-        }, 1500);
-    }
-
+            showQuestion();
+            document.getElementById('result-msg').innerText = "";
+        } else {
+            alert("임무 완료! 기지로 귀환합니다.");
+            location.href = 'index.html';
+        }
+    }, isCorrect ? 1000 : 3000); // 오답 시 해설 볼 시간 부여
+}
     function sendRecord(isCorrect, selected) {
         const q = questions[currentIdx];
         const formData = new URLSearchParams();
