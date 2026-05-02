@@ -3,159 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATC Modern Console: California</title>
+    <title>ATC Modern Console v5.1</title>
     <style>
         :root {
-            /* Light Mode - 가독성 중심 세팅 */
-            --bg-color: #f2f2f7; 
-            --card-bg: #ffffff;
-            --text-main: #000000; 
-            --text-sub: #3a3a3c;
-            --accent: #007aff; 
-            --radar-green: #248a3d; 
-            --danger: #ff3b30; 
-            --border: #c6c6c8;
-            --opt-bg: #f9f9f9;
+            --bg: #f2f2f7; --card: #ffffff; --text: #1c1c1e; 
+            --accent: #007aff; --border: #8e8e93; --opt-hover: rgba(0, 122, 255, 0.1);
         }
         [data-theme="dark"] {
-            /* Dark Mode - 기존 쌈뽕함 유지 */
-            --bg-color: #000000; 
-            --card-bg: #1c1c1e;
-            --text-main: #ffffff; 
-            --text-sub: #a1a1a6;
-            --accent: #5e5ce6; 
-            --radar-green: #30d158; 
-            --danger: #ff453a; 
-            --border: #38383a;
-            --opt-bg: rgba(255, 255, 255, 0.05);
+            --bg: #000000; --card: #1c1c1e; --text: #ffffff; 
+            --accent: #5e5ce6; --border: #38383a; --opt-hover: rgba(94, 92, 230, 0.2);
         }
-
-        body {
-            background-color: var(--bg-color); color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif;
-            margin: 0; display: flex; justify-content: center; min-height: 100vh;
-            transition: all 0.3s ease;
-        }
-
-        .container { width: 92%; max-width: 500px; padding: 40px 0; position: relative; }
-
-        .glass-card {
-            background: var(--card-bg); border-radius: 24px; padding: 24px; margin-bottom: 20px;
-            border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        h1 { font-size: 2.2rem; font-weight: 800; text-align: center; letter-spacing: -1.5px; margin-bottom: 5px; }
-        .subtitle { color: var(--accent); text-align: center; font-weight: 700; font-size: 0.8rem; margin-bottom: 40px; letter-spacing: 2px; }
-
-        button { border-radius: 16px; cursor: pointer; transition: all 0.2s; font-weight: 700; border: none; padding: 18px; font-size: 1rem; display: flex; align-items: center; justify-content: center; width: 100%; }
-        .btn-primary { background: var(--accent); color: #ffffff; }
-        .btn-abort { background: var(--danger); color: #ffffff; width: auto; padding: 8px 16px; font-size: 0.75rem; position: absolute; top: 10px; right: 0; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; transition: 0.3s; }
+        .container { width: 90%; max-width: 500px; padding: 40px 0; margin: auto; position: relative; }
+        .glass-card { background: var(--card); border-radius: 24px; padding: 24px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         
-        .opt-btn { background: var(--opt-bg); color: var(--text-main); border: 1px solid var(--border); text-align: left; justify-content: flex-start; margin-bottom: 12px; }
-        .opt-btn:hover { border-color: var(--accent); background: var(--accent); color: #ffffff; }
-
-        .pb-wrap { height: 6px; background: var(--border); border-radius: 100px; margin: 25px 0; }
-        .pb-fill { height: 100%; background: var(--accent); transition: 0.5s ease; width: 0%; }
-
-        #feedback-layer {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 500px; background: var(--card-bg);
-            border-radius: 30px 30px 0 0; padding: 30px; display: none; z-index: 1000;
-            border-top: 2px solid var(--accent); box-shadow: 0 -15px 40px rgba(0,0,0,0.2);
-        }
+        button { cursor: pointer; border-radius: 16px; border: none; padding: 16px; font-weight: 700; width: 100%; transition: 0.2s; font-size: 1rem; }
+        .btn-main { background: var(--accent); color: #ffffff; margin-bottom: 12px; }
+        .btn-outline { background: none; border: 2px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--accent); background: var(--opt-hover); }
+        
+        .btn-abort { background: #ff3b30; color: white; width: auto; position: absolute; top: -10px; right: 0; padding: 8px 16px; font-size: 0.8rem; z-index: 100; border-radius: 10px; }
+        
+        .pb-wrap { height: 6px; background: var(--border); border-radius: 3px; margin: 20px 0; overflow: hidden; opacity: 0.3; }
+        .pb-fill { height: 100%; background: var(--accent); width: 0%; transition: 0.4s; }
+        
         .hidden { display: none !important; }
+        #feedback-layer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--card); border-top: 2px solid var(--accent); padding: 25px; display: none; border-radius: 25px 25px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.2); z-index: 1000; }
+        #theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 25px; background: var(--accent); color: white; border: none; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="main-page">
-        <h1>ATC CENTER</h1>
-        <p class="subtitle">CALIFORNIA DESIGN v4.1</p>
+        <h1 style="text-align:center; letter-spacing:-1px;">ATC CENTER</h1>
+        <p style="text-align:center; font-size:0.8rem; color:var(--accent); font-weight:800; margin-top:-15px; margin-bottom:30px;">CALIFORNIA DESIGN SYSTEM</p>
+        
+        <div style="text-align:center; margin-bottom:25px;">
+            <button id="diff-toggle" class="btn-outline" onclick="toggleDiff()" style="width:auto; padding:10px 20px;">MODE: NORMAL (EZ)</button>
+        </div>
+
         <div class="glass-card">
-            <button class="btn-primary" onclick="window.loadQuiz('LAW')">MISSION START</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <span style="font-size:1.1rem; font-weight:800;">✈️ 항공법규 (LAW)</span>
+                <button class="btn-outline" style="width:auto; padding:6px 12px; font-size:0.7rem;" onclick="loadStats('LAW')">STATS</button>
+            </div>
+            <button class="btn-main" onclick="showMission('LAW')">SELECT MISSION</button>
+        </div>
+
+        <div class="glass-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <span style="font-size:1.1rem; font-weight:800;">📡 항공관제 (CTRL)</span>
+                <button class="btn-outline" style="width:auto; padding:6px 12px; font-size:0.7rem;" onclick="loadStats('CTRL')">STATS</button>
+            </div>
+            <button class="btn-main" onclick="showMission('CTRL')">SELECT MISSION</button>
+        </div>
+    </div>
+
+    <div id="mission-page" class="hidden">
+        <button class="btn-outline" onclick="showPage('main-page')" style="width:auto; padding:8px 15px; margin-bottom:20px;">← RETURN</button>
+        <div class="glass-card">
+            <h3 style="text-align:center; margin-top:0;">CHOOSE PROFILE</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:25px;">
+                <button id="type-multi" class="btn-main" onclick="setType('MULTI')">객관식</button>
+                <button id="type-subj" class="btn-outline" onclick="setType('SUBJ')">주관식</button>
+            </div>
+            <button class="btn-main" style="background:#34c759; color:white;" onclick="initData('OMAKASE')">🍱 오마카세 100선</button>
+            <div style="margin:8px 0;"></div>
+            <button class="btn-main" style="background:#ff9500; color:white;" onclick="initData('WRONG')">📝 오답 100선</button>
         </div>
     </div>
 
     <div id="quiz-page" class="hidden">
-        <button class="btn-abort" onclick="location.reload()">ABORT MISSION</button>
-        <div id="pos-display" style="text-align:center; font-weight:800; margin-top:20px;"></div>
+        <button class="btn-abort" onclick="location.reload()">ABORT</button>
+        <div id="pos-display" style="font-size:0.75rem; text-align:center; font-weight:800;"></div>
         <div class="pb-wrap"><div class="pb-fill" id="pb"></div></div>
-        <div id="question-box" class="glass-card" style="font-size:1.2rem; font-weight:700;"></div>
-        <div id="answer-area"></div>
+        <div class="glass-card" id="q-box" style="font-size:1.2rem; font-weight:700; line-height:1.5;"></div>
+        <div id="ans-area"></div>
     </div>
 </div>
 
 <div id="feedback-layer">
-    <div id="result-status" style="text-align:center; font-weight:900; font-size:1.2rem; margin-bottom:15px; padding:10px; border-radius:12px;"></div>
-    <div id="correct-ans-show" style="color:var(--radar-green); font-weight:800; margin-bottom:10px;"></div>
-    <button class="btn-primary" onclick="window.nextQuestion()">NEXT CONTACT</button>
+    <div id="res-status" style="text-align:center; font-weight:900; font-size:1.2rem; margin-bottom:15px; padding:10px; border-radius:12px;"></div>
+    <div id="res-correct" style="color:var(--radar-green); font-weight:800; margin-bottom:15px; text-align:center;"></div>
+    <button class="btn-main" onclick="nextQ()">NEXT CONTACT</button>
 </div>
 
-<button id="theme-toggle" onclick="window.toggleTheme()" style="position:fixed; bottom:20px; right:20px; width:50px; height:50px; border-radius:25px; background:var(--accent); color:white; border:none; cursor:pointer; font-size:1.5rem; z-index:2000;">🌓</button>
+<button id="theme-toggle" onclick="toggleTheme()">🌓</button>
 
 <script>
-window.state = { questions: [], currentIndex: 0, isProcessing: false };
+// CONFIG & STATE
+const CONFIG = {
+    EZ: {
+        URL: "https://script.google.com/macros/s/AKfycbxQdRw8bAcYSfZWNV6r808lVpwED88FaZj6bviR1pMZ2DimYDKHYu13jeT7oXaT04ErGw/exec",
+        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1036407965, CTRL_MULTI: 438358690, CTRL_SUBJ: 1403157384, LAW_STATS: 1846282036, CTRL_STATS: 1880986641 }
+    },
+    INFERNO: {
+        URL: "https://script.google.com/macros/s/AKfycbzjGLlSq7-xpO0dZxCWExg06paUtwsP1kcPBXTCXhDzm8wkU0CJCyCADB0gJKsU76z7RA/exec",
+        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1805786990, CTRL_MULTI: 2049752243, CTRL_SUBJ: 570358631, LAW_STATS: 668283973, CTRL_STATS: 1546545747 }
+    }
+};
+let state = { diff: 'EZ', sub: '', type: 'MULTI', q: [], idx: 0, isProc: false };
 
-window.toggleTheme = () => {
+// UI CONTROLS
+function toggleTheme() {
     const html = document.documentElement;
-    const current = html.getAttribute('data-theme');
-    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
-};
+    html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+function toggleDiff() {
+    state.diff = state.diff === 'EZ' ? 'INFERNO' : 'EZ';
+    document.getElementById('diff-toggle').innerText = `MODE: ${state.diff === 'EZ' ? 'NORMAL (EZ)' : 'HELL (INFERNO)'}`;
+    document.getElementById('diff-toggle').style.color = state.diff === 'EZ' ? 'var(--text)' : '#ff3b30';
+}
+function showPage(id) {
+    ['main-page', 'mission-page', 'quiz-page'].forEach(p => document.getElementById(p).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+}
+function showMission(sub) { state.sub = sub; showPage('mission-page'); }
+function setType(t) {
+    state.type = t;
+    document.getElementById('type-multi').className = t === 'MULTI' ? 'btn-main' : 'btn-outline';
+    document.getElementById('type-subj').className = t === 'SUBJ' ? 'btn-main' : 'btn-outline';
+}
 
-window.loadQuiz = async function() {
-    // 셈플 데이터 무결성 검사 포함 로드 (실제 URL 연동 필요)
-    window.state.questions = [
-        {ID: 1, 문제: "국내 항공안전법의 기본이 되는 국제법은?", 보기1: "동경협약", 보기2: "미국 연방항공규정", 보기3: "국제민간항공협약 및 부속서", 보기4: "국제항공업무통과협정", 정답번호: 3},
-        {ID: 2, 문제: "형식증명이란?", 보기1: "안전하게 비행할 성능이 있다는 증명", 보기2: "기술기준에 적합하다는 인정 증명", 보기3: "설계가 기술기준에 적합하다는 증명", 보기4: "기술, 설비 등을 갖추고 있음을 인정", 정답번호: 3}
-    ];
-    document.getElementById('main-page').classList.add('hidden');
-    document.getElementById('quiz-page').classList.remove('hidden');
-    window.renderQuestion();
-};
-
-window.renderQuestion = function() {
-    const q = window.state.questions[window.state.currentIndex];
-    if(!q || !q.문제) return; // 데이터 증발 방지 로직
-
-    document.getElementById('pos-display').innerText = `STEP ${window.state.currentIndex + 1} / ${window.state.questions.length}`;
-    document.getElementById('pb').style.width = `${((window.state.currentIndex + 1)/window.state.questions.length)*100}%`;
-    document.getElementById('question-box').innerText = q.문제;
+// DATA & LOGIC
+async function initData(mode) {
+    showPage('quiz-page');
+    document.getElementById('q-box').innerText = "📡 RADAR SCANNING...";
     
-    const area = document.getElementById('answer-area');
+    try {
+        // [L1 무결성] 데이터 필터링 단계
+        // const res = await fetch(...) 
+        let rawData = [
+            {ID:1, 문제:"항공안전법의 기본법은?", 보기1:"협약A", 보기2:"협약B", 보기3:"ICAO부속서", 보기4:"협약D", 정답번호:3, 기출:5, 오답:2},
+            {ID:2, 문제:"", 보기1:"무결성테스트", 정답번호:1} // 잘못된 데이터 샘플
+        ];
+
+        // 1. 유효 데이터 선별 (문제/정답이 없는 행 제거)
+        let cleanData = rawData.filter(d => d.문제 && (state.type==='MULTI'?d.정답번호:d.정답));
+        
+        // 2. 알고리즘 적용
+        if(mode === 'OMAKASE') cleanData.sort((a,b) => (a.기출||0) - (b.기출||0));
+        else cleanData.sort((a,b) => (b.오답||0) - (a.오답||0));
+
+        state.q = cleanData.slice(0, 100);
+        state.idx = 0;
+        renderQ();
+    } catch(e) { alert("LINK ERROR"); location.reload(); }
+}
+
+function renderQ() {
+    const q = state.q[state.idx];
+    if(!q) return; // [L2 무결성] 방어코드
+
+    document.getElementById('pos-display').innerText = `STEP ${state.idx + 1} / ${state.q.length}`;
+    document.getElementById('pb').style.width = `${((state.idx+1)/state.q.length)*100}%`;
+    document.getElementById('q-box').innerText = q.문제;
+    
+    const area = document.getElementById('ans-area');
     area.innerHTML = '';
-    [1,2,3,4].forEach(i => {
-        if(q['보기'+i]) {
-            const btn = document.createElement('button');
-            btn.className = "opt-btn";
-            btn.innerText = q['보기'+i];
-            btn.onclick = () => window.checkAnswer(i);
-            area.appendChild(btn);
-        }
-    });
-};
-
-window.checkAnswer = function(num) {
-    if(window.state.isProcessing) return;
-    window.state.isProcessing = true;
-    const q = window.state.questions[window.state.currentIndex];
-    const isCorrect = parseInt(num) === q.정답번호;
     
-    const status = document.getElementById('result-status');
+    if(state.type === 'MULTI') {
+        let opts = [];
+        for(let i=1; i<=4; i++) if(q['보기'+i]) opts.push({i, t:q['보기'+i]});
+        opts.sort(() => Math.random() - 0.5); // 보기 셔플
+        
+        opts.forEach(opt => {
+            const b = document.createElement('button');
+            b.className = "btn-outline"; b.style.marginBottom = "10px";
+            b.innerText = opt.t;
+            b.onclick = () => checkAns(opt.i);
+            area.appendChild(b);
+        });
+    } else {
+        const input = document.createElement('input');
+        input.style = "width:100%; padding:15px; border-radius:12px; border:2px solid var(--border); background:none; color:var(--text); font-size:1.1rem; box-sizing:border-box; margin-bottom:15px;";
+        input.placeholder = "ENTER COMMAND...";
+        input.onkeyup = (e) => e.key === 'Enter' && checkAns(input.value);
+        area.appendChild(input);
+        setTimeout(() => input.focus(), 100);
+    }
+}
+
+function checkAns(ans) {
+    if(state.isProc) return;
+    state.isProc = true;
+    const q = state.q[state.idx];
+    const isCorrect = state.type === 'MULTI' ? parseInt(ans) === q.정답번호 : ans.trim() === q.정답.trim();
+    
+    const status = document.getElementById('res-status');
     status.innerText = isCorrect ? "CONTACT ESTABLISHED" : "DEVIATION DETECTED";
-    status.style.color = isCorrect ? "var(--radar-green)" : "var(--danger)";
+    status.style.color = isCorrect ? "#34c759" : "#ff3b30";
+    status.style.background = isCorrect ? "rgba(52,199,89,0.1)" : "rgba(255,59,48,0.1)";
     
-    document.getElementById('correct-ans-show').innerText = "IDENTIFIED: " + q['보기'+q.정답번호];
+    document.getElementById('res-correct').innerText = "IDENTIFIED: " + (state.type==='MULTI' ? q['보기'+q.정답번호] : q.정답);
     document.getElementById('feedback-layer').style.display = 'block';
-};
+}
 
-window.nextQuestion = function() {
+function nextQ() {
     document.getElementById('feedback-layer').style.display = 'none';
-    window.state.isProcessing = false;
-    window.state.currentIndex++;
-    if(window.state.currentIndex < window.state.questions.length) window.renderQuestion();
-    else location.reload();
-};
+    state.isProc = false;
+    state.idx++;
+    if(state.idx < state.q.length) renderQ();
+    else { alert("MISSION COMPLETE"); location.reload(); }
+}
 </script>
 </body>
 </html>
