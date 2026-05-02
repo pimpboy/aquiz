@@ -189,7 +189,7 @@
 <style> @keyframes spin { to { transform: rotate(360deg); } } </style>
 
 <script>
-/** [ENGINE v1.1] 8열 스키마 및 고성능 무결성 로직 */
+/** [ENGINE v1.1.1] Bug Fixes: Type Sync, Stats Mapping, Answer Display */
 window.state = {
     difficulty: 'EZ', subject: '', type: '', questions: [], currentIndex: 0,
     sessionResults: [], reportedIds: [], excludedIds: [], statsData: [],
@@ -197,14 +197,8 @@ window.state = {
 };
 
 const CONFIG = {
-    EZ: {
-        URL: "https://script.google.com/macros/s/AKfycbxQdRw8bAcYSfZWNV6r808lVpwED88FaZj6bviR1pMZ2DimYDKHYu13jeT7oXaT04ErGw/exec",
-        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1036407965, CTRL_MULTI: 438358690, CTRL_SUBJ: 1403157384, LAW_STATS: 1846282036, CTRL_STATS: 1880986641 }
-    },
-    INFERNO: {
-        URL: "https://script.google.com/macros/s/AKfycbzjGLlSq7-xpO0dZxCWExg06paUtwsP1kcPBXTCXhDzm8wkU0CJCyCADB0gJKsU76z7RA/exec",
-        GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1805786990, CTRL_MULTI: 2049752243, CTRL_SUBJ: 570358631, LAW_STATS: 668283973, CTRL_STATS: 1546545747 }
-    }
+    EZ: { URL: "https://script.google.com/macros/s/AKfycbx_EZ_URL/exec", GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1, CTRL_MULTI: 2, CTRL_SUBJ: 3, LAW_STATS: 4, CTRL_STATS: 5 } },
+    INFERNO: { URL: "https://script.google.com/macros/s/AKfycbx_HELL_URL/exec", GIDs: { LAW_MULTI: 0, LAW_SUBJ: 1, CTRL_MULTI: 2, CTRL_SUBJ: 3, LAW_STATS: 4, CTRL_STATS: 5 } }
 };
 
 window.showPage = function(id) {
@@ -241,11 +235,13 @@ window.loadQuiz = async function(mode) {
         if (!res.ok) throw new Error("Link Failure");
         let data = await res.json();
         
-        // 8열 스키마 동기화: 신규 위주(기출 적은순), 취약 위주(오답 많은순)
+        // 8열 스키마 동기화 및 숫자 데이터 무결성 처리
+        const getNum = (v) => Number(String(v || '0').replace(/[^0-9.-]+/g, "")) || 0;
+        
         if (mode === 'OMAKASE') {
-            data.sort((a,b) => (Number(a['누적 기출'])||0) - (Number(b['누적 기출'])||0));
+            data.sort((a,b) => getNum(a['누적 기출']) - getNum(b['누적 기출']));
         } else {
-            data.sort((a,b) => (Number(b['누적 오답'])||0) - (Number(a['누적 오답'])||0));
+            data.sort((a,b) => getNum(b['누적 오답']) - getNum(a['누적 오답']));
         }
         
         window.state.questions = data.slice(0, 100);
@@ -319,11 +315,12 @@ window.checkAnswer = function(userAns) {
         isCorrect = clean(userAns) === clean(q.정답);
     }
 
-    // 무결성 보장: 백엔드 업데이트에 필요한 모든 필드 강제 매핑
+    // 수정 포인트 1: '유형(type)' 필드를 결과 객체에 포함하여 DB 전송 시 누락 방지
     window.state.sessionResults.push({ 
         id: q.ID, 
         isCorrect: isCorrect, 
         userAns: userAns,
+        type: window.state.type, // 유형 기입 결함 해결
         problem: q.문제,
         category: q.대분류 || 'ATC',
         explanation: q.해설 || 'No manual.'
@@ -338,7 +335,6 @@ window.checkAnswer = function(userAns) {
     document.getElementById('correct-ans-show').innerText = "IDENTIFIED AS: " + (realAnsText || "N/A");
     document.getElementById('explanation-box').innerText = q.해설 || "작전 지침이 등록되지 않은 문항입니다.";
     
-    // 버튼 이벤트 무결성 재설정
     document.getElementById('go-around-btn').onclick = () => {
         if(!window.state.excludedIds.includes(q.ID)) window.state.excludedIds.push(q.ID);
         alert("Excluded from sync.");
@@ -394,16 +390,18 @@ window.loadStats = async function(subject) {
         const res = await fetch(`${cfg.URL}?gid=${cfg.GIDs[subject+'_STATS']}`);
         const data = await res.json();
         
+        // 수정 포인트 2: 데이터 센터 기출/오답 횟수 및 정답 필드 매핑 결함 해결
         window.state.statsData = data.map(row => {
-            const c = Number(row['누적 기출']) || 0;
-            const w = Number(row['누적 오답']) || 0;
+            const getNum = (v) => Number(String(v || '0').replace(/[^0-9.-]+/g, "")) || 0;
+            const c = getNum(row['누적 기출']);
+            const w = getNum(row['누적 오답']);
             const rawRate = row['오답률'] || "0%";
             const parsedRate = parseFloat(String(rawRate).replace('%','')) || 0;
             
             return { 
                 type: row['유형'] || '-', 
                 problem: row['문제'] || '-', 
-                answer: row['실제정답'] || '-',
+                answer: row['실제정답'] || row['정답'] || '-', // 정답 표시 결함 보정
                 count: c, 
                 wrong: w, 
                 rate: parsedRate,
@@ -421,6 +419,7 @@ window.loadStats = async function(subject) {
 
 window.renderStats = function() {
     const tbody = document.getElementById('stats-body');
+    // 수정 포인트 3: 정답(d.answer)이 HTML 상에서 정확히 노출되도록 보장
     tbody.innerHTML = window.state.statsData.map((d, i) => `
         <tr>
             <td><span style="color:#888;">${d.type}</span></td>
