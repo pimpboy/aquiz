@@ -1,224 +1,75 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>항공 훈련 센터 : 통합 관제소</title>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #f4f7fa;
-            --card-bg: #ffffff;
-            --text-main: #2d3436;
-            --primary: #4361ee;
-            --accent: #4895ef;
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        body.hell-mode {
-            --bg-color: #0f0f0f;
-            --card-bg: #1a1a1a;
-            --text-main: #eeeeee;
-            --primary: #d93025;
-            --accent: #ff4d4f;
-        }
-
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            transition: var(--transition);
-        }
-
-        .container {
-            text-align: center;
-            padding: 40px;
-            background: var(--card-bg);
-            border-radius: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 550px;
-            transition: var(--transition);
-        }
-
-        h1 { font-weight: 900; font-size: 2.2rem; margin-bottom: 5px; }
-        .subtitle { color: #95a5a6; margin-bottom: 25px; font-size: 0.95rem; }
-
-        /* 🎚️ 슬라이딩 토글 스위치 */
-        .mode-switch-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 35px;
-            padding: 15px;
-            background: rgba(128, 128, 128, 0.1);
-            border-radius: 20px;
-        }
-
-        .switch { position: relative; display: inline-block; width: 70px; height: 34px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc; transition: .4s; border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute; content: ""; height: 26px; width: 26px;
-            left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;
-        }
-        input:checked + .slider { background-color: #d93025; }
-        input:checked + .slider:before { transform: translateX(36px); }
-
-        /* 🔘 버튼 그룹 */
-        .subject-group {
-            margin-bottom: 25px;
-            padding: 20px;
-            border: 1px solid rgba(128, 128, 128, 0.2);
-            border-radius: 20px;
-            text-align: left;
-        }
-        .subject-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 15px; display: block; }
-
-        .btn-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px; }
-
-        .btn {
-            padding: 15px; border: none; border-radius: 12px;
-            font-size: 1rem; font-weight: 700; cursor: pointer;
-            color: white; background: var(--primary); transition: var(--transition);
-        }
-        .btn-stats { background: #636e72; font-size: 0.85rem; }
-        
-        .btn:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn:disabled { background: #555 !important; opacity: 0.5; cursor: wait; }
-
-        #loader-msg {
-            margin-top: 15px; font-size: 0.85rem; font-weight: 600;
-            color: var(--primary); min-height: 1.2em;
-        }
-
-        body.hell-mode .container { border: 2px solid var(--primary); animation: shake 0.4s infinite; }
-        @keyframes shake { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(1px,1px); } 75% { transform: translate(-1px,1px); } }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1 id="main-title">항공 훈련 관제소</h1>
-    <p class="subtitle">난이도를 선택하고 훈련 과목을 장전하십시오.</p>
-
-    <div class="mode-switch-container">
-        <span>NORMAL</span>
-        <label class="switch">
-            <input type="checkbox" id="mode-toggle">
-            <span class="slider"></span>
-        </label>
-        <span style="color:#d93025; font-weight:bold;">HELL</span>
-    </div>
-
-    <div class="subject-group">
-        <span class="subject-title">✈️ 항공법규 (Law)</span>
-        <div class="btn-row">
-            <button class="btn" onclick="prepareTraining('law')">🚀 훈련 시작</button>
-            <button class="btn btn-stats" onclick="openDataCenter('law')">📊 데이터 센터</button>
-        </div>
-    </div>
-
-    <div class="subject-group">
-        <span class="subject-title">📡 항공관제 (Control)</span>
-        <div class="btn-row">
-            <button class="btn" onclick="prepareTraining('control')">🚀 훈련 시작</button>
-            <button class="btn btn-stats" onclick="openDataCenter('control')">📊 데이터 센터</button>
-        </div>
-    </div>
-
-    <div id="loader-msg"></div>
-</div>
-
-<script>
-    // 🔗 아우님의 12개 CSV 및 GAS URL을 여기에 매핑하십시오.
+/**
+     * ------------------------------------------------------------------
+     * ⚠️ [포커 소좌 전용 통합 주소 설정창]
+     * ------------------------------------------------------------------
+     */
     const CONFIG = {
         normal: {
-            law: {
-                db: ["https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=0&single=true", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=2011973258&single=true"],
-                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=1384146265&single=true",
-                gas: "https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec"
+            law: { 
+                obj: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?gid=0&single=true&output=csv", // 일반 법규 객관식 DB
+                sub: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?gid=2011973258&single=true&output=csv, // 일반 법규 주관식 DB
+                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?gid=1384146265&single=true&output=csv", // 일반 법규 통계용(데이터센터) CSV 주소
+                gas: "https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec"         // 일반 기록 전송용 GAS
             },
-            control: {
-                db: ["https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=1053182571&single=true", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=217691441&single=true"],
-                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pubhtml?gid=1522345468&single=true",
-                gas: "https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec"
+            control: { 
+                obj: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?gid=1053182571&single=true&output=csv", // 일반 관제 객관식 DB
+                sub: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?gid=217691441&single=true&output=csv", // 일반 관제 주관식 DB
+                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyZ24Pjcs6P2E4bzyxYuuVBSSxltreMArT-jxVdEK6J-Wc7_uPMTO47NwZQxA7mLZK_WIYqkmj5YAK/pub?gid=1522345468&single=true&output=csv", // 일반 관제 통계용 CSV 주소
+                gas: "https://script.google.com/macros/s/AKfycbzgyYj5bS-NjFueQar5k4HLTs7CpdsKOiYn76PK2Z5ydrn74Ds8fov8gnemaaRTWiMT/exec" // 일반 기록 전송용 GAS
             }
         },
         hell: {
-            law: {
-                db: ["https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=0&single=true&output=csv", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=606421897&single=true&output=csv"],
-                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=1366188626&single=true&output=csv",
-                gas: "https://script.google.com/macros/s/AKfycbyhGW6_7Zl5P2Z-hDOvd4r_4Iw0FXF0-ygQduMJJAAqkqvEhHRxskPMn4st2LFshxUc/exec"
+            law: { 
+                obj: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=0&single=true&output=csv", // 불지옥 법규 객관식 DB
+                sub: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=606421897&single=true&output=csv", // 불지옥 법규 주관식 DB
+                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=1366188626&single=true&output=csv", // 불지옥 통계용 CSV 주소
+                gas: "https://script.google.com/macros/s/AKfycbyhGW6_7Zl5P2Z-hDOvd4r_4Iw0FXF0-ygQduMJJAAqkqvEhHRxskPMn4st2LFshxUc/exec" // 불지옥 기록 전송용 GAS
             },
-            control: {
-                db: ["https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=371932808&single=true&output=csv", "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=157857311&single=true&output=csv"],
-                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=720487079&single=true&output=csv",
-                gas: "https://script.google.com/macros/s/AKfycbyhGW6_7Zl5P2Z-hDOvd4r_4Iw0FXF0-ygQduMJJAAqkqvEhHRxskPMn4st2LFshxUc/exec"
+            control: { 
+                obj: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=371932808&single=true&output=csv", // 불지옥 관제 객관식 DB
+                sub: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=157857311&single=true&output=csv", // 불지옥 관제 주관식 DB
+                stats: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHqWTrWL6RM0ko1WIXeYKzjlQ0wb1LtQti-AeR7Q8cuGWJ1P905Q4DywrBLsKBKU8I7BYojLFRor5f/pub?gid=720487079&single=true&output=csv", // 불지옥 통계용 CSV 주소
+                gas: "https://script.google.com/macros/s/AKfycbyhGW6_7Zl5P2Z-hDOvd4r_4Iw0FXF0-ygQduMJJAAqkqvEhHRxskPMn4st2LFshxUc/exec" // 불지옥 기록 전송용 GAS
             }
         }
     };
 
-    let currentMode = 'normal';
-    const toggle = document.getElementById('mode-toggle');
-    const loaderMsg = document.getElementById('loader-msg');
-
-    toggle.addEventListener('change', () => {
-        currentMode = toggle.checked ? 'hell' : 'normal';
-        document.body.classList.toggle('hell-mode', toggle.checked);
-        document.getElementById('main-title').innerText = toggle.checked ? "🔥 불지옥 커리큘럼" : "항공 훈련 관제소";
-        loaderMsg.innerText = ""; // 모드 바꿀 때 메시지 초기화
-    });
-
     async function prepareTraining(subject) {
         const btns = document.querySelectorAll('.btn');
         btns.forEach(b => b.disabled = true);
-        loaderMsg.innerText = `⚠️ [${currentMode.toUpperCase()}] 데이터 메모리 로딩 중...`;
+        const loaderMsg = document.getElementById('loader-msg');
+        loaderMsg.innerText = `[${currentMode.toUpperCase()}] 전 탄종(객/주/통) 장전 중...`;
 
         try {
             const target = CONFIG[currentMode][subject];
             
-            // 1. 객관식/주관식 CSV 2개를 병렬로 fetch
-            const [objRes, subRes] = await Promise.all(target.db.map(url => fetch(url)));
-            const objData = await objRes.text();
-            const subData = await subRes.text();
+            // 🚀 객관식, 주관식, 그리고 '통계 CSV'까지 3개를 동시에 fetch!
+            const [resObj, resSub, resStats] = await Promise.all([
+                fetch(target.obj),
+                fetch(target.sub),
+                fetch(target.stats)
+            ]);
 
-            // 2. 세션 스토리지에 데이터 장전 (다음 페이지에서 사용)
-            sessionStorage.setItem('quiz_obj', objData);
-            sessionStorage.setItem('quiz_sub', subData);
+            const dataObj = await resObj.text();
+            const dataSub = await resSub.text();
+            const dataStats = await resStats.text(); // 통계 데이터 로드
+
+            // 세션 스토리지에 3종 세트 저장
+            sessionStorage.setItem('quiz_obj', dataObj);
+            sessionStorage.setItem('quiz_sub', dataSub);
+            sessionStorage.setItem('quiz_stats', dataStats); // 통계 데이터 저장
+            
             sessionStorage.setItem('quiz_config', JSON.stringify({
                 mode: currentMode,
                 subject: subject,
                 gasUrl: target.gas
             }));
 
-            loaderMsg.innerText = "✅ 로딩 완료! 훈련지로 이동합니다.";
-            
-            setTimeout(() => {
-                location.href = `quiz.html`; // 퀴즈 페이지 주소
-            }, 800);
+            loaderMsg.innerText = "✅ 데이터 동기화 완료! 출격합니다.";
+            setTimeout(() => { location.href = 'quiz.html'; }, 800);
 
         } catch (e) {
-            loaderMsg.innerText = "❌ 로드 실패! URL 설정을 확인하십시오.";
+            loaderMsg.innerText = "❌ 로드 실패! 통계 혹은 문제 CSV 주소를 확인하십시오.";
             btns.forEach(b => b.disabled = false);
         }
     }
-
-    function openDataCenter(subject) {
-        // 현재 모드와 과목에 맞는 GAS 대시보드 URL 호출
-        const url = CONFIG[currentMode][subject].gas;
-        window.open(url, '_blank');
-    }
-</script>
-
-</body>
-</html>
