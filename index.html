@@ -42,12 +42,12 @@
 
         /* Stats Table */
         .stats-wrap { width: 100%; overflow-x: auto; margin-top: 10px; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: #111; min-width: 550px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #111; min-width: 550px; }
         th { background: #222; padding: 12px; cursor: pointer; border-bottom: 2px solid #333; color: var(--radar-green); position: sticky; top: 0; }
-        td { padding: 12px; border-bottom: 1px solid #222; text-align: center; }
-        .rate-bg { width: 100%; background: #333; height: 6px; border-radius: 3px; margin-top: 5px; }
-        .rate-bar { height: 100%; background: var(--danger-red); }
-        .exp-content { display: none; background: #222; padding: 10px; margin-top: 8px; border-radius: 8px; color: #bbb; text-align: left; line-height: 1.4; }
+        td { padding: 15px 12px; border-bottom: 1px solid #222; text-align: center; vertical-align: middle; }
+        .rate-bg { width: 100%; background: #333; height: 6px; border-radius: 3px; margin-top: 8px; }
+        .rate-bar { height: 100%; background: var(--danger-red); transition: width 0.5s ease-out; }
+        .exp-content { display: none; background: #222; padding: 12px; margin-top: 10px; border-radius: 8px; color: #bbb; text-align: left; line-height: 1.5; border-left: 3px solid var(--radar-green); }
 
         /* Layers */
         #feedback-layer {
@@ -63,7 +63,7 @@
 <div class="container">
     <div id="main-page">
         <h1 style="text-align: center; margin-bottom: 5px;">항공 훈련 관제소</h1>
-        <p style="text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 25px;">포커 소좌, 리포트를 확인하고 훈련을 시작하십시오.</p>
+        <p style="text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 25px;">포커 소좌, 훈련 모드를 선택하십시오.</p>
 
         <div class="toggle-container">
             <span>NORMAL</span>
@@ -73,30 +73,29 @@
 
         <div id="subject-cards">
             <div class="mode-card">
-                <div style="font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-weight: bold; display: flex; justify-content: space-between; align-items: center; margin-bottom:15px;">
                     <span>✈️ 항공법규 (Law)</span>
-                    <button class="btn-stats" onclick="loadStats('LAW')">📊 데이터 센터</button>
+                    <button class="btn-stats" onclick="loadStats('LAW')">📊 DATA CENTER</button>
                 </div>
-                <div class="btn-group"><button class="btn-start" onclick="prepType('LAW')">🚀 훈련 시작</button></div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-start" onclick="prepMission('LAW', 'MULTI')" style="background:#4f46e5;">🚀 훈련 시작 (객)</button>
+                    <button class="btn-start" onclick="prepMission('LAW', 'SUBJ')" style="background:#4f46e5;">🚀 훈련 시작 (주)</button>
+                </div>
             </div>
             <div class="mode-card">
-                <div style="font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-weight: bold; display: flex; justify-content: space-between; align-items: center; margin-bottom:15px;">
                     <span>📡 항공관제 (Control)</span>
-                    <button class="btn-stats" onclick="loadStats('CTRL')">📊 데이터 센터</button>
+                    <button class="btn-stats" onclick="loadStats('CTRL')">📊 DATA CENTER</button>
                 </div>
-                <div class="btn-group"><button class="btn-start" onclick="prepType('CTRL')">🚀 훈련 시작</button></div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-start" onclick="prepMission('CTRL', 'MULTI')" style="background:#4f46e5;">🚀 훈련 시작 (객)</button>
+                    <button class="btn-start" onclick="prepMission('CTRL', 'SUBJ')" style="background:#4f46e5;">🚀 훈련 시작 (주)</button>
+                </div>
             </div>
-        </div>
-
-        <div id="type-selection" class="hidden">
-            <p style="text-align:center; color:var(--radar-green);">시험 유형 선택</p>
-            <button class="btn-start" onclick="prepMission('MULTI')" style="margin-bottom:10px;">Multiple Choice (객관식)</button>
-            <button class="btn-start" onclick="prepMission('SUBJ')">Subjective (주관식)</button>
-            <button onclick="location.reload()" style="background:none; color:#666; margin-top:20px; border:1px solid #333;">CANCEL</button>
         </div>
 
         <div id="mode-selection" class="hidden">
-            <p style="text-align:center; color:orange;">MISSION PROFILE</p>
+            <p style="text-align:center; color:orange; font-weight:bold;">MISSION PROFILE</p>
             <button class="btn-start" onclick="loadQuiz('OMAKASE')" style="background:#333; margin-bottom:10px;">🍱 100문항 오마카세 (신규 위주)</button>
             <button class="btn-start" onclick="loadQuiz('WRONG')" style="background:#333;">📝 100문항 오답노트 (취약 위주)</button>
             <button onclick="location.reload()" style="background:none; color:#666; margin-top:20px; border:1px solid #333;">BACK TO BASE</button>
@@ -106,7 +105,7 @@
     <div id="stats-page" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 style="margin:0; color:var(--radar-green);">DATA CENTER</h2>
-            <button onclick="location.reload()" style="padding:8px 15px; background:#333; color:white; border-radius:8px;">EXIT</button>
+            <button onclick="location.reload()" style="padding:10px 25px; background:#333; color:white; border-radius:8px; font-weight:bold;">EXIT</button>
         </div>
         <div class="stats-wrap">
             <table>
@@ -123,11 +122,11 @@
         <div class="progress-container"><div class="progress-bar" id="pb"></div></div>
         <div id="question-box" style="margin:30px 0; font-size:1.15rem; line-height:1.6; min-height:80px;"></div>
         <div id="answer-area"></div>
-        <button onclick="stopSession()" style="border:1px solid #444; color:#444; margin-top:40px; background: none;">ABORT MISSION (TERMINATE)</button>
+        <button onclick="stopSession()" style="border:1px solid #444; color:#444; margin-top:40px; background: none; font-size:0.8rem;">ABORT MISSION (TERMINATE)</button>
     </div>
 
     <div id="loading-page" class="hidden">
-        <div style="text-align: center; margin-top: 150px;"><h2 id="loading-msg" style="color: var(--radar-green);">LINKING...</h2></div>
+        <div style="text-align: center; margin-top: 150px;"><h2 id="loading-msg" style="color: var(--radar-green);">LINKING TO TOWER...</h2></div>
     </div>
 </div>
 
@@ -138,14 +137,14 @@
         <div id="explanation-box" style="font-size:0.95rem; line-height:1.5; color:#ccc; white-space:pre-wrap;"></div>
     </div>
     <div style="display:flex; gap:10px; margin-bottom:10px;">
-        <button id="go-around-btn" style="flex:1; border:1px solid var(--radar-green); color:var(--radar-green); background:none;">✈️ Go Around</button>
-        <button id="deviation-btn" style="flex:1; border:1px solid orange; color:orange; background:none;">⚠️ Deviation</button>
+        <button id="go-around-btn" style="flex:1; border:1px solid var(--radar-green); color:var(--radar-green); background:none; font-size:0.9rem;">✈️ Go Around</button>
+        <button id="deviation-btn" style="flex:1; border:1px solid orange; color:orange; background:none; font-size:0.9rem;">⚠️ Possible Deviation</button>
     </div>
     <button id="next-btn" style="background:var(--radar-green); color:black; font-size:1.2rem; border:none; margin-top:10px;">NEXT CONTACT</button>
 </div>
 
 <script>
-/** [CRITICAL] GAS URL & GID CONFIG */
+/** [세팅] 실제 GAS URL을 여기에 입력하세요 */
 const CONFIG = {
     EZ: {
         URL: "https://script.google.com/macros/s/AKfycbxQdRw8bAcYSfZWNV6r808lVpwED88FaZj6bviR1pMZ2DimYDKHYu13jeT7oXaT04ErGw/exec",
@@ -170,11 +169,13 @@ function showPage(id) {
     document.getElementById(id).classList.remove('hidden');
 }
 
-// flow control
-function prepType(sub) { state.subject = sub; document.getElementById('subject-cards').classList.add('hidden'); document.getElementById('type-selection').classList.remove('hidden'); }
-function prepMission(type) { state.type = type; document.getElementById('type-selection').classList.add('hidden'); document.getElementById('mode-selection').classList.remove('hidden'); }
+function prepMission(sub, type) {
+    state.subject = sub;
+    state.type = type;
+    document.getElementById('subject-cards').classList.add('hidden');
+    document.getElementById('mode-selection').classList.remove('hidden');
+}
 
-// quiz load
 async function loadQuiz(mode) {
     showPage('loading-page');
     const cfg = CONFIG[state.difficulty];
@@ -182,7 +183,7 @@ async function loadQuiz(mode) {
     try {
         const res = await fetch(`${cfg.URL}?gid=${targetGid}`);
         let data = await res.json();
-        // Sorting Algorithm
+        
         if (mode === 'OMAKASE') data.sort((a,b) => (a['누적 기출 횟수']||0)-(b['누적 기출 횟수']||0));
         else data.sort((a,b) => (b['누적 오답 횟수']||0)-(a['누적 오답 횟수']||0));
         
@@ -191,14 +192,14 @@ async function loadQuiz(mode) {
         state.sessionResults = [];
         renderQuestion();
         showPage('quiz-page');
-    } catch(e) { alert("Link Failure!"); location.reload(); }
+    } catch(e) { alert("연결 실패! URL 설정을 확인하세요."); location.reload(); }
 }
 
 function renderQuestion() {
     const q = state.questions[state.currentIndex];
-    document.getElementById('pos-display').innerText = `Position: ${state.currentIndex + 1}nm / 100nm`;
+    document.getElementById('pos-display').innerText = `Position: ${state.currentIndex + 1} / 100`;
     document.getElementById('pb').style.width = `${state.currentIndex + 1}%`;
-    document.getElementById('question-box').innerText = `[${q.대분류||'UNIT'}] ${q.문제}`;
+    document.getElementById('question-box').innerText = `[${q.대분류||'ATC'}] ${q.문제}`;
     
     const area = document.getElementById('answer-area');
     area.innerHTML = '';
@@ -214,7 +215,7 @@ function renderQuestion() {
     } else {
         const input = document.createElement('input');
         input.id = "subj-input";
-        input.placeholder = "명령어를 입력하세요...";
+        input.placeholder = "명령어를 입력하십시오...";
         input.style = "width:100%; padding:15px; background:#1a1a1a; border:1px solid var(--radar-green); color:white; border-radius:12px; box-sizing:border-box; margin-bottom:15px;";
         input.onkeyup = (e) => e.key === 'Enter' && checkAnswer(input.value);
         area.appendChild(input);
@@ -222,7 +223,7 @@ function renderQuestion() {
         b.innerText = "SEND COMMAND"; b.style = "background:var(--primary-blue); color:white;";
         b.onclick = () => checkAnswer(input.value);
         area.appendChild(b);
-        setTimeout(() => input.focus(), 100);
+        setTimeout(() => input.focus(), 150);
     }
 }
 
@@ -252,7 +253,6 @@ function checkAnswer(userAns) {
     document.getElementById('correct-ans-show').innerText = "IDENTIFIED AS: " + realAnsText;
     document.getElementById('explanation-box').innerText = q.해설 || "NO ADDITIONAL MANUAL.";
     
-    // 특수 액션 핸들러
     document.getElementById('go-around-btn').onclick = () => { state.excludedIds.push(q.ID); alert("Go Around Logged."); };
     document.getElementById('deviation-btn').onclick = () => { state.reportedIds.push(q.ID); alert("Deviation Reported."); };
     document.getElementById('next-btn').onclick = () => nextQuestion();
@@ -295,44 +295,63 @@ async function stopSession() {
             })
         });
     } catch(e) { console.error(e); }
-    location.reload(); // 완벽한 초기화를 위해 리로드
+    location.reload();
 }
 
-// Stats Logic
+/** [수정 핵심] 데이터 센터 매핑 로직 강화 */
 async function loadStats(subject) {
     showPage('loading-page');
     const cfg = CONFIG[state.difficulty];
     try {
         const res = await fetch(`${cfg.URL}?gid=${cfg.GIDs[subject+'_STATS']}`);
         const data = await res.json();
+        
         state.statsData = data.map(row => {
             const c = Number(row['누적 기출 횟수'])||0; 
             const w = Number(row['누적 오답 횟수'])||0;
+            
+            // 시트 컬럼명과 매칭 (실제정답, 해설 키 확인)
             return {
-                type: row['유형']||'-', problem: row['문제']||'-',
-                answer: row['실제 정답']||'-', exp: row['해설']||'-',
-                count: c, wrong: w, rate: c>0?(w/c)*100:0
+                type: row['유형'] || 'MULTI',
+                problem: row['문제'] || '데이터 없음',
+                answer: row['실제정답'] || row['정답'] || '-', // '실제정답' 또는 '정답' 컬럼 사용
+                exp: row['해설'] || '상세 해설이 없습니다.',
+                count: c, 
+                wrong: w, 
+                rate: c > 0 ? (w / c) * 100 : 0
             };
         });
         renderStats();
         showPage('stats-page');
-    } catch(e) { location.reload(); }
+    } catch(e) { 
+        console.error(e);
+        alert("데이터 로드 실패. 시트의 컬럼명을 확인하십시오.");
+        location.reload(); 
+    }
 }
 
 function renderStats() {
     const tbody = document.getElementById('stats-body');
     tbody.innerHTML = state.statsData.map((d, i) => `
         <tr>
-            <td>${d.type}</td>
-            <td style="text-align:left;">
-                <b>${d.problem}</b><br>
-                <small style="color:var(--radar-green)">정답: ${d.answer}</small><br>
-                <span style="cursor:pointer;text-decoration:underline;font-size:0.7rem;color:#888;" 
-                      onclick="const e=document.getElementById('st-exp-${i}'); e.style.display=e.style.display==='block'?'none':'block'">[VIEW MANUAL]</span>
-                <div id="st-exp-${i}" class="exp-content">${d.exp}</div>
+            <td style="font-weight:bold; color:#888;">${d.type}</td>
+            <td style="text-align:left; padding:20px 15px;">
+                <div style="font-weight:bold; margin-bottom:8px; line-height:1.4;">${d.problem}</div>
+                <div style="color:var(--radar-green); font-size:0.85rem; font-weight:bold;">정답: ${d.answer}</div>
+                <div style="margin-top:10px;">
+                    <span style="cursor:pointer; text-decoration:underline; font-size:0.75rem; color:#666;" 
+                          onclick="const e=document.getElementById('st-exp-${i}'); e.style.display=e.style.display==='block'?'none':'block'">
+                        [VIEW MANUAL]
+                    </span>
+                    <div id="st-exp-${i}" class="exp-content">${d.exp}</div>
+                </div>
             </td>
-            <td>${d.count}</td><td>${d.wrong}</td>
-            <td>${d.rate.toFixed(0)}%<div class="rate-bg"><div class="rate-bar" style="width:${d.rate}%"></div></div></td>
+            <td>${d.count}</td>
+            <td>${d.wrong}</td>
+            <td style="font-weight:bold; color:${d.rate > 50 ? 'var(--danger-red)' : 'white'}">
+                ${d.rate.toFixed(0)}%
+                <div class="rate-bg"><div class="rate-bar" style="width:${d.rate}%"></div></div>
+            </td>
         </tr>
     `).join('');
 }
